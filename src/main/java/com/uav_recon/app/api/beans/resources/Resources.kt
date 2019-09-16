@@ -9,7 +9,7 @@ class Resources(private val objectMapper: ObjectMapper) {
     private val root = "classpath:files"
 
     val template by lazy {
-        ResourceUtils.getURL("$root/template.docx").readText()
+        ResourceUtils.getURL("$root/template.docx").readBytes()
     }
 
     val mockImage by lazy {

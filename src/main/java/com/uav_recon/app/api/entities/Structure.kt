@@ -1,14 +1,9 @@
 package com.uav_recon.app.api.entities
 
-interface Structure {
-    val id: Long
-    val name: String
-    val type: Type
-    val components: List<StructuralComponent>
+import java.io.Serializable
 
-    enum class Type(val title: Int) {
-        BRIDGES_AND_AERIAL_STRUCTURE(0),
-        RETAINING_WALLS_AND_CONCENTRATE_TRACKS(1),
-        SUBWAY_STATIONS_AND_AERIAL_STATIONS(2)
-    }
-}
+class Structure(
+    val id: Long = 0,
+    val name: String = "",
+    val type: String = ""
+) : Serializable

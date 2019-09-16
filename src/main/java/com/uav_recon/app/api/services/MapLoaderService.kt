@@ -27,7 +27,7 @@ class MapLoaderService {
 
     fun loadImage(location: Location) = loadImage(location.latitude, location.longitude)
 
-    fun loadImage(latitude: Double, longitude: Double): InputStream? {
+    fun loadImage(latitude: Double?, longitude: Double?): InputStream? {
         val url = createUrl(latitude, longitude)
         val data = loadUrl(url)
         return data?.inputStream()
@@ -42,8 +42,8 @@ class MapLoaderService {
     }
 
     private fun createUrl(
-            latitude: Double,
-            longitude: Double,
+            latitude: Double?,
+            longitude: Double?,
             width: Int = DEFAULT_WIDTH,
             height: Int = DEFAULT_HEIGHT,
             zoom: Float = DEFAULT_ZOOM

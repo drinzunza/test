@@ -7,6 +7,10 @@ import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import org.apache.poi.util.Units
+import org.apache.poi.xwpf.converter.pdf.PdfConverter
+import org.apache.poi.xwpf.converter.pdf.PdfOptions
+//import org.apache.poi.xwpf.converter.pdf.PdfConverter
+//import org.apache.poi.xwpf.converter.pdf.PdfOptions
 import org.apache.poi.xwpf.usermodel.*
 import org.springframework.stereotype.Service
 import java.io.File
@@ -29,29 +33,31 @@ class ReportGeneratorService(
     }
 
     fun generateReport(inspection: Inspection): String {
-        val doc = XWPFDocument(resources.template.byteInputStream()) // нужен для сохранения таблицы стилей
-            createTitlePage(doc, inspection)
-            doc.newPage()
-            createGlobalsPage(doc, inspection)
-            doc.newPage()
-            createSummaryOfObservations(doc, inspection)
-            doc.newPage()
+        val doc = XWPFDocument(resources.template.inputStream()) // нужен для сохранения таблицы стилей
+        createTitlePage(doc, inspection)
+        doc.newPage()
+        createGlobalsPage(doc, inspection)
+        doc.newPage()
+        createSummaryOfObservations(doc, inspection)
+        doc.newPage()
 //            for (obs in inspection.obs) {
-            createObservationReport(doc, inspection/*, obs*/)
+        createObservationReport(doc, inspection/*, obs*/)
 //        }
 
         return saveToFile(inspection, doc)
     }
 
     private fun saveToFile(inspection: Inspection, doc: XWPFDocument): String {
-        val fileName = "report_of_${inspection.structure?.name}.docx"
-        val file = fileStorageService.getFile(fileName)
-        FileOutputStream(file).use {
-            //            PdfConverter.getInstance().convert(doc, it, PdfOptions.getDefault()) // там в libs/ лежит джарник в котором я смерджил зависимости 2 либ
-            //https://drive.google.com/open?id=1uOqzBLKL0VN0-3oWxGQVp3t7EaqqaAJ9 вот проект в котором генерировал
-            doc.write(it)
-        }
-        return fileName
+        val docxFileName = "report of ${inspection.structure.name}.docx"
+        val pdfFileName = "report of ${inspection.structure.name}.pdf"
+        val docxFile = fileStorageService.getFile(docxFileName)
+        val pdfFile = fileStorageService.getFile(pdfFileName)
+
+        PdfConverter.getInstance().convert(doc, FileOutputStream(pdfFile), PdfOptions.getDefault()) // там в libs/ лежит джарник в котором я смерджил зависимости 2 либ
+        //https://drive.google.com/open?id=1uOqzBLKL0VN0-3oWxGQVp3t7EaqqaAJ9 вот проект в котором генерировал
+        doc.write(FileOutputStream(docxFile))
+
+        return pdfFileName
     }
 
     private fun createTitlePage(doc: XWPFDocument, inspection: Inspection) {
@@ -64,7 +70,7 @@ class ReportGeneratorService(
                 }
                 textRun {
                     isItalic = true
-                    setText("${inspection.structure?.type?.name}")
+                    setText(inspection.structure.type)
                     addBreak()
                 }
                 blankLines(2)
@@ -74,7 +80,7 @@ class ReportGeneratorService(
                 }
                 textRun {
                     isItalic = true
-                    setText("${inspection.structure?.id}")
+                    setText("${inspection.structure.id}")
                     addBreak()
                 }
                 textRun {
@@ -121,7 +127,7 @@ class ReportGeneratorService(
                 textRun {
                     fontSize = 9
                     isItalic = true
-                    setText("${inspection.structure?.name}")
+                    setText(inspection.structure.name)
                     addBreak()
                 }
                 blankLines(1)
@@ -133,7 +139,7 @@ class ReportGeneratorService(
                 textRun {
                     fontSize = 9
                     isItalic = true
-                    setText("${inspection.structure?.type?.name}")
+                    setText(inspection.structure.type)
                     addBreak()
                 }
                 blankLines(6)
@@ -185,7 +191,7 @@ class ReportGeneratorService(
     }
 
     private fun createGlobalsPage(doc: XWPFDocument, inspection: Inspection) {
-        inspection.location?.let {
+        inspection.location.let {
             val inputStream = mapLoaderService.loadImage(it)
             doc.apply {
                 paragraph {
