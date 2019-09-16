@@ -1,7 +1,5 @@
 package com.uav_recon.app.configurations
 
-class SecurityConfiguration
-
 //@Configuration
 //class SecurityConfiguration : WebSecurityConfigurerAdapter() {
 //

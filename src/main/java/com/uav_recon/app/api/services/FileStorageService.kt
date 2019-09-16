@@ -8,6 +8,7 @@ import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import org.springframework.web.multipart.MultipartFile
+import java.io.File
 import java.io.IOException
 import java.net.MalformedURLException
 import java.nio.file.Files
@@ -25,6 +26,14 @@ class FileStorageService(private val config: FileStorageConfiguration) {
         } catch (ex: Exception) {
             throw FileStorageException("Could not create the directory where the uploaded files will be stored.", ex)
         }
+    }
+
+    fun getFile(fileName: String): File {
+        return fileStorageLocation.resolve(fileName).toFile()
+    }
+
+    fun storeFile(fileName: String, data: ByteArray) {
+        File(fileName).writeBytes(data)
     }
 
     fun storeFile(file: MultipartFile): String {
