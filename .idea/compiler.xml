@@ -2,6 +2,8 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
+      <module name="data-recon-backend.main" target="1.8" />
+      <module name="data-recon-backend.test" target="1.8" />
       <module name="gen.main" target="1.8" />
       <module name="gen.test" target="1.8" />
       <module name="reportgenerator.main" target="1.8" />
