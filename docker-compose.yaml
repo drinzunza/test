@@ -1,0 +1,21 @@
+version: '3.4'
+
+x-var: &APP_NAME
+         ${CONTAINER_NAME:-uav-recon}
+
+services:
+
+  server:
+    image: *APP_NAME
+    container_name: *APP_NAME
+    build: .
+    ports:
+      - ${EXTERNAL_PORT:-1671}:${DOCKER_PORT:-8080}
+    networks:
+      - uav-recon
+
+networks:
+  uav-recon:
+    external: true
+
+
