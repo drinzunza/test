@@ -9,8 +9,6 @@ import java.util.*
 import org.apache.poi.util.Units
 import org.apache.poi.xwpf.converter.pdf.PdfConverter
 import org.apache.poi.xwpf.converter.pdf.PdfOptions
-//import org.apache.poi.xwpf.converter.pdf.PdfConverter
-//import org.apache.poi.xwpf.converter.pdf.PdfOptions
 import org.apache.poi.xwpf.usermodel.*
 import org.springframework.stereotype.Service
 import java.io.File
@@ -53,11 +51,13 @@ class ReportGeneratorService(
         val docxFile = fileStorageService.getFile(docxFileName)
         val pdfFile = fileStorageService.getFile(pdfFileName)
 
-        PdfConverter.getInstance().convert(doc, FileOutputStream(pdfFile), PdfOptions.getDefault()) // там в libs/ лежит джарник в котором я смерджил зависимости 2 либ
-        //https://drive.google.com/open?id=1uOqzBLKL0VN0-3oWxGQVp3t7EaqqaAJ9 вот проект в котором генерировал
         doc.write(FileOutputStream(docxFile))
+        //PdfConverter.getInstance().convert(doc, FileOutputStream(pdfFile), PdfOptions.getDefault()) // там в libs/ лежит джарник в котором я смерджил зависимости 2 либ
+        //https://drive.google.com/open?id=1uOqzBLKL0VN0-3oWxGQVp3t7EaqqaAJ9 вот проект в котором генерировал
 
-        return pdfFileName
+        //Runtime.getRuntime().exec("oowriter -pt pdf ${docxFile.absolutePath}")
+
+        return docxFileName
     }
 
     private fun createTitlePage(doc: XWPFDocument, inspection: Inspection) {
@@ -201,7 +201,7 @@ class ReportGeneratorService(
                             this.addPicture(
                                     inputStream,
                                     XWPFDocument.PICTURE_TYPE_PICT,
-                                    resources.mockImage,
+                                    resources.mockImagePath,
                                     Units.toEMU(450.0),
                                     Units.toEMU(250.0)
                             )
@@ -211,6 +211,21 @@ class ReportGeneratorService(
                 }
 
                 // for styling see http://svn.apache.org/repos/asf/poi/trunk/src/examples/src/org/apache/poi/xwpf/usermodel/examples/SimpleTable.java
+
+                table {
+                    row(0) {
+                        cell(0) {
+                            paragraph {
+                                alignment = ParagraphAlignment.CENTER
+                                textRun {
+                                    isItalic = true
+                                    isBold = true
+                                    setText("Critical Findings – Prompt Action Required")
+                                }
+                            }
+                        }
+                    }
+                }
 
                 table {
                     row(0) {
@@ -431,12 +446,12 @@ class ReportGeneratorService(
                     cell(0) {
                         paragraph {
                             textRun {
-                                val file = File(resources.mockImage)
+                                val file = File(resources.mockImagePath)
                                 if (file.exists()) {
                                     addPicture(
                                             FileInputStream(file),
                                             XWPFDocument.PICTURE_TYPE_PICT,
-                                            resources.mockImage,
+                                            resources.mockImagePath,
                                             Units.toEMU(200.0),
                                             Units.toEMU(200.0)
                                     )
@@ -455,12 +470,12 @@ class ReportGeneratorService(
                     cell(2) {
                         paragraph {
                             textRun {
-                                val file = File(resources.mockImage)
+                                val file = File(resources.mockImagePath)
                                 if (file.exists()) {
                                     addPicture(
                                             FileInputStream(file),
                                             XWPFDocument.PICTURE_TYPE_PICT,
-                                            resources.mockImage,
+                                            resources.mockImagePath,
                                             Units.toEMU(200.0),
                                             Units.toEMU(200.0)
                                     )
