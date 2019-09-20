@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletRequest
 @RestController
 class UploadController(private val fileStorageService: FileStorageService) {
 
-    /*private val logger = LoggerFactory.getLogger(UploadController::class.java)
+    private val logger = LoggerFactory.getLogger(UploadController::class.java)
 
     @PostMapping("${VERSION}/uploadFile")
     fun uploadFile(@RequestParam("file") file: MultipartFile): UploadFileResponse {
@@ -62,5 +62,5 @@ class UploadController(private val fileStorageService: FileStorageService) {
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
                 .body<Resource>(resource)
-    }*/
+    }
 }

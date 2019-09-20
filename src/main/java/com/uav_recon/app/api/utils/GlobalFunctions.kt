@@ -2,6 +2,8 @@ package com.uav_recon.app.api.utils
 
 import com.uav_recon.app.api.entities.Response
 import com.uav_recon.app.api.utils.DateExtensions.Companion.DEFAULT_FORMAT
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,4 +34,13 @@ fun Date?.formatDate(formatter: DateFormat = DEFAULT_FORMAT): String? {
         return formatter.format(this)
     }
     return null
+}
+
+fun runCommand(cmd: String): String {
+    val process = Runtime.getRuntime().exec(cmd)
+    process.waitFor()
+    val buf = BufferedReader(InputStreamReader(process.inputStream))
+    val output = buf.readText()
+    buf.close()
+    return output
 }

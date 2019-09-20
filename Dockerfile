@@ -3,7 +3,8 @@ WORKDIR /src
 COPY . /src
 RUN ./gradlew bootJar
 
-FROM openjdk:8-jre-alpine as server
+FROM openjdk:8-jre as server
+RUN apt-get update && apt-get -y install libreoffice-writer
 RUN mkdir /var/uav-recon
 WORKDIR /var/uav-recon
 COPY --from=builder /src/build/libs/uav-recon-*.jar /var/uav-recon/app.jar

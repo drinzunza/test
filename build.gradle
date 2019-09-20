@@ -45,7 +45,24 @@ dependencies {
 	compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.7.0'
 	compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.7.0'
 
-	//compile group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.0'
+	compile group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.0'
+	//compile group: 'com.itextpdf', name: 'itextpdf', version: '5.5.10'
+	compile group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.4'
+	//compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.56'
+	compile 'com.github.dhorions:boxable:1.5'
+
+	compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
+	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+	compile group: 'commons-codec', name: 'commons-codec', version: '1.4'
+	compile group: 'org.apache.poi', name: 'poi', version: '3.17'
+	compile group: 'org.apache.poi', name: 'poi-excelant', version: '3.17'
+	compile group: 'org.apache.poi', name: 'poi-ooxml', version: '3.17'
+	compile group: 'org.apache.poi', name: 'poi-ooxml-schemas', version: '3.17'
+	compile group: 'org.apache.poi', name: 'poi-scratchpad', version: '3.17'
+	compile group: 'org.apache.poi', name: 'ooxml-schemas', version: '1.3'
+	compile group: 'org.apache.poi', name: 'ooxml-security', version: '1.1'
+	compile group: 'org.apache.xmlbeans', name: 'xmlbeans', version: '2.6.0'
+	compile group: 'com.github.virtuald', name: 'curvesapi', version: '1.03'
 
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 }

@@ -1,18 +1,27 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.beans.resources.Resources
+import com.uav_recon.app.api.controllers.UploadController
 import com.uav_recon.app.api.entities.Inspection
 import com.uav_recon.app.api.utils.formatDate
+import com.uav_recon.app.api.utils.runCommand
+import com.uav_recon.app.configurations.FileStorageConfiguration
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import org.apache.poi.util.Units
-import org.apache.poi.xwpf.converter.pdf.PdfConverter
-import org.apache.poi.xwpf.converter.pdf.PdfOptions
+//import org.apache.poi.xwpf.converter.pdf.PdfConverter
+//import org.apache.poi.xwpf.converter.pdf.PdfOptions
 import org.apache.poi.xwpf.usermodel.*
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileInputStream
+import jdk.nashorn.internal.runtime.ScriptingFunctions.readLine
+import org.slf4j.LoggerFactory
+import java.io.InputStreamReader
+import java.io.BufferedReader
+
+
 
 private val DATE_FORMAT = SimpleDateFormat("MM/dd/yy")
 
@@ -20,8 +29,11 @@ private val DATE_FORMAT = SimpleDateFormat("MM/dd/yy")
 @Service
 class ReportGeneratorService(
         private val mapLoaderService: MapLoaderService,
+        private val config: FileStorageConfiguration,
         private val fileStorageService: FileStorageService,
         private val resources: Resources) {
+
+    private val logger = LoggerFactory.getLogger(ReportGeneratorService::class.java)
 
     init {
         // костылина, чтобы POI работал
@@ -55,9 +67,14 @@ class ReportGeneratorService(
         //PdfConverter.getInstance().convert(doc, FileOutputStream(pdfFile), PdfOptions.getDefault()) // там в libs/ лежит джарник в котором я смерджил зависимости 2 либ
         //https://drive.google.com/open?id=1uOqzBLKL0VN0-3oWxGQVp3t7EaqqaAJ9 вот проект в котором генерировал
 
-        //Runtime.getRuntime().exec("oowriter -pt pdf ${docxFile.absolutePath}")
+        logger.info(runCommand("pwd"))
 
-        return docxFileName
+        val command = "soffice --headless --convert-to pdf \"${docxFile.absolutePath}\""
+        logger.info("Command: $command")
+        val output = runCommand(command)
+        logger.info("Out: $output")
+
+        return pdfFileName
     }
 
     private fun createTitlePage(doc: XWPFDocument, inspection: Inspection) {
