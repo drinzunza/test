@@ -1,8 +1,8 @@
-package com.uav_recon.app.api.services
+package com.uav_recon.app.api.services.report
 
 import com.uav_recon.app.api.beans.resources.Resources
-import com.uav_recon.app.api.controllers.UploadController
-import com.uav_recon.app.api.entities.Inspection
+import com.uav_recon.app.api.entities.db.Inspection
+import com.uav_recon.app.api.services.FileStorageService
 import com.uav_recon.app.api.utils.formatDate
 import com.uav_recon.app.api.utils.runCommand
 import com.uav_recon.app.configurations.FileStorageConfiguration
@@ -16,12 +16,7 @@ import org.apache.poi.xwpf.usermodel.*
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileInputStream
-import jdk.nashorn.internal.runtime.ScriptingFunctions.readLine
 import org.slf4j.LoggerFactory
-import java.io.InputStreamReader
-import java.io.BufferedReader
-
-
 
 private val DATE_FORMAT = SimpleDateFormat("MM/dd/yy")
 

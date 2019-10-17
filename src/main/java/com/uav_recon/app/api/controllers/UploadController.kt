@@ -15,7 +15,7 @@ import java.io.IOException
 import java.util.stream.Collectors
 import javax.servlet.http.HttpServletRequest
 
-@RestController
+/*@RestController
 class UploadController(private val fileStorageService: FileStorageService) {
 
     private val logger = LoggerFactory.getLogger(UploadController::class.java)
@@ -63,4 +63,4 @@ class UploadController(private val fileStorageService: FileStorageService) {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
                 .body<Resource>(resource)
     }
-}
+}*/

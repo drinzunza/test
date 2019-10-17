@@ -1,4 +1,4 @@
-package com.uav_recon.app.api.entities
+package com.uav_recon.app.api.entities.responses
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

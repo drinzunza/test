@@ -1,6 +1,6 @@
 package com.uav_recon.app.api.controllers.handlers
 
-import com.uav_recon.app.api.entities.Response
+import com.uav_recon.app.api.entities.responses.Response
 import com.uav_recon.app.api.controllers.handlers.Exceptions.BAD_REQUEST
 import com.uav_recon.app.api.controllers.handlers.Exceptions.ERROR
 import org.apache.commons.lang3.exception.ExceptionUtils

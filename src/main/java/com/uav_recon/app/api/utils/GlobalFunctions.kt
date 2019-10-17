@@ -1,6 +1,6 @@
 package com.uav_recon.app.api.utils
 
-import com.uav_recon.app.api.entities.Response
+import com.uav_recon.app.api.entities.responses.Response
 import com.uav_recon.app.api.utils.DateExtensions.Companion.DEFAULT_FORMAT
 import java.io.BufferedReader
 import java.io.InputStreamReader

@@ -1,18 +1,17 @@
 package com.uav_recon.app.api.controllers
 
-import com.uav_recon.app.api.entities.Inspection
+import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.services.FileStorageService
-import com.uav_recon.app.api.services.ReportGeneratorService
-import com.uav_recon.app.api.services.ReportService
+import com.uav_recon.app.api.services.report.ReportGeneratorService
+import com.uav_recon.app.api.services.report.ReportService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import javax.servlet.http.HttpServletRequest
 
-@RestController
+/*@RestController
 class ReportGeneratorController(
         private val reportGeneratorService: ReportGeneratorService,
         private val reportService: ReportService,
@@ -27,4 +26,4 @@ class ReportGeneratorController(
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
                 .body<Resource>(resource)
     }
-}
+}*/

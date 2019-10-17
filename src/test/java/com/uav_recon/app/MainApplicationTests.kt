@@ -11,6 +11,6 @@ class MainApplicationTests {
 
 	@Test
 	fun contextLoads() {
+		assert(true)
 	}
-
 }

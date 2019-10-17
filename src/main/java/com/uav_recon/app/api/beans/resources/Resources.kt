@@ -12,6 +12,8 @@ class Resources(private val objectMapper: ObjectMapper) {
         ResourceUtils.getURL("$root/template.docx").readBytes()
     }
 
+    val mockImageName: String = "map.png"
+
     val mockImagePath: String by lazy {
         ResourceUtils.getURL("$root/map.png").path
     }

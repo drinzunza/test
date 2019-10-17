@@ -1,7 +1,7 @@
-package com.uav_recon.app.api.services
+package com.uav_recon.app.api.services.report
 
-import com.uav_recon.app.api.entities.Inspection
-import com.uav_recon.app.api.entities.Location
+import com.uav_recon.app.api.entities.db.Inspection
+import com.uav_recon.app.api.entities.db.Location
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -21,7 +21,7 @@ private const val IMAGE_URL_FORMAT =
 class MapLoaderService {
 
     fun loadImage(inspection: Inspection): InputStream? {
-        val location = inspection.location ?: return null
+        val location = inspection.location
         return loadImage(location)
     }
 

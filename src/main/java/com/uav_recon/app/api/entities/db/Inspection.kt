@@ -1,4 +1,4 @@
-package com.uav_recon.app.api.entities
+package com.uav_recon.app.api.entities.db
 
 import java.io.Serializable
 import java.util.*

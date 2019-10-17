@@ -1,11 +1,12 @@
-package com.uav_recon.app.api.services
+package com.uav_recon.app.api.services.report
 
 import be.quodlibet.boxable.BaseTable
 import be.quodlibet.boxable.HorizontalAlignment
 import be.quodlibet.boxable.VerticalAlignment
 import be.quodlibet.boxable.line.LineStyle
 import com.uav_recon.app.api.beans.resources.Resources
-import com.uav_recon.app.api.entities.Inspection
+import com.uav_recon.app.api.entities.db.Inspection
+import com.uav_recon.app.api.services.FileStorageService
 import com.uav_recon.app.configurations.FileStorageConfiguration
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
