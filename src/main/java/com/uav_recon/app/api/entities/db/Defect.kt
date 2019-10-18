@@ -13,6 +13,7 @@ class Defect : Serializable {
     var name: String? = null
     @Column(name = "number")
     var number: Int? = null
-    @Column(name = "material_id")
-    var materialId: Int? = null
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "material_id", referencedColumnName = "id")
+    var material: Material? = null
 }

@@ -10,18 +10,23 @@ class Inspection : Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0
+    @Temporal(TemporalType.DATE)
     @Column(name = "start_date")
     var startDate: Date? = null
+    @Temporal(TemporalType.DATE)
     @Column(name = "end_date")
     var endDate: Date? = null
-    @Column(name = "structure_id")
-    var structureId: Int? = null
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "structure_id", referencedColumnName = "id")
+    var structure: Structure? = null
     @Column(name = "status")
     var status: String? = null
-    @Column(name = "company_id")
-    var companyId: Int? = null
-    @Column(name = "inspector_id")
-    var inspectorId: Int? = null
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", referencedColumnName = "id")
+    var company: Company? = null
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inspector_id", referencedColumnName = "id")
+    var inspector: Inspector? = null
     @Column(name = "general_summary")
     var generalSummary: String? = null
     @Column(name = "term_rating")

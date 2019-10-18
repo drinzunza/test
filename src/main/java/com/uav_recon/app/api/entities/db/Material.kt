@@ -15,6 +15,7 @@ class Material : Serializable {
     var description: String? = null
     @Column(name = "measure_unit")
     var measureUnit: String? = null
-    @Column(name = "subcomponent_id")
-    var subcomponentId: String? = null
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subcomponent_id", referencedColumnName = "id")
+    var subcomponent: Subcomponent? = null
 }

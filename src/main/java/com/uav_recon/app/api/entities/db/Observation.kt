@@ -9,8 +9,11 @@ class Observation : Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0
-    @Column(name = "inspection_id")
-    var inspectionId: Int? = null
+    @Column(name = "code")
+    var code: String? = null
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inspection_id", referencedColumnName = "id")
+    var inspection: Inspection? = null
     @Column(name = "drawing_number")
     var drawingNumber: String? = null
     @Column(name = "room_number")
@@ -19,8 +22,10 @@ class Observation : Serializable {
     var spanNumber: String? = null
     @Column(name = "location_description")
     var locationDescription: String? = null
-    @Column(name = "structural_component_id")
-    var structuralComponentId: Int? = null
-    @Column(name = "subcomponent_id")
-    var subcomponentId: String? = null
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "structural_component_id", referencedColumnName = "id")
+    var structuralComponent: StructuralComponent? = null
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subcomponent_id", referencedColumnName = "id")
+    var subcomponent: Subcomponent? = null
 }

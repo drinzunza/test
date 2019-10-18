@@ -13,6 +13,7 @@ class Condition : Serializable {
     var description: String? = null
     @Column(name = "type")
     var type: String? = null
-    @Column(name = "defect_id")
-    var defectId: Int? = null
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "defect_id", referencedColumnName = "id")
+    var defect: Defect? = null
 }

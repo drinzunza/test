@@ -9,6 +9,8 @@ class Structure : Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0
+    @Column(name = "code")
+    var code: String? = null
     @Column(name = "name")
     var name: String? = null
     @Column(name = "type")

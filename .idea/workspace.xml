@@ -2,14 +2,21 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="16111de9-e2b2-4515-aeb4-f0ac327bdb2b" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/StructureComponent.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/ReportGeneratorController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/ReportGeneratorController.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/DataController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/DataController.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Condition.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Condition.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Defect.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Defect.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Inspection.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Inspection.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Location.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Material.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Material.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Observation.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Observation.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/ObservationDefect.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/ObservationDefect.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Photo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Photo.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Report.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Report.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Structure.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Structure.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/StructureAndComponent.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Subcomponent.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/db/Subcomponent.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/services/report/MapLoaderService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/services/report/MapLoaderService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/services/report/ReportGeneratorService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/services/report/ReportGeneratorService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/services/report/ReportService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/services/report/ReportService.kt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -32,8 +39,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Kotlin File" />
         <option value="Kotlin Class" />
+        <option value="Kotlin File" />
       </list>
     </option>
   </component>

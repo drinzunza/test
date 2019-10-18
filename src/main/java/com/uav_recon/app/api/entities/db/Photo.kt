@@ -26,8 +26,10 @@ class Photo : Serializable {
     var endX: Double? = null
     @Column(name = "end_y")
     var endY: Double? = null
+    @Temporal(TemporalType.DATE)
     @Column(name = "created_date")
     var createdDate: Date? = null
-    @Column(name = "observation_defect_id")
-    var observationDefectId: Int? = null
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "observation_defect_id", referencedColumnName = "id")
+    var observationDefect: ObservationDefect? = null
 }

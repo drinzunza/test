@@ -2,7 +2,7 @@ package com.uav_recon.app.api.services.report
 
 import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.entities.db.Observation
-import com.uav_recon.app.api.entities.db.ObservationDefects
+import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.entities.db.Photo
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -44,7 +44,7 @@ class MapLoaderService {
         val builder = StringBuilder(DEFAULT_COLOR)
         val observations: List<Observation> = listOf()
         observations.forEach { observation ->
-            val defects: List<ObservationDefects> = listOf()
+            val defects: List<ObservationDefect> = listOf()
             defects.forEach { defect ->
                 val photos: List<Photo> = listOf()
                 val photo = photos.firstOrNull { it.latitude != null && it.longitude != null }
