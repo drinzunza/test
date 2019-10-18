@@ -1,12 +1,27 @@
 spring:
   profiles:
     active: default
-    servlet:
-      multipart:
-        enabled: true
-        file-size-threshold: 2KB
-        max-file-size: 200MB
-        max-request-size: 215MB
+  datasource:
+    url: jdbc:postgresql://localhost:5432/uav_recon
+    username: postgres
+    password:
+  jpa:
+    show-sql: true
+    format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 2KB
+      max-file-size: 200MB
+      max-request-size: 215MB
 server:
   port: 8080
   undertow:
