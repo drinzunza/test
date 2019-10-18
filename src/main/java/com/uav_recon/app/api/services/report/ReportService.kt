@@ -19,13 +19,13 @@ import org.springframework.stereotype.Service
 import java.awt.Color
 import java.io.IOException
 
-@Service
+/*@Service
 class ReportService(private val mapLoaderService: MapLoaderService,
                     private val config: FileStorageConfiguration,
                     private val fileStorageService: FileStorageService,
                     private val resources: Resources) {
 
-    private val logger = LoggerFactory.getLogger(ReportGeneratorService::class.java)
+    private val logger = LoggerFactory.getLogger(ReportService::class.java)
 
     fun generateReport(inspection: Inspection): String {
         val document = PDDocument()
@@ -234,4 +234,4 @@ class ReportService(private val mapLoaderService: MapLoaderService,
         document.close()
         return pdfFileName
     }
-}
+}*/

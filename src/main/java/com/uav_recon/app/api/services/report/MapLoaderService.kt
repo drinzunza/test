@@ -1,7 +1,9 @@
 package com.uav_recon.app.api.services.report
 
 import com.uav_recon.app.api.entities.db.Inspection
-import com.uav_recon.app.api.entities.db.Location
+import com.uav_recon.app.api.entities.db.Observation
+import com.uav_recon.app.api.entities.db.ObservationDefects
+import com.uav_recon.app.api.entities.db.Photo
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -10,27 +12,48 @@ import org.springframework.web.client.RestTemplate
 import java.io.InputStream
 import java.util.*
 
-private const val DEFAULT_ZOOM = 15f
 private const val DEFAULT_WIDTH = 640
 private const val DEFAULT_HEIGHT = 400
-private const val KEY = "AIzaSyByRNcBd0mi9rGgf9yUfvpS8RaiBixfGog"
+private const val API_KEY = "AIzaSyC8F-m4w3Ge0m849fzy4TtBwZU07vl0Bs4"
 private const val IMAGE_URL_FORMAT =
-        "https://maps.googleapis.com/maps/api/staticmap?center=%.5f,%.5f&zoom=%.2f&size=%dx%d&markers=color:red|%.5f,%.5f&key=%s"
+        "https://maps.googleapis.com/maps/api/staticmap?size=%dx%d&markers=%s&key=%s&maptype=satellite"
+private const val MARKER_FORMAT = "|%.5f,%.5f"
+private const val DEFAULT_COLOR = "color:red"
 
 @Service
 class MapLoaderService {
 
     fun loadImage(inspection: Inspection): InputStream? {
-        val location = inspection.location
-        return loadImage(location)
+        try {
+            val url = String.format(
+                    Locale.getDefault(),
+                    IMAGE_URL_FORMAT,
+                    DEFAULT_WIDTH,
+                    DEFAULT_HEIGHT,
+                    getMarkers(inspection),
+                    API_KEY
+            )
+            return loadUrl(url)?.inputStream()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
     }
 
-    fun loadImage(location: Location) = loadImage(location.latitude, location.longitude)
-
-    fun loadImage(latitude: Double?, longitude: Double?): InputStream? {
-        val url = createUrl(latitude, longitude)
-        val data = loadUrl(url)
-        return data?.inputStream()
+    private fun getMarkers(inspection: Inspection): String {
+        val builder = StringBuilder(DEFAULT_COLOR)
+        val observations: List<Observation> = listOf()
+        observations.forEach { observation ->
+            val defects: List<ObservationDefects> = listOf()
+            defects.forEach { defect ->
+                val photos: List<Photo> = listOf()
+                val photo = photos.firstOrNull { it.latitude != null && it.longitude != null }
+                photo?.let {
+                    builder.append(String.format(MARKER_FORMAT, it.latitude, it.longitude))
+                }
+            }
+        }
+        return builder.toString()
     }
 
     fun loadUrl(url: String): ByteArray? {
@@ -39,18 +62,5 @@ class MapLoaderService {
         val entity = HttpEntity("", headers)
         val response = restTemplate.exchange(url, HttpMethod.GET, entity, ByteArray::class.java)
         return response.body
-    }
-
-    private fun createUrl(
-            latitude: Double?,
-            longitude: Double?,
-            width: Int = DEFAULT_WIDTH,
-            height: Int = DEFAULT_HEIGHT,
-            zoom: Float = DEFAULT_ZOOM
-    ): String {
-        return String.format(
-                Locale.getDefault(), IMAGE_URL_FORMAT, latitude, longitude,
-                zoom, width, height, latitude, longitude, KEY
-        )
     }
 }

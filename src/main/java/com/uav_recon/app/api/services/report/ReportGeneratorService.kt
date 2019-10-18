@@ -18,7 +18,7 @@ import java.io.File
 import java.io.FileInputStream
 import org.slf4j.LoggerFactory
 
-private val DATE_FORMAT = SimpleDateFormat("MM/dd/yy")
+/*private val DATE_FORMAT = SimpleDateFormat("MM/dd/yy")
 
 // for references see : https://www.tutorialspoint.com/apache_poi_word/apache_poi_word_tables.htm
 @Service
@@ -561,4 +561,4 @@ private fun XWPFTable.row(index: Int, block: XWPFTableRow.() -> Unit) {
     } else {
         block(createRow())
     }
-}
+}*/

@@ -236,7 +236,7 @@ CREATE TABLE public.material (
     name character varying(255),
     description text,
     measure_unit character varying(50),
-    sub_component_id integer
+    subcomponent_id integer
 );
 
 
@@ -269,14 +269,14 @@ ALTER SEQUENCE public.material_id_seq OWNED BY public.material.id;
 --
 
 CREATE TABLE public.observation (
-    id character varying(50),
+    id character varying(50) NOT NULL,
     inspection_id integer,
     drawing_number character varying(255),
     room_number character varying(255),
     span_number character varying(255),
     location_description text,
     structural_component_id integer,
-    sub_component_id integer
+    subcomponent_id integer
 );
 
 
@@ -331,10 +331,10 @@ CREATE TABLE public.photo (
     latitude real,
     longitude real,
     altitude real,
-    startx real,
-    starty real,
-    endx real,
-    endy real,
+    start_x real,
+    start_y real,
+    end_x real,
+    end_y real,
     created_date date,
     observation_defect_id integer
 );
@@ -457,11 +457,34 @@ ALTER TABLE public.structure OWNER TO postgres;
 
 CREATE TABLE public.structure_and_component (
     structure_id character varying(50) NOT NULL,
-    component_id integer NOT NULL
+    component_id integer NOT NULL,
+    id integer NOT NULL
 );
 
 
 ALTER TABLE public.structure_and_component OWNER TO postgres;
+
+--
+-- Name: structure_and_component_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.structure_and_component_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.structure_and_component_id_seq OWNER TO postgres;
+
+--
+-- Name: structure_and_component_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.structure_and_component_id_seq OWNED BY public.structure_and_component.id;
+
 
 --
 -- Name: structure_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -593,6 +616,13 @@ ALTER TABLE ONLY public.structural_component ALTER COLUMN id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY public.structure ALTER COLUMN id SET DEFAULT nextval('public.structure_id_seq'::regclass);
+
+
+--
+-- Name: structure_and_component id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.structure_and_component ALTER COLUMN id SET DEFAULT nextval('public.structure_and_component_id_seq'::regclass);
 
 
 --
@@ -5531,7 +5561,7 @@ COPY public.inspector (id, first_name, last_name, email, "position") FROM stdin;
 -- Data for Name: material; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.material (id, name, description, measure_unit, sub_component_id) FROM stdin;
+COPY public.material (id, name, description, measure_unit, subcomponent_id) FROM stdin;
 1	Deck - Reinforced Concrete	All reinforced concrete bridge decks regardless of the wearing surface or protection systems used.	sq.ft.	1
 2	Deck â Prestressed Concrete	All prestressed concrete bridge decks regardless of the wearing surface or protection systems used.	sq.ft.	1
 3	Top Flange - Prestressed Concrete	All prestressed bridge girder top flanges where traffic rides directly on the structural element\nregardless of the wearing surface or protection systems used. These bridge types include only\nconcrete bulb-tees, box girders, and girders that require traffic to ride on the top flange. Use in\nconjunction with the appropriate girder element.	sq.ft.	1
@@ -5662,7 +5692,7 @@ COPY public.material (id, name, description, measure_unit, sub_component_id) FRO
 -- Data for Name: observation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.observation (id, inspection_id, drawing_number, room_number, span_number, location_description, structural_component_id, sub_component_id) FROM stdin;
+COPY public.observation (id, inspection_id, drawing_number, room_number, span_number, location_description, structural_component_id, subcomponent_id) FROM stdin;
 \.
 
 
@@ -5678,7 +5708,7 @@ COPY public.observation_defect (id, defect_id, condition_id, observation_id, des
 -- Data for Name: photo; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.photo (id, file, latitude, longitude, altitude, startx, starty, endx, endy, created_date, observation_defect_id) FROM stdin;
+COPY public.photo (id, file, latitude, longitude, altitude, start_x, start_y, end_x, end_y, created_date, observation_defect_id) FROM stdin;
 \.
 
 
@@ -5731,117 +5761,117 @@ BR-L10	Culvert South of Bixby Creek	BRIDGES_AND_AERIAL_STRUCTURE	Los Angeles Met
 -- Data for Name: structure_and_component; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.structure_and_component (structure_id, component_id) FROM stdin;
-BR-L01	1
-BR-L01	2
-BR-L01	3
-BR-L01	4
-BR-L01	5
-BR-L01	6
-BR-L01	7
-BR-L01	8
-BR-L01	9
-BR-L01	10
-BR-L01	11
-BR-L02L BR-L02R	1
-BR-L02L BR-L02R	2
-BR-L02L BR-L02R	3
-BR-L02L BR-L02R	4
-BR-L02L BR-L02R	5
-BR-L02L BR-L02R	6
-BR-L02L BR-L02R	7
-BR-L02L BR-L02R	8
-BR-L02L BR-L02R	9
-BR-L02L BR-L02R	10
-BR-L02L BR-L02R	11
-BR-L03	1
-BR-L03	2
-BR-L03	3
-BR-L03	4
-BR-L03	5
-BR-L03	6
-BR-L03	7
-BR-L03	8
-BR-L03	9
-BR-L03	10
-BR-L03	11
-BR-L04	1
-BR-L04	2
-BR-L04	3
-BR-L04	4
-BR-L04	5
-BR-L04	6
-BR-L04	7
-BR-L04	8
-BR-L04	9
-BR-L04	10
-BR-L04	11
-BR-L05	1
-BR-L05	2
-BR-L05	3
-BR-L05	4
-BR-L05	5
-BR-L05	6
-BR-L05	7
-BR-L05	8
-BR-L05	9
-BR-L05	10
-BR-L05	11
-BR-L06	1
-BR-L06	2
-BR-L06	3
-BR-L06	4
-BR-L06	5
-BR-L06	6
-BR-L06	7
-BR-L06	8
-BR-L06	9
-BR-L06	10
-BR-L06	11
-BR-L07	1
-BR-L07	2
-BR-L07	3
-BR-L07	4
-BR-L07	5
-BR-L07	6
-BR-L07	7
-BR-L07	8
-BR-L07	9
-BR-L07	10
-BR-L07	11
-BR-L08	1
-BR-L08	2
-BR-L08	3
-BR-L08	4
-BR-L08	5
-BR-L08	6
-BR-L08	7
-BR-L08	8
-BR-L08	9
-BR-L08	10
-BR-L08	11
-BR-L09	1
-BR-L09	2
-BR-L09	3
-BR-L09	4
-BR-L09	5
-BR-L09	6
-BR-L09	7
-BR-L09	8
-BR-L09	9
-BR-L09	10
-BR-L09	11
-BR-L10	1
-BR-L10	2
-BR-L10	3
-BR-L10	4
-BR-L10	5
-BR-L10	6
-BR-L10	7
-BR-L10	8
-BR-L10	9
-BR-L10	10
-BR-L10	11
+COPY public.structure_and_component (structure_id, component_id, id) FROM stdin;
+BR-L01	1	1
+BR-L01	2	2
+BR-L01	3	3
+BR-L01	4	4
+BR-L01	5	5
+BR-L01	6	6
+BR-L01	7	7
+BR-L01	8	8
+BR-L01	9	9
+BR-L01	10	10
+BR-L01	11	11
+BR-L02L BR-L02R	1	12
+BR-L02L BR-L02R	2	13
+BR-L02L BR-L02R	3	14
+BR-L02L BR-L02R	4	15
+BR-L02L BR-L02R	5	16
+BR-L02L BR-L02R	6	17
+BR-L02L BR-L02R	7	18
+BR-L02L BR-L02R	8	19
+BR-L02L BR-L02R	9	20
+BR-L02L BR-L02R	10	21
+BR-L02L BR-L02R	11	22
+BR-L03	1	23
+BR-L03	2	24
+BR-L03	3	25
+BR-L03	4	26
+BR-L03	5	27
+BR-L03	6	28
+BR-L03	7	29
+BR-L03	8	30
+BR-L03	9	31
+BR-L03	10	32
+BR-L03	11	33
+BR-L04	1	34
+BR-L04	2	35
+BR-L04	3	36
+BR-L04	4	37
+BR-L04	5	38
+BR-L04	6	39
+BR-L04	7	40
+BR-L04	8	41
+BR-L04	9	42
+BR-L04	10	43
+BR-L04	11	44
+BR-L05	1	45
+BR-L05	2	46
+BR-L05	3	47
+BR-L05	4	48
+BR-L05	5	49
+BR-L05	6	50
+BR-L05	7	51
+BR-L05	8	52
+BR-L05	9	53
+BR-L05	10	54
+BR-L05	11	55
+BR-L06	1	56
+BR-L06	2	57
+BR-L06	3	58
+BR-L06	4	59
+BR-L06	5	60
+BR-L06	6	61
+BR-L06	7	62
+BR-L06	8	63
+BR-L06	9	64
+BR-L06	10	65
+BR-L06	11	66
+BR-L07	1	67
+BR-L07	2	68
+BR-L07	3	69
+BR-L07	4	70
+BR-L07	5	71
+BR-L07	6	72
+BR-L07	7	73
+BR-L07	8	74
+BR-L07	9	75
+BR-L07	10	76
+BR-L07	11	77
+BR-L08	1	78
+BR-L08	2	79
+BR-L08	3	80
+BR-L08	4	81
+BR-L08	5	82
+BR-L08	6	83
+BR-L08	7	84
+BR-L08	8	85
+BR-L08	9	86
+BR-L08	10	87
+BR-L08	11	88
+BR-L09	1	89
+BR-L09	2	90
+BR-L09	3	91
+BR-L09	4	92
+BR-L09	5	93
+BR-L09	6	94
+BR-L09	7	95
+BR-L09	8	96
+BR-L09	9	97
+BR-L09	10	98
+BR-L09	11	99
+BR-L10	1	100
+BR-L10	2	101
+BR-L10	3	102
+BR-L10	4	103
+BR-L10	5	104
+BR-L10	6	105
+BR-L10	7	106
+BR-L10	8	107
+BR-L10	9	108
+BR-L10	10	109
+BR-L10	11	110
 \.
 
 
@@ -5943,6 +5973,13 @@ SELECT pg_catalog.setval('public.structural_component_id_seq', 1, false);
 
 
 --
+-- Name: structure_and_component_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.structure_and_component_id_seq', 110, true);
+
+
+--
 -- Name: structure_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -6013,6 +6050,14 @@ ALTER TABLE ONLY public.observation_defect
 
 
 --
+-- Name: observation observation_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.observation
+    ADD CONSTRAINT observation_pk PRIMARY KEY (id);
+
+
+--
 -- Name: photo photo_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -6034,6 +6079,14 @@ ALTER TABLE ONLY public.report
 
 ALTER TABLE ONLY public.structural_component
     ADD CONSTRAINT structural_component_pk PRIMARY KEY (id);
+
+
+--
+-- Name: structure_and_component structure_and_component_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.structure_and_component
+    ADD CONSTRAINT structure_and_component_pk PRIMARY KEY (id);
 
 
 --
@@ -6081,6 +6134,13 @@ CREATE UNIQUE INDEX material_id_uindex ON public.material USING btree (id);
 
 
 --
+-- Name: observation_id_uindex; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX observation_id_uindex ON public.observation USING btree (id);
+
+
+--
 -- Name: photo_id_uindex; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -6092,6 +6152,13 @@ CREATE UNIQUE INDEX photo_id_uindex ON public.photo USING btree (id);
 --
 
 CREATE UNIQUE INDEX structural_component_id_uindex ON public.structural_component USING btree (id);
+
+
+--
+-- Name: structure_and_component_id_uindex; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX structure_and_component_id_uindex ON public.structure_and_component USING btree (id);
 
 
 --
