@@ -68,6 +68,5 @@ class FileStorageService(private val config: FileStorageConfiguration) {
         } catch (ex: MalformedURLException) {
             throw MyFileNotFoundException("File not found $fileName", ex)
         }
-
     }
 }
