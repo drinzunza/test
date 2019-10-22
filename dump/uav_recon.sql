@@ -152,8 +152,8 @@ ALTER SEQUENCE public.defect_id_seq OWNED BY public.defect.id;
 
 CREATE TABLE public.inspection (
     id integer NOT NULL,
-    start_date date,
-    end_date date,
+    start_date timestamp without time zone,
+    end_date timestamp without time zone,
     structure_id integer,
     status character varying(255),
     company_id integer,
@@ -358,7 +358,7 @@ CREATE TABLE public.photo (
     start_y double precision,
     end_x double precision,
     end_y double precision,
-    created_date date,
+    created_date timestamp without time zone,
     observation_defect_id integer
 );
 
@@ -393,7 +393,7 @@ ALTER SEQUENCE public.photo_id_seq OWNED BY public.photo.id;
 
 CREATE TABLE public.report (
     id integer NOT NULL,
-    date date,
+    date timestamp without time zone,
     file character varying(255),
     inspection_id integer
 );
@@ -7826,6 +7826,13 @@ deterioration and reinforcing steel from corrosion.', 'sq.ft. (surface)', 17);
 -- Data for Name: photo; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO public.photo VALUES (1, 'ic_launcher-web.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2019-10-21 00:00:00', NULL);
+INSERT INTO public.photo VALUES (2, 'ic_launcher-web.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2019-10-22 00:00:00', NULL);
+INSERT INTO public.photo VALUES (3, 'ic_launcher-web.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2019-10-22 00:00:00', NULL);
+INSERT INTO public.photo VALUES (4, 'ic_launcher-web.png', 3, 32, 4, 4, 5, 6, 7, '2019-10-22 00:00:00', NULL);
+INSERT INTO public.photo VALUES (5, 'AndroidManifest.xml', 2, 2, 2, 2, 2, 2, 2, '2019-10-22 00:00:00', NULL);
+INSERT INTO public.photo VALUES (6, 'ic_launcher-web.png', 5, 5, 5, 5, 5, 5, 5, '2019-10-22 00:00:00', NULL);
+INSERT INTO public.photo VALUES (7, 'ic_launcher-web.png', 2, 2, 2, 2, 2, 2, 2, '2019-10-22 16:22:59.135', NULL);
 
 
 --
@@ -8089,7 +8096,7 @@ SELECT pg_catalog.setval('public.observation_id_seq', 1, false);
 -- Name: photo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.photo_id_seq', 1, false);
+SELECT pg_catalog.setval('public.photo_id_seq', 7, true);
 
 
 --
