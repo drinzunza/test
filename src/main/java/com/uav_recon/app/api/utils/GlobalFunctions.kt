@@ -1,50 +1,24 @@
 package com.uav_recon.app.api.utils
 
 import com.uav_recon.app.api.entities.responses.Response
-import com.uav_recon.app.api.utils.DateExtensions.Companion.DEFAULT_FORMAT
-import java.io.BufferedReader
-import java.io.File
-import java.io.InputStreamReader
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.*
-
-class DateExtensions {
-
-    companion object {
-        internal val HOURS_AND_MINS_FORMAT = SimpleDateFormat("HH:mm", Locale.getDefault())
-        internal val DEFAULT_FORMAT = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-
-        @JvmStatic
-        fun createDate(year: Int, month: Int, day: Int): Date {
-            val calendar = Calendar.getInstance()
-            calendar.set(year, month, day)
-            return calendar.time
-        }
-    }
-}
+import org.springframework.core.io.Resource
+import java.io.IOException
+import javax.servlet.http.HttpServletRequest
 
 fun <T> T.response(): Response<T> {
     return Response(this)
 }
 
-val emptyResponse = Response<Any>()
-
-fun Date?.formatDate(formatter: DateFormat = DEFAULT_FORMAT): String? {
-    this?.let {
-        return formatter.format(this)
+fun Resource.getFileContentType(request: HttpServletRequest): String {
+    var contentType: String? = null
+    try {
+        contentType = request.servletContext.getMimeType(this.file.absolutePath)
+    } catch (ex: IOException) {
+        println("Could not determine file type.")
     }
-    return null
-}
 
-fun runCommand(cmd: String): String {
-    val process = Runtime.getRuntime().exec(cmd)
-    process.waitFor()
-    val buf = BufferedReader(InputStreamReader(process.inputStream))
-    val output = buf.readText()
-    buf.close()
-    return output
+    if (contentType == null) {
+        contentType = "application/octet-stream"
+    }
+    return contentType
 }
-
-val File.extension: String
-    get() = name.substringAfterLast('.', "")

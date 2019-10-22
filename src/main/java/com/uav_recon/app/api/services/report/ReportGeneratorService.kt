@@ -1,6 +1,6 @@
 package com.uav_recon.app.api.services.report
 
-import com.uav_recon.app.api.beans.resources.Resources
+/*import com.uav_recon.app.api.beans.resources.Resources
 import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.services.FileStorageService
 import com.uav_recon.app.api.utils.formatDate
@@ -18,7 +18,7 @@ import java.io.File
 import java.io.FileInputStream
 import org.slf4j.LoggerFactory
 
-/*private val DATE_FORMAT = SimpleDateFormat("MM/dd/yy")
+private val DATE_FORMAT = SimpleDateFormat("MM/dd/yy")
 
 // for references see : https://www.tutorialspoint.com/apache_poi_word/apache_poi_word_tables.htm
 @Service

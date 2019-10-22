@@ -7,6 +7,7 @@ import com.uav_recon.app.api.entities.responses.photo.PhotoResponse
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.api.services.FileStorageService
+import com.uav_recon.app.api.utils.getFileContentType
 import com.uav_recon.app.api.utils.response
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import org.slf4j.LoggerFactory
@@ -17,7 +18,6 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.io.IOException
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 
@@ -62,41 +62,27 @@ class PhotoController(
         return response.response()
     }
 
-//    @GetMapping("${VERSION}/photo/{fileName:.+}")
-//    fun downloadPhoto(@PathVariable fileName: String, request: HttpServletRequest): ResponseEntity<Resource> {
-//        val resource = fileStorageService.loadFileAsResource(fileName)
-//        val contentType = getFileContentType(request, resource)
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.parseMediaType(contentType))
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
-//                .body<Resource>(resource)
-//    }
-
-    @GetMapping("${VERSION}/photo/{id}")
-    fun downloadPhoto(@PathVariable id: Int, request: HttpServletRequest): ResponseEntity<Resource> {
-        val photo = photoRepository.findByIdOrNull(id)
-        if (photo?.file == null) {
-            throw FileStorageException("Photo not found.")
-        }
-        val resource = fileStorageService.loadFileAsResource(photo.file!!)
-        val contentType = getFileContentType(request, resource)
+    @GetMapping("${VERSION}/photo/{fileName:.+}")
+    fun downloadPhoto(@PathVariable fileName: String, request: HttpServletRequest): ResponseEntity<Resource> {
+        val resource = fileStorageService.loadFileAsResource(fileName)
+        val contentType = resource.getFileContentType(request)
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
                 .body<Resource>(resource)
     }
 
-    private fun getFileContentType(request: HttpServletRequest, resource: Resource): String {
-        var contentType: String? = null
-        try {
-            contentType = request.servletContext.getMimeType(resource.file.absolutePath)
-        } catch (ex: IOException) {
-            logger.info("Could not determine file type.")
+    @GetMapping("${VERSION}/photo")
+    fun downloadPhoto(@RequestParam id: Int, request: HttpServletRequest): ResponseEntity<Resource> {
+        val photo = photoRepository.findByIdOrNull(id)
+        if (photo?.file == null) {
+            throw FileStorageException("Photo not found.")
         }
-
-        if (contentType == null) {
-            contentType = "application/octet-stream"
-        }
-        return contentType
+        val resource = fileStorageService.loadFileAsResource(photo.file!!)
+        val contentType = resource.getFileContentType(request)
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
+                .body<Resource>(resource)
     }
 }
