@@ -4,6 +4,10 @@ import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.entities.db.Observation
 import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.entities.db.Photo
+import com.uav_recon.app.api.repositories.DefectRepository
+import com.uav_recon.app.api.repositories.ObservationDefectRepository
+import com.uav_recon.app.api.repositories.ObservationRepository
+import com.uav_recon.app.api.repositories.PhotoRepository
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -21,7 +25,11 @@ private const val MARKER_FORMAT = "|%.5f,%.5f"
 private const val DEFAULT_COLOR = "color:red"
 
 @Service
-class MapLoaderService {
+class MapLoaderService(
+        private val observationRepository: ObservationRepository,
+        private val observationDefectRepository: ObservationDefectRepository,
+        private val photoRepository: PhotoRepository
+) {
 
     fun loadImage(inspection: Inspection): InputStream? {
         try {
@@ -42,11 +50,11 @@ class MapLoaderService {
 
     private fun getMarkers(inspection: Inspection): String {
         val builder = StringBuilder(DEFAULT_COLOR)
-        val observations: List<Observation> = listOf()
+        val observations = observationRepository.findAllByInspection(inspection)
         observations.forEach { observation ->
-            val defects: List<ObservationDefect> = listOf()
+            val defects = observationDefectRepository.findAllByObservation(observation)
             defects.forEach { defect ->
-                val photos: List<Photo> = listOf()
+                val photos = photoRepository.findAllByObservationDefect(defect)
                 val photo = photos.firstOrNull { it.latitude != null && it.longitude != null }
                 photo?.let {
                     builder.append(String.format(MARKER_FORMAT, it.latitude, it.longitude))
@@ -57,10 +65,6 @@ class MapLoaderService {
     }
 
     fun loadUrl(url: String): ByteArray? {
-        val restTemplate = RestTemplate()
-        val headers = HttpHeaders()
-        val entity = HttpEntity("", headers)
-        val response = restTemplate.exchange(url, HttpMethod.GET, entity, ByteArray::class.java)
-        return response.body
+        return RestTemplate().exchange(url, HttpMethod.GET, null, ByteArray::class.java).body
     }
 }
