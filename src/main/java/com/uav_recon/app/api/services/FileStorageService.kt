@@ -36,9 +36,9 @@ class FileStorageService(private val config: FileStorageConfiguration) {
         File(fileName).writeBytes(data)
     }
 
-    fun storeFile(file: MultipartFile): String {
+    fun storeFile(file: MultipartFile, name: String? = null): String {
         // Normalize file name
-        val fileName = StringUtils.cleanPath(file.originalFilename!!)
+        val fileName = name ?: StringUtils.cleanPath(file.originalFilename!!)
 
         try {
             // Check if the file's name contains invalid characters

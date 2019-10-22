@@ -1,10 +1,8 @@
 package com.uav_recon.app.api.controllers
 
+import com.uav_recon.app.api.controllers.handlers.FileStorageException
 import com.uav_recon.app.api.entities.db.Photo
-import com.uav_recon.app.api.entities.requests.photo.PhotoRequest
 import com.uav_recon.app.api.entities.responses.Response
-import com.uav_recon.app.api.entities.responses.UploadFileResponse
-import com.uav_recon.app.api.entities.responses.photo.PhotoResponse
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.api.services.FileStorageService
@@ -44,8 +42,15 @@ class PhotoController(
             @RequestParam("observationDefectId") observationDefectId: Int,
             @RequestParam("file") file: MultipartFile
     ): Response<Photo> {
-        // TODO add unique file name
-        val fileName = fileStorageService.storeFile(file)
+        val now = Date()
+        val extension = file.originalFilename?.substringAfterLast('.', "")
+        val uniqueFileName = "photo_${now.time}.$extension"
+        if (fileStorageService.getFile(uniqueFileName).exists()) {
+            throw FileStorageException("Image already exists.")
+        }
+
+        val fileName = fileStorageService.storeFile(file, uniqueFileName)
+        val observationDefect = observationDefectRepository.findByIdOrNull(observationDefectId)
 
         val photo = Photo()
         photo.file = fileName
@@ -56,8 +61,8 @@ class PhotoController(
         photo.startY = startY
         photo.endX = endX
         photo.endY = endY
-        photo.createdDate = Date()
-        photo.observationDefect = observationDefectRepository.findByIdOrNull(observationDefectId)
+        photo.createdDate = now
+        photo.observationDefect = observationDefect
 
         val savedPhoto = photoRepository.save(photo)
 
