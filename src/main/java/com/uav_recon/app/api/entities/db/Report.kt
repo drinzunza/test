@@ -10,7 +10,7 @@ class Report : Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "date")
     var date: Date? = null
     @Column(name = "file")

@@ -26,7 +26,7 @@ class Photo : Serializable {
     var endX: Double? = null
     @Column(name = "end_y")
     var endY: Double? = null
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_date")
     var createdDate: Date? = null
     @OneToOne(fetch = FetchType.LAZY)

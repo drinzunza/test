@@ -10,10 +10,10 @@ class Inspection : Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "start_date")
     var startDate: Date? = null
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "end_date")
     var endDate: Date? = null
     @OneToOne(fetch = FetchType.LAZY)
