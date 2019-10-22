@@ -3,6 +3,7 @@ package com.uav_recon.app.api.controllers
 import com.uav_recon.app.api.controllers.handlers.FileStorageException
 import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.responses.Response
+import com.uav_recon.app.api.entities.responses.photo.PhotoResponse
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.api.services.FileStorageService
@@ -41,7 +42,7 @@ class PhotoController(
             @RequestParam("endY") endY: Double,
             @RequestParam("observationDefectId") observationDefectId: Int,
             @RequestParam("file") file: MultipartFile
-    ): Response<Photo> {
+    ): Response<PhotoResponse> {
         val now = Date()
         val extension = file.originalFilename?.substringAfterLast('.', "")
         val uniqueFileName = "photo_${now.time}.$extension"
@@ -52,26 +53,14 @@ class PhotoController(
         val fileName = fileStorageService.storeFile(file, uniqueFileName)
         val observationDefect = observationDefectRepository.findByIdOrNull(observationDefectId)
 
-        val photo = Photo()
-        photo.file = fileName
-        photo.latitude = latitude
-        photo.longitude = longitude
-        photo.altitude = altitude
-        photo.startX = startX
-        photo.startY = startY
-        photo.endX = endX
-        photo.endY = endY
-        photo.createdDate = now
-        photo.observationDefect = observationDefect
-
+        val photo = Photo(0, fileName, latitude, longitude, altitude, startX, startY, endX, endY, now, observationDefect)
         val savedPhoto = photoRepository.save(photo)
+        val response = savedPhoto.run {
+            PhotoResponse(this.id, this.file, this.latitude, this.longitude, this.altitude,
+                    this.startX, this.startY, this.endX, this.endY, this.createdDate, this.observationDefect?.id)
+        }
 
-        val fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/${VERSION}/photo/")
-                .path(fileName)
-                .toUriString()
-
-        return savedPhoto.response()
+        return response.response()
     }
 
     @GetMapping("${VERSION}/photo/{fileName:.+}")

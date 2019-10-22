@@ -5,6 +5,7 @@ import java.util.*
 
 data class PhotoResponse(
         val id: Int,
+        var file: String?,
         val latitude: Double?,
         val longitude: Double?,
         val altitude: Double?,
@@ -12,5 +13,6 @@ data class PhotoResponse(
         val startY: Double?,
         val endX: Double?,
         val endY: Double?,
-        val createdDate: Date?
+        val createdDate: Date?,
+        var observationDefectId: Int?
 ) : Serializable

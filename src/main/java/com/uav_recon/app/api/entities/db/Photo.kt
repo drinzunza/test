@@ -32,4 +32,22 @@ class Photo : Serializable {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "observation_defect_id", referencedColumnName = "id")
     var observationDefect: ObservationDefect? = null
+
+    constructor()
+    constructor(id: Int, file: String?, latitude: Double?, longitude: Double?, altitude: Double?,
+                startX: Double?, startY: Double?, endX: Double?, endY: Double?,
+                createdDate: Date?, observationDefect: ObservationDefect?
+    ) {
+        this.id = id
+        this.file = file
+        this.latitude = latitude
+        this.longitude = longitude
+        this.altitude = altitude
+        this.startX = startX
+        this.startY = startY
+        this.endX = endX
+        this.endY = endY
+        this.createdDate = createdDate
+        this.observationDefect = observationDefect
+    }
 }
