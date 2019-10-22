@@ -17,7 +17,6 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import java.io.IOException
 import java.util.*
 import javax.servlet.http.HttpServletRequest
@@ -47,7 +46,7 @@ class PhotoController(
         val extension = file.originalFilename?.substringAfterLast('.', "")
         val uniqueFileName = "photo_${now.time}.$extension"
         if (fileStorageService.getFile(uniqueFileName).exists()) {
-            throw FileStorageException("Image already exists.")
+            throw FileStorageException("Photo already exists.")
         }
 
         val fileName = fileStorageService.storeFile(file, uniqueFileName)
@@ -63,10 +62,31 @@ class PhotoController(
         return response.response()
     }
 
-    @GetMapping("${VERSION}/photo/{fileName:.+}")
-    fun downloadPhoto(@PathVariable fileName: String, request: HttpServletRequest): ResponseEntity<Resource> {
-        val resource = fileStorageService.loadFileAsResource(fileName)
+//    @GetMapping("${VERSION}/photo/{fileName:.+}")
+//    fun downloadPhoto(@PathVariable fileName: String, request: HttpServletRequest): ResponseEntity<Resource> {
+//        val resource = fileStorageService.loadFileAsResource(fileName)
+//        val contentType = getFileContentType(request, resource)
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType(contentType))
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
+//                .body<Resource>(resource)
+//    }
 
+    @GetMapping("${VERSION}/photo/{id}")
+    fun downloadPhoto(@PathVariable id: Int, request: HttpServletRequest): ResponseEntity<Resource> {
+        val photo = photoRepository.findByIdOrNull(id)
+        if (photo?.file == null) {
+            throw FileStorageException("Photo not found.")
+        }
+        val resource = fileStorageService.loadFileAsResource(photo.file!!)
+        val contentType = getFileContentType(request, resource)
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
+                .body<Resource>(resource)
+    }
+
+    private fun getFileContentType(request: HttpServletRequest, resource: Resource): String {
         var contentType: String? = null
         try {
             contentType = request.servletContext.getMimeType(resource.file.absolutePath)
@@ -77,10 +97,6 @@ class PhotoController(
         if (contentType == null) {
             contentType = "application/octet-stream"
         }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
-                .body<Resource>(resource)
+        return contentType
     }
 }
