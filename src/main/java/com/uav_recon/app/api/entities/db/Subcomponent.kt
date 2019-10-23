@@ -12,6 +12,6 @@ class Subcomponent : Serializable {
     @Column(name = "name")
     var name: String? = null
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "structural_id", referencedColumnName = "id")
-    var structural: StructuralComponent? = null
+    @JoinColumn(name = "structural_component_id", referencedColumnName = "id")
+    var structuralComponent: StructuralComponent? = null
 }

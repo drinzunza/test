@@ -13,6 +13,6 @@ class StructureComponent : Serializable {
     @JoinColumn(name = "structure_id", referencedColumnName = "id")
     var structure: Structure? = null
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "component_id", referencedColumnName = "id")
-    var component: StructuralComponent? = null
+    @JoinColumn(name = "structural_component_id", referencedColumnName = "id")
+    var structuralComponent: StructuralComponent? = null
 }

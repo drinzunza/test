@@ -481,7 +481,7 @@ ALTER TABLE public.structure OWNER TO postgres;
 
 CREATE TABLE public.structure_component (
     id integer NOT NULL,
-    component_id integer,
+    structural_component_id integer,
     structure_id integer
 );
 
@@ -537,7 +537,7 @@ ALTER SEQUENCE public.structure_id_seq OWNED BY public.structure.id;
 CREATE TABLE public.subcomponent (
     id integer NOT NULL,
     name character varying(255),
-    structural_id integer
+    structural_component_id integer
 );
 
 
@@ -7587,6 +7587,7 @@ INSERT INTO public.defect VALUES (813, 'Damage', 7000, 123);
 -- Data for Name: inspection; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO public.inspection VALUES (1, '2019-10-22 18:19:24.271', '2019-10-22 18:19:24.271', NULL, 'string', NULL, NULL, 'string', 'string', 'string', 0, 0, 0);
 
 
 --
@@ -7826,13 +7827,6 @@ deterioration and reinforcing steel from corrosion.', 'sq.ft. (surface)', 17);
 -- Data for Name: photo; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.photo VALUES (1, 'ic_launcher-web.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2019-10-21 00:00:00', NULL);
-INSERT INTO public.photo VALUES (2, 'ic_launcher-web.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2019-10-22 00:00:00', NULL);
-INSERT INTO public.photo VALUES (3, 'ic_launcher-web.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2019-10-22 00:00:00', NULL);
-INSERT INTO public.photo VALUES (4, 'ic_launcher-web.png', 3, 32, 4, 4, 5, 6, 7, '2019-10-22 00:00:00', NULL);
-INSERT INTO public.photo VALUES (5, 'AndroidManifest.xml', 2, 2, 2, 2, 2, 2, 2, '2019-10-22 00:00:00', NULL);
-INSERT INTO public.photo VALUES (6, 'ic_launcher-web.png', 5, 5, 5, 5, 5, 5, 5, '2019-10-22 00:00:00', NULL);
-INSERT INTO public.photo VALUES (7, 'ic_launcher-web.png', 2, 2, 2, 2, 2, 2, 2, '2019-10-22 16:22:59.135', NULL);
 
 
 --
@@ -8061,7 +8055,7 @@ SELECT pg_catalog.setval('public.defect_id_seq', 1, false);
 -- Name: inspection_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.inspection_id_seq', 1, false);
+SELECT pg_catalog.setval('public.inspection_id_seq', 1, true);
 
 
 --
@@ -8096,14 +8090,14 @@ SELECT pg_catalog.setval('public.observation_id_seq', 1, false);
 -- Name: photo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.photo_id_seq', 7, true);
+SELECT pg_catalog.setval('public.photo_id_seq', 11, true);
 
 
 --
 -- Name: report_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.report_id_seq', 1, false);
+SELECT pg_catalog.setval('public.report_id_seq', 5, true);
 
 
 --
@@ -8300,6 +8294,142 @@ CREATE UNIQUE INDEX structure_component_id_uindex ON public.structure_component 
 --
 
 CREATE UNIQUE INDEX structure_id_uindex ON public.structure USING btree (id);
+
+
+--
+-- Name: condition condition_defect_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.condition
+    ADD CONSTRAINT condition_defect_id_fk FOREIGN KEY (defect_id) REFERENCES public.defect(id);
+
+
+--
+-- Name: defect defect_material_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.defect
+    ADD CONSTRAINT defect_material_id_fk FOREIGN KEY (material_id) REFERENCES public.material(id);
+
+
+--
+-- Name: inspection inspection_company_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.inspection
+    ADD CONSTRAINT inspection_company_id_fk FOREIGN KEY (company_id) REFERENCES public.company(id);
+
+
+--
+-- Name: inspection inspection_inspector_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.inspection
+    ADD CONSTRAINT inspection_inspector_id_fk FOREIGN KEY (inspector_id) REFERENCES public.inspector(id);
+
+
+--
+-- Name: inspection inspection_structure_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.inspection
+    ADD CONSTRAINT inspection_structure_id_fk FOREIGN KEY (structure_id) REFERENCES public.structure(id);
+
+
+--
+-- Name: material material_subcomponent_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.material
+    ADD CONSTRAINT material_subcomponent_id_fk FOREIGN KEY (subcomponent_id) REFERENCES public.subcomponent(id);
+
+
+--
+-- Name: observation_defect observation_defect_condition_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.observation_defect
+    ADD CONSTRAINT observation_defect_condition_id_fk FOREIGN KEY (condition_id) REFERENCES public.condition(id);
+
+
+--
+-- Name: observation_defect observation_defect_defect_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.observation_defect
+    ADD CONSTRAINT observation_defect_defect_id_fk FOREIGN KEY (defect_id) REFERENCES public.defect(id);
+
+
+--
+-- Name: observation_defect observation_defect_material_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.observation_defect
+    ADD CONSTRAINT observation_defect_material_id_fk FOREIGN KEY (material_id) REFERENCES public.material(id);
+
+
+--
+-- Name: observation_defect observation_defect_observation_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.observation_defect
+    ADD CONSTRAINT observation_defect_observation_id_fk FOREIGN KEY (observation_id) REFERENCES public.observation(id);
+
+
+--
+-- Name: observation observation_inspection_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.observation
+    ADD CONSTRAINT observation_inspection_id_fk FOREIGN KEY (inspection_id) REFERENCES public.inspection(id);
+
+
+--
+-- Name: observation observation_structural_component_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.observation
+    ADD CONSTRAINT observation_structural_component_id_fk FOREIGN KEY (structural_component_id) REFERENCES public.structural_component(id);
+
+
+--
+-- Name: observation observation_subcomponent_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.observation
+    ADD CONSTRAINT observation_subcomponent_id_fk FOREIGN KEY (subcomponent_id) REFERENCES public.subcomponent(id);
+
+
+--
+-- Name: photo photo_observation_defect_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.photo
+    ADD CONSTRAINT photo_observation_defect_id_fk FOREIGN KEY (observation_defect_id) REFERENCES public.observation_defect(id);
+
+
+--
+-- Name: report report_inspection_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.report
+    ADD CONSTRAINT report_inspection_id_fk FOREIGN KEY (inspection_id) REFERENCES public.inspection(id);
+
+
+--
+-- Name: structure_component structure_component_structural_component_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.structure_component
+    ADD CONSTRAINT structure_component_structural_component_id_fk FOREIGN KEY (structural_component_id) REFERENCES public.structural_component(id);
+
+
+--
+-- Name: subcomponent subcomponent_structural_component_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.subcomponent
+    ADD CONSTRAINT subcomponent_structural_component_id_fk FOREIGN KEY (structural_component_id) REFERENCES public.structural_component(id);
 
 
 --
