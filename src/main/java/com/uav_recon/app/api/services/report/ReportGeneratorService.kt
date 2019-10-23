@@ -1,17 +1,13 @@
 package com.uav_recon.app.api.services.report
 
-/*import com.uav_recon.app.api.beans.resources.Resources
+import com.uav_recon.app.api.beans.resources.Resources
 import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.services.FileStorageService
-import com.uav_recon.app.api.utils.formatDate
-import com.uav_recon.app.api.utils.runCommand
 import com.uav_recon.app.configurations.FileStorageConfiguration
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import org.apache.poi.util.Units
-//import org.apache.poi.xwpf.converter.pdf.PdfConverter
-//import org.apache.poi.xwpf.converter.pdf.PdfOptions
 import org.apache.poi.xwpf.usermodel.*
 import org.springframework.stereotype.Service
 import java.io.File
@@ -20,7 +16,6 @@ import org.slf4j.LoggerFactory
 
 private val DATE_FORMAT = SimpleDateFormat("MM/dd/yy")
 
-// for references see : https://www.tutorialspoint.com/apache_poi_word/apache_poi_word_tables.htm
 @Service
 class ReportGeneratorService(
         private val mapLoaderService: MapLoaderService,
@@ -37,7 +32,7 @@ class ReportGeneratorService(
         System.setProperty("org.apache.poi.javax.xml.stream.XMLEventFactory", "com.fasterxml.aalto.stax.EventFactoryImpl")
     }
 
-    fun generateReport(inspection: Inspection): String {
+    fun generateReport(fileName: String, inspection: Inspection): String {
         val doc = XWPFDocument(resources.template.inputStream()) // нужен для сохранения таблицы стилей
         createTitlePage(doc, inspection)
         doc.newPage()
@@ -49,27 +44,13 @@ class ReportGeneratorService(
         createObservationReport(doc, inspection/*, obs*/)
 //        }
 
-        return saveToFile(inspection, doc)
+        return saveToFile(fileName, doc)
     }
 
-    private fun saveToFile(inspection: Inspection, doc: XWPFDocument): String {
-        val docxFileName = "report of ${inspection.structure.name}.docx"
-        val pdfFileName = "report of ${inspection.structure.name}.pdf"
-        val docxFile = fileStorageService.getFile(docxFileName)
-        val pdfFile = fileStorageService.getFile(pdfFileName)
-
+    private fun saveToFile(fileName: String, doc: XWPFDocument): String {
+        val docxFile = fileStorageService.getFile(fileName)
         doc.write(FileOutputStream(docxFile))
-        //PdfConverter.getInstance().convert(doc, FileOutputStream(pdfFile), PdfOptions.getDefault()) // там в libs/ лежит джарник в котором я смерджил зависимости 2 либ
-        //https://drive.google.com/open?id=1uOqzBLKL0VN0-3oWxGQVp3t7EaqqaAJ9 вот проект в котором генерировал
-
-        logger.info(runCommand("pwd"))
-
-        val command = "soffice --headless --convert-to pdf \"${docxFile.absolutePath}\""
-        logger.info("Command: $command")
-        val output = runCommand(command)
-        logger.info("Out: $output")
-
-        return pdfFileName
+        return fileName
     }
 
     private fun createTitlePage(doc: XWPFDocument, inspection: Inspection) {
@@ -82,7 +63,7 @@ class ReportGeneratorService(
                 }
                 textRun {
                     isItalic = true
-                    setText(inspection.structure.type)
+                    setText(inspection.structure?.type)
                     addBreak()
                 }
                 blankLines(2)
@@ -92,7 +73,7 @@ class ReportGeneratorService(
                 }
                 textRun {
                     isItalic = true
-                    setText("${inspection.structure.id}")
+                    setText("${inspection.structure?.id}")
                     addBreak()
                 }
                 textRun {
@@ -139,7 +120,7 @@ class ReportGeneratorService(
                 textRun {
                     fontSize = 9
                     isItalic = true
-                    setText(inspection.structure.name)
+                    setText(inspection.structure?.name)
                     addBreak()
                 }
                 blankLines(1)
@@ -151,7 +132,7 @@ class ReportGeneratorService(
                 textRun {
                     fontSize = 9
                     isItalic = true
-                    setText(inspection.structure.type)
+                    setText(inspection.structure?.type)
                     addBreak()
                 }
                 blankLines(6)
@@ -179,7 +160,7 @@ class ReportGeneratorService(
                 }
                 textRun {
                     isItalic = true
-                    setText("${Date().formatDate(DATE_FORMAT)}")
+                    setText(DATE_FORMAT.format(Date()))
                     addBreak()
                 }
                 textRun {
@@ -187,7 +168,7 @@ class ReportGeneratorService(
                 }
                 textRun {
                     isItalic = true
-                    setText("${inspection.date.formatDate(DATE_FORMAT)}")
+                    setText(DATE_FORMAT.format(inspection.endDate))
                     addBreak()
                 }
             }
@@ -203,110 +184,108 @@ class ReportGeneratorService(
     }
 
     private fun createGlobalsPage(doc: XWPFDocument, inspection: Inspection) {
-        inspection.location.let {
-            val inputStream = mapLoaderService.loadImage(it)
-            doc.apply {
-                paragraph {
-                    alignment = ParagraphAlignment.CENTER
-                    textRun {
-                        if (inputStream != null) {
-                            this.addPicture(
-                                    inputStream,
-                                    XWPFDocument.PICTURE_TYPE_PICT,
-                                    resources.mockImagePath,
-                                    Units.toEMU(450.0),
-                                    Units.toEMU(250.0)
-                            )
-                        }
-                        addBreak()
+        val inputStream = mapLoaderService.loadImage(inspection)
+        doc.apply {
+            paragraph {
+                alignment = ParagraphAlignment.CENTER
+                textRun {
+                    if (inputStream != null) {
+                        this.addPicture(
+                                inputStream,
+                                XWPFDocument.PICTURE_TYPE_PICT,
+                                resources.mockImagePath,
+                                Units.toEMU(450.0),
+                                Units.toEMU(250.0)
+                        )
                     }
+                    addBreak()
                 }
+            }
 
-                // for styling see http://svn.apache.org/repos/asf/poi/trunk/src/examples/src/org/apache/poi/xwpf/usermodel/examples/SimpleTable.java
+            // for styling see http://svn.apache.org/repos/asf/poi/trunk/src/examples/src/org/apache/poi/xwpf/usermodel/examples/SimpleTable.java
 
-                table {
-                    row(0) {
-                        cell(0) {
-                            paragraph {
-                                alignment = ParagraphAlignment.CENTER
-                                textRun {
-                                    isItalic = true
-                                    isBold = true
-                                    setText("Critical Findings – Prompt Action Required")
-                                }
+            table {
+                row(0) {
+                    cell(0) {
+                        paragraph {
+                            alignment = ParagraphAlignment.CENTER
+                            textRun {
+                                isItalic = true
+                                isBold = true
+                                setText("Critical Findings – Prompt Action Required")
                             }
                         }
                     }
                 }
+            }
 
-                table {
-                    row(0) {
-                        cell(0) {
-                            paragraph {
-                                alignment = ParagraphAlignment.CENTER
-                                textRun {
-                                    isItalic = true
-                                    isBold = true
-                                    setText("Critical Findings – Prompt Action Required")
-                                }
-                            }
-                        }
-                        cell(1) {
-                            paragraph {
-                                alignment = ParagraphAlignment.CENTER
-                                textRun {
-                                    isItalic = true
-                                    isBold = true
-                                    setText("General Structure Condition Code")
-                                }
+            table {
+                row(0) {
+                    cell(0) {
+                        paragraph {
+                            alignment = ParagraphAlignment.CENTER
+                            textRun {
+                                isItalic = true
+                                isBold = true
+                                setText("Critical Findings – Prompt Action Required")
                             }
                         }
                     }
-                    row(1) {
-                        cell(0) {
-                            paragraph {
-                                alignment = ParagraphAlignment.CENTER
-                                textRun {
-                                    isItalic = true
-                                    setText("Structural: ${2}") // TODO: value from inspection
-                                    addBreak()
-                                    setText("Safety: ${0}") // TODO: value from inspection
-                                    addBreak()
-                                    setText("Other: ${"TBD"}") // TODO: value from inspection
-                                }
-                            }
-                        }
-                        cell(1) {
-                            paragraph {
-                                alignment = ParagraphAlignment.CENTER
-                                textRun {
-                                    isItalic = true
-                                    setText("SGR Rating: ${75}%") // TODO: value from inspection
-                                    addBreak()
-                                    setText("Term Rating: ${3}") // TODO: value from inspection
-                                }
+                    cell(1) {
+                        paragraph {
+                            alignment = ParagraphAlignment.CENTER
+                            textRun {
+                                isItalic = true
+                                isBold = true
+                                setText("General Structure Condition Code")
                             }
                         }
                     }
                 }
-
-                table {
-                    row(0) {
-                        cell(0) {
-                            paragraph {
-                                alignment = ParagraphAlignment.CENTER
-                                textRun {
-                                    setText("General Inspection Summary")
-                                }
+                row(1) {
+                    cell(0) {
+                        paragraph {
+                            alignment = ParagraphAlignment.CENTER
+                            textRun {
+                                isItalic = true
+                                setText("Structural: ${2}") // TODO: value from inspection
+                                addBreak()
+                                setText("Safety: ${0}") // TODO: value from inspection
+                                addBreak()
+                                setText("Other: ${"TBD"}") // TODO: value from inspection
+                            }
+                        }
+                    }
+                    cell(1) {
+                        paragraph {
+                            alignment = ParagraphAlignment.CENTER
+                            textRun {
+                                isItalic = true
+                                setText("SGR Rating: ${75}%") // TODO: value from inspection
+                                addBreak()
+                                setText("Term Rating: ${3}") // TODO: value from inspection
                             }
                         }
                     }
                 }
+            }
 
-                paragraph {
-                    textRun {
-                        setText("User text regarding inspection summary.")
+            table {
+                row(0) {
+                    cell(0) {
+                        paragraph {
+                            alignment = ParagraphAlignment.CENTER
+                            textRun {
+                                setText("General Inspection Summary")
+                            }
+                        }
                     }
+                }
+            }
+
+            paragraph {
+                textRun {
+                    setText("User text regarding inspection summary.")
                 }
             }
         }
@@ -427,7 +406,7 @@ class ReportGeneratorService(
                                 setText("Inspection date: ")
                             }
                             textRun {
-                                setText(inspection.date.formatDate(DATE_FORMAT))
+                                setText(DATE_FORMAT.format(inspection.endDate))
                                 addBreak()
                             }
                             textRun {
@@ -561,4 +540,4 @@ private fun XWPFTable.row(index: Int, block: XWPFTableRow.() -> Unit) {
     } else {
         block(createRow())
     }
-}*/
+}

@@ -33,7 +33,7 @@ class FileStorageService(private val config: FileStorageConfiguration) {
     }
 
     fun storeFile(fileName: String, data: ByteArray) {
-        File(fileName).writeBytes(data)
+        getFile(fileName).writeBytes(data)
     }
 
     fun storeFile(file: MultipartFile, name: String? = null): String {
