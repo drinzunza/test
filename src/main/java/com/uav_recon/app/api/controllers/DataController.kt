@@ -22,6 +22,7 @@ class DataController(
         private val reportRepository: ReportRepository,
         private val structuralComponentRepository: StructuralComponentRepository,
         private val structureRepository: StructureRepository,
+        private val structureComponentRepository: StructureComponentRepository,
         private val subcomponentRepository: SubcomponentRepository) {
 
     @GetMapping("$VERSION/companies")
@@ -82,6 +83,11 @@ class DataController(
     @GetMapping("$VERSION/structures")
     fun structures(): Response<List<Structure>> {
         return structureRepository.findAll().toMutableList().response()
+    }
+
+    @GetMapping("$VERSION/structure_components")
+    fun structureComponents(): Response<List<StructureComponent>> {
+        return structureComponentRepository.findAll().toMutableList().response()
     }
 
     @GetMapping("$VERSION/subcomponents")
