@@ -44,7 +44,7 @@ class ReportController(
                 .body<Resource>(resource)
     }
 
-    @PostMapping("$VERSION/generateReport")
+    @PostMapping("$VERSION/report")
     fun generateReport(@RequestParam inspectionId: Int): Response<Report> {
         val inspection = inspectionRepository.findByIdOrNull(inspectionId)
                 ?: throw FileStorageException("Inspection does not exists.")

@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class SyncController(private val syncService: SyncService) {
 
-    @GetMapping("$VERSION/sync/assets")
+    @GetMapping("$VERSION/syncAssets")
     fun syncAssets(): Response<Any> {
         return Response()
     }
 
-    @PostMapping("$VERSION/sync/inspections")
+    @PostMapping("$VERSION/syncInspections")
     fun syncInspections(): Response<Any> {
         return Response()
     }

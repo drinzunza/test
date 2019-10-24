@@ -62,16 +62,6 @@ class PhotoController(
         return response.response()
     }
 
-    @GetMapping("${VERSION}/photo/{fileName:.+}")
-    fun downloadPhoto(@PathVariable fileName: String, request: HttpServletRequest): ResponseEntity<Resource> {
-        val resource = fileStorageService.loadFileAsResource(fileName)
-        val contentType = resource.getFileContentType(request)
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
-                .body<Resource>(resource)
-    }
-
     @GetMapping("${VERSION}/photo")
     fun downloadPhoto(@RequestParam id: Int, request: HttpServletRequest): ResponseEntity<Resource> {
         val photo = photoRepository.findByIdOrNull(id)
