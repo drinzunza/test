@@ -1,6 +1,10 @@
 package com.uav_recon.app.api.repositories
 
 import com.uav_recon.app.api.entities.db.Defect
+import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 
-interface DefectRepository : CrudRepository<Defect, Int>
+interface DefectRepository : CrudRepository<Defect, Int> {
+    @Query("SELECT d FROM Defect d WHERE d.id > ?1")
+    fun getValuesAfter(lastId: Int): List<Defect>
+}

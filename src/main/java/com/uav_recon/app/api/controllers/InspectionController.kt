@@ -3,11 +3,13 @@ package com.uav_recon.app.api.controllers
 import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.entities.requests.bridge.InspectionRequest
 import com.uav_recon.app.api.entities.responses.Response
+import com.uav_recon.app.api.entities.responses.bridge.InspectionResponse
 import com.uav_recon.app.api.repositories.CompanyRepository
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.InspectorRepository
 import com.uav_recon.app.api.repositories.StructureRepository
 import com.uav_recon.app.api.utils.response
+import com.uav_recon.app.api.utils.toResponse
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.web.bind.annotation.*
@@ -20,13 +22,13 @@ class InspectionController(
         private val inspectorRepository: InspectorRepository) {
 
     @GetMapping("$VERSION/inspection")
-    fun getInspection(@RequestParam inspectionId: Int): Response<Inspection> {
+    fun getInspection(@RequestParam inspectionId: Int): Response<InspectionResponse> {
         val inspection = inspectionRepository.findByIdOrNull(inspectionId)
-        return inspection?.response() ?: Response()
+        return inspection?.toResponse()?.response() ?: Response()
     }
 
     @PostMapping("$VERSION/inspection")
-    fun setInspection(@RequestBody inspection: InspectionRequest): Response<Inspection> {
+    fun setInspection(@RequestBody inspection: InspectionRequest): Response<InspectionResponse> {
         val result = Inspection()
         result.startDate = inspection.startDate
         result.endDate = inspection.endDate
@@ -43,6 +45,6 @@ class InspectionController(
         result.wind = inspection.wind
 
         val savedInspection = inspectionRepository.save(result)
-        return savedInspection.response()
+        return savedInspection.toResponse().response()
     }
 }

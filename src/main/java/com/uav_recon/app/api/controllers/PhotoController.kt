@@ -9,6 +9,7 @@ import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.api.services.FileStorageService
 import com.uav_recon.app.api.utils.getFileContentType
 import com.uav_recon.app.api.utils.response
+import com.uav_recon.app.api.utils.toResponse
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.Resource
@@ -54,12 +55,7 @@ class PhotoController(
 
         val photo = Photo(0, fileName, latitude, longitude, altitude, startX, startY, endX, endY, now, observationDefect)
         val savedPhoto = photoRepository.save(photo)
-        val response = savedPhoto.run {
-            PhotoResponse(this.id, this.file, this.latitude, this.longitude, this.altitude,
-                    this.startX, this.startY, this.endX, this.endY, this.createdDate, this.observationDefect?.id)
-        }
-
-        return response.response()
+        return savedPhoto.toResponse().response()
     }
 
     @GetMapping("${VERSION}/photo")

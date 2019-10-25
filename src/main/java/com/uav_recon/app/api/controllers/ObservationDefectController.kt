@@ -3,8 +3,10 @@ package com.uav_recon.app.api.controllers
 import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectRequest
 import com.uav_recon.app.api.entities.responses.Response
+import com.uav_recon.app.api.entities.responses.bridge.ObservationDefectResponse
 import com.uav_recon.app.api.repositories.*
 import com.uav_recon.app.api.utils.response
+import com.uav_recon.app.api.utils.toResponse
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.web.bind.annotation.*
@@ -19,13 +21,13 @@ class ObservationDefectController(
 ) {
 
     @GetMapping("$VERSION/observationDefect")
-    fun getObservationDefect(@RequestParam observationDefectId: Int): Response<ObservationDefect> {
+    fun getObservationDefect(@RequestParam observationDefectId: Int): Response<ObservationDefectResponse> {
         val observationDefect = observationDefectRepository.findByIdOrNull(observationDefectId)
-        return observationDefect?.response() ?: Response()
+        return observationDefect?.toResponse()?.response() ?: Response()
     }
 
     @PostMapping("$VERSION/observationDefect")
-    fun setObservationDefect(@RequestBody observationDefect: ObservationDefectRequest): Response<ObservationDefect> {
+    fun setObservationDefect(@RequestBody observationDefect: ObservationDefectRequest): Response<ObservationDefectResponse> {
         val result = ObservationDefect()
         result.defect = observationDefect.defectId?.let { defectRepository.findByIdOrNull(it) }
         result.condition = observationDefect.conditionId?.let { conditionRepository.findByIdOrNull(it) }
@@ -36,6 +38,6 @@ class ObservationDefectController(
         result.size = observationDefect.size
 
         val savedObservationDefect = observationDefectRepository.save(result)
-        return savedObservationDefect.response()
+        return savedObservationDefect.toResponse().response()
     }
 }
