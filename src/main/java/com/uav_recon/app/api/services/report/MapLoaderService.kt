@@ -1,15 +1,9 @@
 package com.uav_recon.app.api.services.report
 
 import com.uav_recon.app.api.entities.db.Inspection
-import com.uav_recon.app.api.entities.db.Observation
-import com.uav_recon.app.api.entities.db.ObservationDefect
-import com.uav_recon.app.api.entities.db.Photo
-import com.uav_recon.app.api.repositories.DefectRepository
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
@@ -50,13 +44,11 @@ class MapLoaderService(
 
     private fun getMarkers(inspection: Inspection): String {
         val builder = StringBuilder(DEFAULT_COLOR)
-        val observations = observationRepository.findAllByInspection(inspection)
-        observations.forEach { observation ->
-            val defects = observationDefectRepository.findAllByObservation(observation)
-            defects.forEach { defect ->
-                val photos = photoRepository.findAllByObservationDefect(defect)
-                val photo = photos.firstOrNull { it.latitude != null && it.longitude != null }
-                photo?.let {
+        observationRepository.findAllByInspection(inspection).forEach { observation ->
+            observationDefectRepository.findAllByObservation(observation).forEach { defect ->
+                photoRepository.findAllByObservationDefect(defect).firstOrNull {
+                    it.latitude != null && it.longitude != null
+                }?.let {
                     builder.append(String.format(MARKER_FORMAT, it.latitude, it.longitude))
                 }
             }

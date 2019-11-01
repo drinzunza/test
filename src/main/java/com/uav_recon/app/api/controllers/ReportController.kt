@@ -7,7 +7,8 @@ import com.uav_recon.app.api.entities.responses.bridge.ReportResponse
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ReportRepository
 import com.uav_recon.app.api.services.FileStorageService
-import com.uav_recon.app.api.services.report.ReportGeneratorService
+import com.uav_recon.app.api.services.report.DocumentWriter
+import com.uav_recon.app.api.services.report.document.DocumentFactory
 import com.uav_recon.app.api.utils.getFileContentType
 import com.uav_recon.app.api.utils.response
 import com.uav_recon.app.api.utils.toResponse
@@ -28,7 +29,8 @@ import javax.servlet.http.HttpServletRequest
 class ReportController(
         private val reportRepository: ReportRepository,
         private val inspectionRepository: InspectionRepository,
-        private val reportGeneratorService: ReportGeneratorService,
+        private val documentWriter: DocumentWriter,
+        private val documentFactory: DocumentFactory,
         private val fileStorageService: FileStorageService) {
 
     @GetMapping("$VERSION/report")
@@ -57,11 +59,13 @@ class ReportController(
             throw FileStorageException("Report already exists.")
         }
 
-        val fileName = reportGeneratorService.generateReport(uniqueFileName, inspection)
         val report = Report()
         report.date = Date()
-        report.file = fileName
+        report.file = uniqueFileName
         report.inspection = inspection
+
+        val document = documentFactory.generateDocument(report)
+        documentWriter.writeDocument(document, fileStorageService.getFile(uniqueFileName))
         val savedReport = reportRepository.save(report)
 
         return savedReport.toResponse().response()

@@ -2,23 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="16111de9-e2b2-4515-aeb4-f0ac327bdb2b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/DataController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/DataController.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/InspectionController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/InspectionController.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/ObservationController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/ObservationController.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/ObservationDefectController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/ObservationDefectController.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/PhotoController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/PhotoController.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/ReportController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/ReportController.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/SyncController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/controllers/SyncController.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/requests/bridge/ObservationRequest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/entities/requests/bridge/ObservationRequest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/ConditionRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/ConditionRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/DefectRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/DefectRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/MaterialRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/MaterialRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/StructuralComponentRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/StructuralComponentRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/StructureComponentRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/StructureComponentRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/StructureRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/StructureRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/SubcomponentRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/repositories/SubcomponentRepository.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/services/report/MapLoaderService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/services/report/MapLoaderService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/services/report/ReportGeneratorService.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/services/report/ReportService.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/utils/GlobalFunctions.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/uav_recon/app/api/utils/GlobalFunctions.kt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
