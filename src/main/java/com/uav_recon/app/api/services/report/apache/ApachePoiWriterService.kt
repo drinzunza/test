@@ -123,7 +123,7 @@ class ApachePoiWriterService(
         textRun {
             isItalic = value.styles.contains(TextElement.Typeface.ITALIC)
             isBold = value.styles.contains(TextElement.Typeface.BOLD)
-            isStrike = value.styles.contains(TextElement.Typeface.STRIKE)
+            isStrikeThrough = value.styles.contains(TextElement.Typeface.STRIKE)
             if (value.styles.contains(TextElement.Typeface.UNDERLINE)) underline = UnderlinePatterns.SINGLE
             value.textSize?.let { fontSize = it }
             value.textColor?.let { color = it }
@@ -146,7 +146,7 @@ class ApachePoiWriterService(
 
         hyperlinkRun.isItalic = value.styles.contains(TextElement.Typeface.ITALIC)
         hyperlinkRun.isBold = value.styles.contains(TextElement.Typeface.BOLD)
-        hyperlinkRun.isStrike = value.styles.contains(TextElement.Typeface.STRIKE)
+        hyperlinkRun.isStrikeThrough = value.styles.contains(TextElement.Typeface.STRIKE)
 
         hyperlinkRun.setText(link)
     }
