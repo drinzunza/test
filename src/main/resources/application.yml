@@ -27,4 +27,4 @@ server:
   undertow:
     worker-threads: 32
 file:
-  uploadDir: /Users/admin/data/uav-recon
+  uploadDir: /var/lib/uav-recon/files
