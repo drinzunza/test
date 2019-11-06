@@ -27,6 +27,12 @@ repositories {
 	maven { url 'http://repo.spring.io/milestone/' }
 }
 
+allOpen {
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.MappedSuperclass")
+    annotation("javax.persistence.Embeddable")
+}
+
 dependencies {
 	compile fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -36,10 +42,12 @@ dependencies {
 	compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
 	compile "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
 	compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
+	compile "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
+	compile "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
 	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
-	//compile "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
 
-	compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.4"	
+	implementation "com.auth0:java-jwt:3.8.3"
+	compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.4"
 	compile "org.postgresql:postgresql:42.2.2"
 
 	compile group: 'io.swagger', name: 'swagger-core', version: '1.5.17'
