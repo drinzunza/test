@@ -1,6 +1,17 @@
 spring:
   profiles:
     active: default
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: no-reply@omega-r.com
+    password: 12345678
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   datasource:
     url: jdbc:postgresql://localhost:5432/uav_recon
     username: postgres
@@ -28,3 +39,7 @@ server:
     worker-threads: 32
 file:
   uploadDir: /var/lib/uav-recon/files
+
+token:
+    secret: WV0TzjM5ZM414ivwUPMj
+    tokenExpirationTime: 1800
