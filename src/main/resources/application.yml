@@ -13,7 +13,7 @@ spring:
           starttls:
             enable: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/uav_recon
+    url: jdbc:postgresql://database:5432/uav_recon
     username: postgres
     password:
   jpa:
