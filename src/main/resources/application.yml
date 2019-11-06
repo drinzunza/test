@@ -15,7 +15,7 @@ spring:
   datasource:
     url: jdbc:postgresql://database:5432/uav_recon
     username: postgres
-    password:
+    password: docker
   jpa:
     show-sql: true
     format_sql: true

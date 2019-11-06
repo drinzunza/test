@@ -7,7 +7,7 @@ import javax.persistence.*
 @Table(name = "password_reset_attempts")
 class PasswordResetAttempt(
         @Id
-        @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "password_reset_attempt_id_seq")
+        @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "password_reset_attempts_id_seq")
         var id: Long? = null,
         @Column(name = "user_id")
         val userId: Long,
