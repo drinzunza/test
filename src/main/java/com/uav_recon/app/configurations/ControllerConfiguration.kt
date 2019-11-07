@@ -1,7 +1,7 @@
 package com.uav_recon.app.configurations
 
 object ControllerConfiguration {
-    const val VERSION = "/api/v1"
+    const val VERSION = "/v1"
 
     const val APP_SESSION = "App-Session"
     const val CONFIRM_SESSION = "Confirm-Session"

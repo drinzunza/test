@@ -41,25 +41,25 @@ class AuthController(val userService: UserService, val tokenManager: TokenManage
             password = password
     )
 
-    @GetMapping("/auth")
+    @PostMapping("$VERSION/auth")
     fun auth(@RequestBody request: AuthorizationRequest?): ResponseEntity<*> {
         val user: User = userService.authenticate(request?.email, request?.password)
         return ResponseEntity.ok(UserResponse(tokenManager.generate(user.id!!), user.toInspector()))
     }
 
-    @PostMapping("/auth/register")
+    @PostMapping("$VERSION/auth/register")
     fun register(@RequestBody request: RegistrationRequest?): ResponseEntity<UserResponse> {
         val user = userService.register(request?.toUser())
         return ResponseEntity.ok(UserResponse(tokenManager.generate(user.id!!), user.toInspector()))
     }
 
-    @PostMapping("/auth/forgot_password")
+    @PostMapping("$VERSION/auth/forgot_password")
     fun forgotPassword(@RequestBody request: PasswordResetAttemptRequest?): ResponseEntity<*> {
         userService.passwordResetAttempt(request?.email)
         return ResponseEntity.ok(success)
     }
 
-    @PostMapping("/auth/forgot_password/reset")
+    @PostMapping("$VERSION/auth/forgot_password/reset")
     fun resetPassword(@RequestBody request: PasswordResetAttemptRequest): ResponseEntity<*> {
         userService.resetPassword(request.email, request.code, request.password)
         return ResponseEntity.ok(success)

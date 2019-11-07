@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletResponse
 @Configuration
 @EnableWebSecurity
 class SecurityConfiguration(val tokenManager: TokenManager) : WebSecurityConfigurerAdapter() {
-    private val AUTH_PATH = "/auth/**"
+    private val AUTH_PATH = "/v1/auth/**"
     private val API_PATH_PATTERN = "/api/**"
 
     @Throws(Exception::class)
