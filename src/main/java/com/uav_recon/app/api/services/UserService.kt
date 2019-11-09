@@ -8,6 +8,7 @@ import com.uav_recon.app.configurations.UavConfiguration
 import org.apache.commons.lang3.RandomStringUtils
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import java.lang.Long.max
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -75,7 +76,7 @@ class UserService(private val userRepository: UserRepository,
         val optional = passwordResetAttemptRepository
                 .findByUserIdAndCreatedAtAfterAndUsedFalse(user.id!!, OffsetDateTime.now().minusMinutes(resetPasswordTimeout))
         if (optional.isPresent) {
-            return resetPasswordTimeout - Duration.between(optional.get().createdAt.toLocalDateTime(), LocalDateTime.now()).toMinutes()
+            return resetPasswordTimeout - max(Duration.between(optional.get().createdAt.toLocalDateTime(), LocalDateTime.now()).toMinutes(), 1)
         }
         val code = RandomStringUtils.randomNumeric(resetPasswordCodeLength).toInt()
         val attempt = PasswordResetAttempt(userId = user.id!!, code = code)
