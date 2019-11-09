@@ -1,6 +1,6 @@
 package com.uav_recon.app.api.entities.db
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import javax.persistence.*
 
 @Entity
@@ -14,4 +14,4 @@ class PasswordResetAttempt(
         val code: Int,
         var used: Boolean = false,
         @Column(name = "created_at")
-        val createdAt: LocalDateTime = LocalDateTime.now())
+        val createdAt: OffsetDateTime = OffsetDateTime.now())

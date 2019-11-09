@@ -2,16 +2,14 @@ package com.uav_recon.app.configurations
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.ZonedDateTime
 import java.util.*
 
 @Component
-class TokenManager(
-        @Value("\${token.secret}") private val secret: String,
-        @Value("\${token.tokenExpirationTime}") private val tokenExpirationTime: Long) {
-    private val algorithm: Algorithm = Algorithm.HMAC256(secret)
+class TokenManager(private val configuration: UavConfiguration) {
+    private val tokenExpirationTime = configuration.token.tokenExpirationTime.toLong()
+    private val algorithm: Algorithm = Algorithm.HMAC256(configuration.token.secret)
     private val userIdClaim = "userId"
 
     fun verifyAndExtractUserId(token: String): Long? {
@@ -27,8 +25,9 @@ class TokenManager(
     }
 
     fun generate(userId: Long): String {
+        val expiresAt = Date.from(ZonedDateTime.now().plusSeconds(tokenExpirationTime).toInstant())
         return JWT.create()
-                .withExpiresAt(Date.from(ZonedDateTime.now().plusSeconds(tokenExpirationTime).toInstant()))
+                .withExpiresAt(expiresAt)
                 .withClaim(userIdClaim, userId)
                 .sign(algorithm)
     }

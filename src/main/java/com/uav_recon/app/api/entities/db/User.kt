@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.entities.db
 
+import java.time.OffsetDateTime
 import javax.persistence.*
 
 @Entity
@@ -14,4 +15,8 @@ class User(
         val firstName: String,
         @Column(name = "last_name")
         val lastName: String,
-        var position: String?)
+        var position: String?,
+        @Column(name = "created_at")
+        val createdAt: OffsetDateTime = OffsetDateTime.now()
+
+)

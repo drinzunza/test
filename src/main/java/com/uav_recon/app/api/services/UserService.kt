@@ -4,21 +4,28 @@ import com.uav_recon.app.api.entities.db.PasswordResetAttempt
 import com.uav_recon.app.api.entities.db.User
 import com.uav_recon.app.api.repositories.PasswordResetAttemptRepository
 import com.uav_recon.app.api.repositories.UserRepository
+import com.uav_recon.app.configurations.UavConfiguration
 import org.apache.commons.lang3.RandomStringUtils
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.*
 import java.util.regex.Pattern
+import javax.transaction.Transactional
 
 @Service
-class UserService(val userRepository: UserRepository,
-                  val passwordResetAttemptRepository: PasswordResetAttemptRepository,
-                  val passwordEncoder: PasswordEncoder,
-                  val emailService: EmailService) {
+class UserService(private val userRepository: UserRepository,
+                  private val passwordResetAttemptRepository: PasswordResetAttemptRepository,
+                  private val passwordEncoder: PasswordEncoder,
+                  private val emailService: EmailService,
+                  private val configuration: UavConfiguration) {
 
     private val emailPattern = Pattern.compile("^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&’*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$")
     private val passwordPattern = Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$")
+    private val resetPasswordTimeout = configuration.security.resetPasswordTimeout.toLong()
+    private val resetPasswordCodeLength = configuration.security.resetPasswordCodeLength.toInt()
 
     @Throws(Error::class)
     fun register(user: User?): User {
@@ -62,12 +69,19 @@ class UserService(val userRepository: UserRepository,
         throw Error(2, "Wrong password")
     }
 
-    fun passwordResetAttempt(email: String?) {
+    @Transactional
+    fun passwordResetAttempt(email: String?): Long {
         val user = findUser(email)
-        val code = RandomStringUtils.randomNumeric(6).toInt()
+        val optional = passwordResetAttemptRepository
+                .findByUserIdAndCreatedAtAfterAndUsedFalse(user.id!!, OffsetDateTime.now().minusMinutes(resetPasswordTimeout))
+        if (optional.isPresent) {
+            return resetPasswordTimeout - Duration.between(optional.get().createdAt.toLocalDateTime(), LocalDateTime.now()).toMinutes()
+        }
+        val code = RandomStringUtils.randomNumeric(resetPasswordCodeLength).toInt()
         val attempt = PasswordResetAttempt(userId = user.id!!, code = code)
         passwordResetAttemptRepository.save(attempt)
         emailService.sendResetPasswordLink(email!!, code)
+        return resetPasswordTimeout
     }
 
     private fun findUser(email: String?): User {
@@ -84,7 +98,7 @@ class UserService(val userRepository: UserRepository,
         validatePassword(password)
         val user = findUser(email)
         val optional = passwordResetAttemptRepository
-                .findByUserIdAndCreatedAtAfterAndUsedFalse(user.id!!, LocalDateTime.now().minusHours(12))
+                .findByUserIdAndCreatedAtAfterAndUsedFalse(user.id!!, OffsetDateTime.now().minusMinutes(resetPasswordTimeout))
         if (optional.isPresent && optional.get().code.equals(code)) {
             user.password = passwordEncoder.encode(password)
             userRepository.save(user)
