@@ -13,7 +13,7 @@ import com.uav_recon.app.api.services.report.document.models.elements.LineFeedEl
 import com.uav_recon.app.api.services.report.document.models.elements.LinkTextElement
 import com.uav_recon.app.api.services.report.document.models.elements.PictureElement
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement
-import com.uav_recon.app.configurations.FileStorageConfiguration
+import com.uav_recon.app.configurations.UavConfiguration
 import org.apache.poi.util.Units
 import org.apache.poi.xwpf.usermodel.*
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STBorder
@@ -30,7 +30,7 @@ private const val FORMAT_COLOR = "%06X"
 @Service
 class ApachePoiWriterService(
         private val mapLoaderService: MapLoaderService,
-        private val config: FileStorageConfiguration,
+        private val config: UavConfiguration,
         private val fileStorageService: FileStorageService,
         private val resources: Resources
 ) : DocumentWriter {

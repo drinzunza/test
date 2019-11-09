@@ -2,7 +2,7 @@ package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.controllers.handlers.FileStorageException
 import com.uav_recon.app.api.controllers.handlers.MyFileNotFoundException
-import com.uav_recon.app.configurations.FileStorageConfiguration
+import com.uav_recon.app.configurations.UavConfiguration
 import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Service
@@ -17,8 +17,8 @@ import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 
 @Service
-class FileStorageService(private val config: FileStorageConfiguration) {
-    private val fileStorageLocation: Path = Paths.get(config.uploadDir).toAbsolutePath().normalize()
+class FileStorageService(private val config: UavConfiguration) {
+    private val fileStorageLocation: Path = Paths.get(config.files.uploadDir).toAbsolutePath().normalize()
 
     init {
         try {
