@@ -21,10 +21,8 @@ class TokenAuthenticationFilter(
         val token = request.getHeader(header)
         if (token != null && token.isNotBlank()) {
             val userId = manager.verifyAndExtractUserId(token)
-            if (userId != null) {
-                SecurityContextHolder.getContext().authentication = UsernamePasswordAuthenticationToken(userId, null)
-            }
-            SecurityContextHolder.getContext().authentication = null
+            SecurityContextHolder.getContext().authentication =
+                    if (userId == null) null else UsernamePasswordAuthenticationToken(userId, null)
         }
         filterChain.doFilter(request, response)
     }
