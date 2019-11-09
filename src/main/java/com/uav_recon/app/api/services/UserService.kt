@@ -23,7 +23,8 @@ class UserService(private val userRepository: UserRepository,
                   private val emailService: EmailService,
                   private val configuration: UavConfiguration) {
 
-    private val emailPattern = Pattern.compile("^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&’*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$")
+    private val emailPattern =
+            Pattern.compile("^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&’*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$")
     private val passwordPattern = Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$")
     private val resetPasswordTimeout = configuration.security.resetPasswordTimeout.toLong()
     private val resetPasswordCodeLength = configuration.security.resetPasswordCodeLength.toInt()
@@ -74,9 +75,11 @@ class UserService(private val userRepository: UserRepository,
     fun passwordResetAttempt(email: String?): Long {
         val user = findUser(email)
         val optional = passwordResetAttemptRepository
-                .findByUserIdAndCreatedAtAfterAndUsedFalse(user.id!!, OffsetDateTime.now().minusMinutes(resetPasswordTimeout))
+                .findByUserIdAndCreatedAtAfterAndUsedFalse(user.id!!,
+                                                           OffsetDateTime.now().minusMinutes(resetPasswordTimeout))
         if (optional.isPresent) {
-            return resetPasswordTimeout - max(Duration.between(optional.get().createdAt.toLocalDateTime(), LocalDateTime.now()).toMinutes(), 1)
+            return resetPasswordTimeout - max(Duration.between(optional.get().createdAt.toLocalDateTime(),
+                                                               LocalDateTime.now()).toMinutes(), 1)
         }
         val code = RandomStringUtils.randomNumeric(resetPasswordCodeLength).toInt()
         val attempt = PasswordResetAttempt(userId = user.id!!, code = code)
@@ -99,7 +102,8 @@ class UserService(private val userRepository: UserRepository,
         validatePassword(password)
         val user = findUser(email)
         val optional = passwordResetAttemptRepository
-                .findByUserIdAndCreatedAtAfterAndUsedFalse(user.id!!, OffsetDateTime.now().minusMinutes(resetPasswordTimeout))
+                .findByUserIdAndCreatedAtAfterAndUsedFalse(user.id!!,
+                                                           OffsetDateTime.now().minusMinutes(resetPasswordTimeout))
         if (optional.isPresent && optional.get().code.equals(code)) {
             user.password = passwordEncoder.encode(password)
             userRepository.save(user)
