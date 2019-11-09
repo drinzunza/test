@@ -1,7 +1,7 @@
 package com.uav_recon.app.api.controllers
 
 import com.uav_recon.app.api.entities.db.ObservationDefect
-import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectRequest
+import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
 import com.uav_recon.app.api.entities.responses.Response
 import com.uav_recon.app.api.entities.responses.bridge.ObservationDefectResponse
 import com.uav_recon.app.api.repositories.*
@@ -27,15 +27,15 @@ class ObservationDefectController(
     }
 
     @PostMapping("$VERSION/observationDefect")
-    fun setObservationDefect(@RequestBody observationDefect: ObservationDefectRequest): Response<ObservationDefectResponse> {
+    fun setObservationDefect(@RequestBody observationDefectDto: ObservationDefectDto): Response<ObservationDefectResponse> {
         val result = ObservationDefect()
-        result.defect = observationDefect.defectId?.let { defectRepository.findByIdOrNull(it) }
-        result.condition = observationDefect.conditionId?.let { conditionRepository.findByIdOrNull(it) }
-        result.observation = observationDefect.observationId?.let { observationRepository.findByIdOrNull(it) }
-        result.description = observationDefect.description
-        result.material = observationDefect.materialId?.let { materialRepository.findByIdOrNull(it) }
-        result.criticalFindings = observationDefect.criticalFindings
-        result.size = observationDefect.size
+        result.defect = observationDefectDto.defectId?.let { defectRepository.findByIdOrNull(it) }
+        result.condition = observationDefectDto.conditionId?.let { conditionRepository.findByIdOrNull(it) }
+        //result.observation = observationDefectDto.observationId?.let { observationRepository.findByIdOrNull(it) }
+        result.description = observationDefectDto.description
+        result.material = observationDefectDto.materialId?.let { materialRepository.findByIdOrNull(it) }
+        //result.criticalFindings = observationDefectDto.criticalFindings
+        //result.size = observationDefectDto.size
 
         val savedObservationDefect = observationDefectRepository.save(result)
         return savedObservationDefect.toResponse().response()

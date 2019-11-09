@@ -1,7 +1,7 @@
 package com.uav_recon.app.api.controllers
 
 import com.uav_recon.app.api.entities.db.Observation
-import com.uav_recon.app.api.entities.requests.bridge.ObservationRequest
+import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
 import com.uav_recon.app.api.entities.responses.Response
 import com.uav_recon.app.api.entities.responses.bridge.ObservationResponse
 import com.uav_recon.app.api.repositories.InspectionRepository
@@ -29,16 +29,16 @@ class ObservationController(
     }
 
     @PostMapping("$VERSION/observation")
-    fun setObservation(@RequestBody observation: ObservationRequest): Response<ObservationResponse> {
+    fun setObservation(@RequestBody observation: ObservationDto): Response<ObservationResponse> {
         val result = Observation()
-        result.code = observation.code
-        result.inspection = observation.inspectionId?.let { inspectionRepository.findByIdOrNull(it) }
+        //result.code = observation.code
+        //result.inspection = observation.inspectionId?.let { inspectionRepository.findByIdOrNull(it) }
         result.drawingNumber = observation.drawingNumber
         result.roomNumber = observation.roomNumber
         result.spanNumber = observation.spanNumber
         result.locationDescription = observation.locationDescription
         result.structuralComponent = observation.structuralComponentId?.let { structuralComponentRepository.findByIdOrNull(it) }
-        result.subcomponent = observation.subcomponentId?.let { subcomponentRepository.findByIdOrNull(it) }
+        //result.subcomponent = observation.subcomponentId?.let { subcomponentRepository.findByIdOrNull(it) }
 
         val savedObservation = observationRepository.save(result)
         return savedObservation.toResponse().response()

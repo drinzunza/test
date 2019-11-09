@@ -1,7 +1,7 @@
 package com.uav_recon.app.api.controllers
 
 import com.uav_recon.app.api.entities.db.Inspection
-import com.uav_recon.app.api.entities.requests.bridge.InspectionRequest
+import com.uav_recon.app.api.entities.requests.bridge.InspectionDto
 import com.uav_recon.app.api.entities.responses.Response
 import com.uav_recon.app.api.entities.responses.bridge.InspectionResponse
 import com.uav_recon.app.api.repositories.CompanyRepository
@@ -28,21 +28,21 @@ class InspectionController(
     }
 
     @PostMapping("$VERSION/inspection")
-    fun setInspection(@RequestBody inspection: InspectionRequest): Response<InspectionResponse> {
+    fun setInspection(@RequestBody inspection: InspectionDto): Response<InspectionResponse> {
         val result = Inspection()
         result.startDate = inspection.startDate
         result.endDate = inspection.endDate
         result.endDate = inspection.endDate
-        result.structure = inspection.structureId?.let { structureRepository.findByIdOrNull(it) }
-        result.status = inspection.status
-        result.company = inspection.companyId?.let { companyRepository.findByIdOrNull(it) }
-        result.inspector = inspection.inspectorId?.let { inspectorRepository.findByIdOrNull(it) }
+        //result.structure = inspection.structureId?.let { structureRepository.findByIdOrNull(it) }
+        //result.status = inspection.status
+        //result.company = inspection.companyId?.let { companyRepository.findByIdOrNull(it) }
+        //result.inspector = inspection.inspectorId?.let { inspectorRepository.findByIdOrNull(it) }
         result.generalSummary = inspection.generalSummary
-        result.termRating = inspection.termRating
+        //result.termRating = inspection.termRating
         result.sgrRating = inspection.sgrRating
-        result.temperature = inspection.temperature
-        result.humidity = inspection.humidity
-        result.wind = inspection.wind
+        //result.temperature = inspection.temperature
+        //result.humidity = inspection.humidity
+        //result.wind = inspection.wind
 
         val savedInspection = inspectionRepository.save(result)
         return savedInspection.toResponse().response()
