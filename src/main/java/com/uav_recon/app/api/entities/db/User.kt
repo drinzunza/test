@@ -1,12 +1,13 @@
 package com.uav_recon.app.api.entities.db
 
+import java.time.OffsetDateTime
 import javax.persistence.*
 
 @Entity
 @Table(name = "users")
 class User(
         @Id
-        @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_id_seq")
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
         var id: Long? = null,
         val email: String,
         var password: String,
@@ -14,4 +15,8 @@ class User(
         val firstName: String,
         @Column(name = "last_name")
         val lastName: String,
-        var position: String?)
+        var position: String?,
+        @Column(name = "created_at")
+        val createdAt: OffsetDateTime = OffsetDateTime.now()
+
+)

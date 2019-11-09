@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.controllers
 
+import com.google.common.collect.ImmutableMap
 import com.uav_recon.app.api.entities.db.User
 import com.uav_recon.app.api.entities.requests.auth.AuthorizationRequest
 import com.uav_recon.app.api.entities.requests.auth.PasswordResetAttemptRequest
@@ -14,16 +15,20 @@ import com.uav_recon.app.configurations.ControllerConfiguration.APP_SESSION
 import com.uav_recon.app.configurations.ControllerConfiguration.REG_SESSION
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.TokenManager
+import com.uav_recon.app.configurations.UavConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-class AuthController(val userService: UserService, val tokenManager: TokenManager) {
+class AuthController(private val userService: UserService,
+                     private val tokenManager: TokenManager,
+                     private val configuration: UavConfiguration) {
 
     private val logger = LoggerFactory.getLogger(AuthController::class.java)
     private val success = Collections.singletonMap("success", true)
+    private val resetPasswordTimeout = configuration.security.resetPasswordTimeout.toLong()
 
     fun User.toInspector() = Inspector(
             id = id!!.toString(),
@@ -55,8 +60,12 @@ class AuthController(val userService: UserService, val tokenManager: TokenManage
 
     @PostMapping("$VERSION/auth/forgot_password")
     fun forgotPassword(@RequestBody request: PasswordResetAttemptRequest?): ResponseEntity<*> {
-        userService.passwordResetAttempt(request?.email)
-        return ResponseEntity.ok(success)
+        val timeout = userService.passwordResetAttempt(request?.email)
+        return if (timeout == resetPasswordTimeout) {
+            ResponseEntity.ok(success)
+        } else {
+            ResponseEntity.ok(ImmutableMap.of("success", false, "timeout", timeout))
+        }
     }
 
     @PostMapping("$VERSION/auth/forgot_password/reset")

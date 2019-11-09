@@ -37,9 +37,12 @@ server:
   port: 8080
   undertow:
     worker-threads: 32
-file:
-  uploadDir: /var/lib/uav-recon/files
-
-token:
+uav:
+  files:
+    uploadDir: /var/lib/uav-recon/files
+  token:
     secret: WV0TzjM5ZM414ivwUPMj
     tokenExpirationTime: 1800
+  security:
+    resetPasswordTimeout: 15 # in minutes
+    resetPasswordCodeLength: 6
