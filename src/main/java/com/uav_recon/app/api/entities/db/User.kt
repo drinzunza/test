@@ -7,7 +7,7 @@ import javax.persistence.*
 @Table(name = "users")
 class User(
         @Id
-        @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_id_seq")
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
         var id: Long? = null,
         val email: String,
         var password: String,
