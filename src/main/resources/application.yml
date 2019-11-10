@@ -42,7 +42,8 @@ server:
     worker-threads: 32
 uav:
   files:
-    upload_dir: /var/lib/uav-recon/files
+    upload_dir: /uav-recon/files
+    photos_dir: /uav-recon/photos/
   token:
     secret: WV0TzjM5ZM414ivwUPMj
     token_expiration_time: 1800

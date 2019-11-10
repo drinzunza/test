@@ -31,5 +31,7 @@ class UavConfiguration {
     class Files {
         @NotBlank
         lateinit var uploadDir: String
+        @NotBlank
+        lateinit var photosDir: String
     }
 }
