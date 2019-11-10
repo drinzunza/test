@@ -51,6 +51,7 @@ dependencies {
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.4"
     compile "org.postgresql:postgresql:42.2.2"
     compile "org.flywaydb:flyway-core:6.0.8"
+    compile "com.vladmihalcea:hibernate-types-52:2.7.1"
 
     compile group: 'io.swagger', name: 'swagger-core', version: '1.5.17'
     compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.7.0'
