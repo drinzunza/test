@@ -18,15 +18,18 @@ spring:
     password: docker
   jpa:
     show-sql: true
-    format_sql: true
     database-platform: org.hibernate.dialect.PostgreSQL9Dialect
     properties:
       hibernate:
+        format_sql: true
         temp:
           use_jdbc_metadata_defaults: false
         jdbc:
           lob:
             non_contextual_creation: true
+  flyway:
+    placeholders:
+      legacy_user_init_password: $2a$10$0nWhc.crRVf7c79Jg/VYe.vMByTd02qWpoWQM2ToApibM/SRtcqIW
   servlet:
     multipart:
       enabled: true
@@ -39,10 +42,10 @@ server:
     worker-threads: 32
 uav:
   files:
-    uploadDir: /var/lib/uav-recon/files
+    upload_dir: /var/lib/uav-recon/files
   token:
     secret: WV0TzjM5ZM414ivwUPMj
-    tokenExpirationTime: 1800
+    token_expiration_time: 1800
   security:
-    resetPasswordTimeout: 15 # in minutes
-    resetPasswordCodeLength: 6
+    reset_password_timeout: 15 # in minutes
+    reset_password_code_length: 6
