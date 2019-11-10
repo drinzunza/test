@@ -12,7 +12,8 @@ import javax.transaction.Transactional
 @Service
 class InspectionService(
         val inspectionRepository: InspectionRepository,
-        val observationService: ObservationService) {
+        val observationService: ObservationService,
+        val weatherService: WeatherService) {
 
     fun Inspection.toDto() = InspectionDto(
         id = id,
@@ -31,7 +32,7 @@ class InspectionService(
         observations = observationService.findAllByInspectionId(uuid)
     )
 
-    fun InspectionDto.toEntity(createdBy: Int, updatedBy: Int) = Inspection(
+    fun InspectionDto.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) = Inspection(
         id = id,
         uuid = uuid,
         latitude = location?.latitude,
@@ -44,6 +45,9 @@ class InspectionService(
         structureId = structureId,
         status = status,
         termRating = termRating,
+        temperature = weather?.temperature,
+        humidity = weather?.humidity,
+        wind = weather?.wind,
         createdBy = createdBy,
         updatedBy = updatedBy
     )
@@ -58,7 +62,9 @@ class InspectionService(
         if (inspection.isPresent) {
             createdBy = inspection.get().createdBy
         }
-        return inspectionRepository.save(dto.toEntity(createdBy, updatedBy)).toDto()
+        return inspectionRepository.save(dto.toEntity(
+            weatherService.getWeather(dto.location?.latitude, dto.location?.longitude), createdBy, updatedBy)
+        ).toDto()
     }
 
     fun list(): List<InspectionDto> {

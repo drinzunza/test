@@ -4,12 +4,18 @@ import com.uav_recon.app.api.entities.requests.bridge.InspectionDto
 import com.uav_recon.app.api.services.InspectionService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import java.util.*
 
 @RestController
 @RequestMapping("$VERSION/inspection")
-class InspectionController(private val inspectionService: InspectionService) {
+class InspectionController(private val inspectionService: InspectionService) : BaseController() {
 
     private val success = Collections.singletonMap("success", true)
 
@@ -20,7 +26,7 @@ class InspectionController(private val inspectionService: InspectionService) {
 
     @PostMapping
     fun createOrUpdate(@RequestBody body: InspectionDto): ResponseEntity<InspectionDto> {
-        return ResponseEntity.ok(inspectionService.save(body, 1))
+        return ResponseEntity.ok(inspectionService.save(body, getAuthenticatedUserId()))
     }
 
     @DeleteMapping("/{uuid}")
@@ -31,6 +37,6 @@ class InspectionController(private val inspectionService: InspectionService) {
 
     @PostMapping("/full")
     fun full(@RequestBody body: InspectionDto): ResponseEntity<*> {
-        return ResponseEntity.ok(inspectionService.save(body, 1))
+        return ResponseEntity.ok(inspectionService.save(body, getAuthenticatedUserId()))
     }
 }
