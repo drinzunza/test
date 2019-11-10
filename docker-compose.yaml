@@ -20,5 +20,7 @@ services:
     build: .
     ports:
       - ${EXTERNAL_PORT:-80}:${DOCKER_PORT:-8080}
+    volumes:
+      - ${HOME}/uav-recon:/uav-recon
     depends_on:
       - database
