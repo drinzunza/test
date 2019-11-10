@@ -5,7 +5,7 @@ import java.io.Serializable
 data class ObservationResponse(
         val id: Int,
         val code: String?,
-        val inspectionId: Int?,
+        val inspectionId: String?,
         val drawingNumber: String?,
         val roomNumber: String?,
         val spanNumber: String?,

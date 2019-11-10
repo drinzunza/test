@@ -1,11 +1,11 @@
 package com.uav_recon.app.api.entities.responses.bridge
 
-import java.util.*
+import java.time.OffsetDateTime
 
 class InspectionResponse(
-        val id: Int,
-        val startDate: Date?,
-        val endDate: Date?,
+        val id: String?,
+        val startDate: OffsetDateTime?,
+        val endDate: OffsetDateTime?,
         val structureId: Int?,
         val status: String?,
         val companyId: Int?,

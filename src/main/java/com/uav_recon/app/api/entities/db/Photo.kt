@@ -1,53 +1,21 @@
 package com.uav_recon.app.api.entities.db
 
-import java.io.Serializable
-import java.util.*
-import javax.persistence.*
+import javax.persistence.Column
+import javax.persistence.Entity
+import javax.persistence.Table
 
 @Entity
-@Table(name = "photo")
-class Photo : Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Int = 0
-    @Column(name = "file")
-    var file: String? = null
-    @Column(name = "latitude")
-    var latitude: Double? = null
-    @Column(name = "longitude")
-    var longitude: Double? = null
-    @Column(name = "altitude")
-    var altitude: Double? = null
-    @Column(name = "start_x")
-    var startX: Double? = null
-    @Column(name = "start_y")
-    var startY: Double? = null
-    @Column(name = "end_x")
-    var endX: Double? = null
-    @Column(name = "end_y")
-    var endY: Double? = null
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_date")
-    var createdDate: Date? = null
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "observation_defect_id", referencedColumnName = "id")
-    var observationDefect: ObservationDefect? = null
-
-    constructor()
-    constructor(id: Int, file: String?, latitude: Double?, longitude: Double?, altitude: Double?,
-                startX: Double?, startY: Double?, endX: Double?, endY: Double?,
-                createdDate: Date?, observationDefect: ObservationDefect?
-    ) {
-        this.id = id
-        this.file = file
-        this.latitude = latitude
-        this.longitude = longitude
-        this.altitude = altitude
-        this.startX = startX
-        this.startY = startY
-        this.endX = endX
-        this.endY = endY
-        this.createdDate = createdDate
-        this.observationDefect = observationDefect
-    }
-}
+@Table(name = "photos")
+class Photo(
+        uuid: String,
+        id: String,
+        createdBy: Int,
+        updatedBy: Int,
+        @Column(name = "observation_defect_id")
+        val observationDefectId: String,
+        val link: String,
+        var latitude: Double? = null,
+        var longitude: Double? = null,
+        var altitude: Double? = null,
+        var drawables: String? = null
+) : MobileAppCreatedEntity(uuid, id, createdBy, updatedBy)

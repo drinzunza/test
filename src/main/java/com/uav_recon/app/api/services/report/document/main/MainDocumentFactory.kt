@@ -4,7 +4,6 @@ import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.entities.db.Observation
 import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.entities.db.Report
-import com.uav_recon.app.api.repositories.DefectRepository
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
@@ -13,18 +12,17 @@ import com.uav_recon.app.api.services.report.MapLoaderService
 import com.uav_recon.app.api.services.report.document.DocumentFactory
 import com.uav_recon.app.api.services.report.document.models.Document
 import com.uav_recon.app.api.services.report.document.models.Page
-import com.uav_recon.app.api.services.report.document.models.elements.Element
-import com.uav_recon.app.api.services.report.document.models.elements.LineFeedElement
-import com.uav_recon.app.api.services.report.document.models.elements.LinkTextElement
-import com.uav_recon.app.api.services.report.document.models.elements.TextElement
 import com.uav_recon.app.api.services.report.document.models.body.Paragraph
-import com.uav_recon.app.api.services.report.document.models.body.Paragraph.Alignment.*
+import com.uav_recon.app.api.services.report.document.models.body.Paragraph.Alignment.RIGHT
 import com.uav_recon.app.api.services.report.document.models.body.Table
 import com.uav_recon.app.api.services.report.document.models.body.Table.Row
-import com.uav_recon.app.api.services.report.document.models.elements.TextElement.Typeface.*
+import com.uav_recon.app.api.services.report.document.models.elements.Element
+import com.uav_recon.app.api.services.report.document.models.elements.LineFeedElement
+import com.uav_recon.app.api.services.report.document.models.elements.TextElement
+import com.uav_recon.app.api.services.report.document.models.elements.TextElement.Typeface.BOLD
+import com.uav_recon.app.api.services.report.document.models.elements.TextElement.Typeface.ITALIC
 import com.uav_recon.app.api.utils.formatDate
 import org.springframework.stereotype.Service
-import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -121,8 +119,8 @@ class MainDocumentFactory(
             page { createGlobalPage(inspection) }
             page { createObservationSummary(inspection) }
 
-            observationRepository.findAllByInspection(inspection).forEach { observation ->
-                observationDefectRepository.findAllByObservation(observation).forEach { defect ->
+            observationRepository.findAllByInspectionId(inspection.id).forEach { observation ->
+                observationDefectRepository.findAllByObservationId(observation.id).forEach { defect ->
                     page { createDefectReportPage(inspection, observation, defect) }
                 }
             }
@@ -174,7 +172,7 @@ class MainDocumentFactory(
             text(formatDate(), styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             text { INSPECTION_DATE_ELEMENT }
-            text(formatDate(inspection?.startDate), styles = ITALIC_STYLE_LIST)
+            //text(formatDate(inspection?.startDate), styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             text { WEATHER_ELEMENT }
             text(inspection?.temperature?.let { "T ${inspection.temperature}F Hum ${inspection.humidity}% Wind ${inspection.wind} m/h" } ?: "", styles = ITALIC_STYLE_LIST)
@@ -282,9 +280,9 @@ class MainDocumentFactory(
     }
 
     private fun formatToValueCount(prefix: String, inspection: Inspection): String {
-        val count = observationRepository.findAllByInspection(inspection).sumBy { observation: Observation ->
-            observationDefectRepository.findAllByObservation(observation).sumBy { defect: ObservationDefect ->
-                if (defect.criticalFindings?.contains(prefix, true) == true) 1 else 0
+        val count = observationRepository.findAllByInspectionId(inspection.id).sumBy { observation: Observation ->
+            observationDefectRepository.findAllByObservationId(observation.id).sumBy { defect: ObservationDefect ->
+                if (defect.criticalFindings?.find { finding -> finding.name.startsWith(prefix) } != null) 1 else 0
             }
         }
 
@@ -303,7 +301,7 @@ class MainDocumentFactory(
             lineFeed { DOUBLE_LINE_FEED_ELEMENT }
         }
 
-        observationRepository.findAllByInspection(inspection).forEach { observation ->
+        observationRepository.findAllByInspectionId(inspection.id).forEach { observation ->
             paragraph {
                 text(observation.structuralComponent?.name ?: "", styles = BOLD_STYLE_LIST)
                 lineFeed { SINGLE_LINE_FEED_ELEMENT }
@@ -325,7 +323,7 @@ class MainDocumentFactory(
     }
 
     private fun Table.Builder.generateDefectRows(observation: Observation) {
-        observationDefectRepository.findAllByObservation(observation).forEach { defect: ObservationDefect ->
+        observationDefectRepository.findAllByObservationId(observation.id).forEach { defect: ObservationDefect ->
             generateDefectRow {
                 text(it.getValue(observation, defect))
             }
@@ -397,7 +395,7 @@ class MainDocumentFactory(
     }
 
     private fun Table.Builder.rowsPictures(inspection: Inspection, defect: ObservationDefect) {
-        val photos = photoRepository.findAllByObservationDefect(defect)
+        val photos = photoRepository.findAllByObservationDefectId(defect.id.toString())
         for (i in 0..(photos.size - 1) / 2) {
             row {
                 cell {
@@ -421,15 +419,15 @@ class MainDocumentFactory(
         paragraphLeft {
             text { PHOTO_SPACE_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            photoRepository.findAllByObservationDefect(defect).getOrNull(index)?.let { photo ->
-                val resource = fileStorageService.loadFileAsResource(photo.file!!)
-                picture(photo.file, resource.inputStream, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
+            photoRepository.findAllByObservationDefectId(defect.id.toString()).getOrNull(index)?.let { photo ->
+                //val resource = fileStorageService.loadFileAsResource(photo.link!!)
+                //picture(photo.file, resource.inputStream, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
                 text { SPACE_ELEMENT }
                 lineFeed { SINGLE_LINE_FEED_ELEMENT }
-                text(photo.file, textSize = 6)
+                //text(photo.file, textSize = 6)
                 lineFeed { SINGLE_LINE_FEED_ELEMENT }
                 inspection.inspector?.let {
-                    text { LinkTextElement.Simple(photo.file, textSize = 6) } // TODO add link
+                    //text { LinkTextElement.Simple(photo.file, textSize = 6) } // TODO add link
                 }
             }
         }

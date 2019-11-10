@@ -1,9 +1,8 @@
 package com.uav_recon.app.api.repositories
 
-import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.entities.db.Observation
 import org.springframework.data.repository.CrudRepository
 
-interface ObservationRepository : CrudRepository<Observation, Int> {
-    fun findAllByInspection(inspection: Inspection): List<Observation>
+interface ObservationRepository : CrudRepository<Observation, String> {
+    fun findAllByInspectionId(inspectionId: String): List<Observation>
 }

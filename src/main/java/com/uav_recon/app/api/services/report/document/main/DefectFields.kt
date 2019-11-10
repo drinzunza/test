@@ -6,8 +6,6 @@ import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.api.services.report.document.models.body.Paragraph
-import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory.Companion.DATE_FORMAT
-import com.uav_recon.app.api.utils.formatDate
 
 internal enum class DefectFields(val title: String) {
 
@@ -39,30 +37,30 @@ internal enum class DefectFields(val title: String) {
             SUB_COMPONENT -> observation.subcomponent?.name
             MATERIAL -> defect.material?.name
             DRAWING_NUMBER -> observation.drawingNumber
-            LOCATION -> observationDefectRepository.findAllByObservation(observation).getOrNull(0)?.let {
-                photoRepository.findAllByObservationDefect(it).firstOrNull {
+            LOCATION -> observationDefectRepository.findAllByObservationId(observation.id).getOrNull(0)?.let {
+                photoRepository.findAllByObservationDefectId(it.id).firstOrNull {
                     it.latitude != null && it.longitude != null
                 }?.let {
                     "${it.latitude}, ${it.longitude}"
                 }
             }
             ROOM_NO -> observation.roomNumber
-            DEFECT -> defect.id.toString()
+            DEFECT -> defect.id
             DEFECT_NUMBER -> defect.defect?.number?.toString()
             DEFECT_NAME -> defect.defect?.name
-            DEFECT_CONDITION -> defect.condition?.let {
-                when (it.type) {
+            DEFECT_CONDITION -> defect.condition.let {
+                when (it?.type) {
                     "GOOD" -> "1 - ${it.type}"
                     "FAIR" -> "2 - ${it.type}"
                     "POOR" -> "3 - ${it.type}"
                     "SEVERE" -> "4 - ${it.type}"
-                    else -> "5 - ${it.type}"
+                    else -> "5 - ${it?.type}"
                 }
             }
-            INSPECTION_DATE -> inspection.startDate?.formatDate(DATE_FORMAT)
+            INSPECTION_DATE -> ""//inspection.startDate?.formatDate(DATE_FORMAT)
             STATIONING -> inspection.structure?.endStationing
-            CRITICAL_FINDINGS -> if (!defect.criticalFindings.isNullOrEmpty()) defect.criticalFindings else ""
-            PHOTO_QTY -> photoRepository.findAllByObservationDefect(defect).size.toString()
+            CRITICAL_FINDINGS -> defect.criticalFindings?.joinToString(separator = ",")
+            PHOTO_QTY -> photoRepository.findAllByObservationDefectId(defect.id).size.toString()
         }
     }
 

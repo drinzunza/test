@@ -7,5 +7,5 @@ data class ReportResponse(
         val id: Int,
         val date: Date?,
         val file: String?,
-        val inspectionId: Int?
+        val inspectionId: String?
 ) : Serializable
