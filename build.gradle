@@ -1,15 +1,16 @@
 buildscript {
-	ext.kotlinVersion = '1.3.50' // Required for Kotlin integration
-	ext.springBootVersion = '2.1.7.RELEASE'
-	repositories {
-		mavenCentral()
-	}
-	dependencies {
-		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion" // Required for Kotlin integration
-		classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlinVersion" // See https://kotlinlang.org/docs/reference/compiler-plugins.html#spring-support
-		classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlinVersion"
-		classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
-	}
+    ext.kotlinVersion = '1.3.50' // Required for Kotlin integration
+    ext.springBootVersion = '2.2.1.RELEASE'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion" // Required for Kotlin integration
+        classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlinVersion"
+        // See https://kotlinlang.org/docs/reference/compiler-plugins.html#spring-support
+        classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlinVersion"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
+    }
 }
 
 apply plugin: 'idea'
@@ -23,46 +24,56 @@ apply plugin: 'io.spring.dependency-management'
 version = '0.0.1'
 
 repositories {
-	mavenCentral()
-	maven { url 'http://repo.spring.io/milestone/' }
+    mavenCentral()
+    maven { url 'http://repo.spring.io/milestone/' }
+}
+
+allOpen {
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.MappedSuperclass")
+    annotation("javax.persistence.Embeddable")
 }
 
 dependencies {
-	compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(dir: 'libs', include: ['*.jar'])
 
-	compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-	compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
 
-	compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
-	compile "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
-	compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
-	//compile "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
-	compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.4"	
-	compile "org.postgresql:postgresql:42.2.2"
+    implementation "com.auth0:java-jwt:3.8.3"
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.4"
+    compile "org.postgresql:postgresql:42.2.2"
+    compile "org.flywaydb:flyway-core:6.0.8"
 
-	compile group: 'io.swagger', name: 'swagger-core', version: '1.5.17'
-	compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.7.0'
-	compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.7.0'
+    compile group: 'io.swagger', name: 'swagger-core', version: '1.5.17'
+    compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.7.0'
+    compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.7.0'
 
-	compile group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.0'
-	//compile group: 'com.itextpdf', name: 'itextpdf', version: '5.5.10'
-	compile group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.4'
-	//compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.56'
-	compile 'com.github.dhorions:boxable:1.5'
+    compile group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.0'
+    //compile group: 'com.itextpdf', name: 'itextpdf', version: '5.5.10'
+    compile group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.4'
+    //compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.56'
+    compile 'com.github.dhorions:boxable:1.5'
 
-	compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
-	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
-	compile group: 'commons-codec', name: 'commons-codec', version: '1.4'
-	compile group: 'org.apache.poi', name: 'poi', version: '3.17'
-	compile group: 'org.apache.poi', name: 'poi-excelant', version: '3.17'
-	compile group: 'org.apache.poi', name: 'poi-ooxml', version: '3.17'
-	compile group: 'org.apache.poi', name: 'poi-ooxml-schemas', version: '3.17'
-	compile group: 'org.apache.poi', name: 'poi-scratchpad', version: '3.17'
-	compile group: 'org.apache.poi', name: 'ooxml-schemas', version: '1.3'
-	compile group: 'org.apache.poi', name: 'ooxml-security', version: '1.1'
-	compile group: 'org.apache.xmlbeans', name: 'xmlbeans', version: '2.6.0'
-	compile group: 'com.github.virtuald', name: 'curvesapi', version: '1.03'
+    compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.4'
+    compile group: 'org.apache.poi', name: 'poi', version: '3.17'
+    compile group: 'org.apache.poi', name: 'poi-excelant', version: '3.17'
+    compile group: 'org.apache.poi', name: 'poi-ooxml', version: '3.17'
+    compile group: 'org.apache.poi', name: 'poi-ooxml-schemas', version: '3.17'
+    compile group: 'org.apache.poi', name: 'poi-scratchpad', version: '3.17'
+    compile group: 'org.apache.poi', name: 'ooxml-schemas', version: '1.3'
+    compile group: 'org.apache.poi', name: 'ooxml-security', version: '1.1'
+    compile group: 'org.apache.xmlbeans', name: 'xmlbeans', version: '2.6.0'
+    compile group: 'com.github.virtuald', name: 'curvesapi', version: '1.03'
 
-	testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
 }

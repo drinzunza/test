@@ -1,27 +1,26 @@
 package com.uav_recon.app.api.entities.responses
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-
 import java.io.Serializable
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 class Response<T> : Serializable {
 
-    @JsonProperty("errorCode")
-    var errorCode: Int? = null
+    @JsonProperty("code")
+    var code: Int? = null
 
-    @JsonProperty("errorMessage")
-    var errorMessage: String
+    @JsonProperty("message")
+    var message: String? = null
 
     var result: T? = null
 
-    constructor(errorCode: Int? = 0, errorMessage: String = "") {
-        this.errorCode = errorCode
-        this.errorMessage = errorMessage
+    constructor(code: Int? = null, message: String? = null) {
+        this.code = code
+        this.message = message
     }
 
     constructor(result: T) {
-        this.errorCode = 0
-        this.errorMessage = ""
         this.result = result
     }
 }

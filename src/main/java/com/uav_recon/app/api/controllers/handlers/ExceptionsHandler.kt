@@ -1,12 +1,14 @@
 package com.uav_recon.app.api.controllers.handlers
 
-import com.uav_recon.app.api.entities.responses.Response
 import com.uav_recon.app.api.controllers.handlers.Exceptions.BAD_REQUEST
 import com.uav_recon.app.api.controllers.handlers.Exceptions.ERROR
+import com.uav_recon.app.api.entities.responses.Response
+import com.uav_recon.app.api.services.UserService
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseBody
@@ -28,6 +30,15 @@ class ExceptionsHandler(@Value("\${spring.profiles.active}") val profile: String
     }
 
     @ResponseBody
+    @ExceptionHandler(UserService.Error::class)
+    fun handle(e: UserService.Error, r: HttpServletRequest): ResponseEntity<*> {
+        if (logger.isErrorEnabled) {
+            logger.error("Method call (`{}`) failed: {}.", r.requestURI, ExceptionUtils.getStackTrace(e))
+        }
+        return ResponseEntity.badRequest().body(Response<Any>(e.code, e.message))
+    }
+
+    @ResponseBody
     @ExceptionHandler(UnauthorizedException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun handle(e: UnauthorizedException): Response<*> {
@@ -35,12 +46,12 @@ class ExceptionsHandler(@Value("\${spring.profiles.active}") val profile: String
     }
 
     private fun internalError(reason: String?): Response<*> = Response<Any>().apply {
-        errorCode = ERROR
-        errorMessage = reason ?: "An internal error occurred. Please contact the support group."
+        code = ERROR
+        message = reason ?: "An internal error occurred. Please contact the support group."
     }
 
     private fun badRequest(reason: String?): Response<*> = Response<Any>().apply {
-        errorCode = BAD_REQUEST
-        errorMessage = reason ?: "Bad request"
+        code = BAD_REQUEST
+        message = reason ?: "Bad request"
     }
 }

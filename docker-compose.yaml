@@ -5,17 +5,20 @@ x-var: &APP_NAME
 
 services:
 
+  database:
+    image: postgres
+    container_name: pg-docker
+    environment:
+      - POSTGRES_PASSWORD=docker
+    ports:
+      - 5432:5432
+    volumes:
+      - /var/lib/uav-recon/docker/volumes/postgres:/var/lib/postgresql/data
   server:
     image: *APP_NAME
     container_name: *APP_NAME
     build: .
     ports:
-      - ${EXTERNAL_PORT:-1671}:${DOCKER_PORT:-8080}
-    networks:
-      - uav-recon
-
-networks:
-  uav-recon:
-    external: true
-
-
+      - ${EXTERNAL_PORT:-80}:${DOCKER_PORT:-8080}
+    depends_on:
+      - database

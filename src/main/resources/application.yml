@@ -1,21 +1,35 @@
 spring:
   profiles:
     active: default
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: no-reply@omega-r.com
+    password: 12345678
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/uav_recon
+    url: jdbc:postgresql://database:5432/uav_recon
     username: postgres
-    password:
+    password: docker
   jpa:
     show-sql: true
-    format_sql: true
     database-platform: org.hibernate.dialect.PostgreSQL9Dialect
     properties:
       hibernate:
+        format_sql: true
         temp:
           use_jdbc_metadata_defaults: false
         jdbc:
           lob:
             non_contextual_creation: true
+  flyway:
+    placeholders:
+      legacy_user_init_password: $2a$10$0nWhc.crRVf7c79Jg/VYe.vMByTd02qWpoWQM2ToApibM/SRtcqIW
   servlet:
     multipart:
       enabled: true
@@ -26,5 +40,12 @@ server:
   port: 8080
   undertow:
     worker-threads: 32
-file:
-  uploadDir: /Users/admin/data/uav-recon
+uav:
+  files:
+    upload_dir: /var/lib/uav-recon/files
+  token:
+    secret: WV0TzjM5ZM414ivwUPMj
+    token_expiration_time: 1800
+  security:
+    reset_password_timeout: 15 # in minutes
+    reset_password_code_length: 6
