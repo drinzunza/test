@@ -13,5 +13,6 @@ data class ObservationDefectDto(
         val conditionId: String?,
         val description: String?,
         val materialId: String?,
-        val photos: List<PhotoDto>?
+        val photos: List<PhotoDto>?,
+        val spanNumber: Int?
 ) : Serializable

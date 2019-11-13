@@ -2,7 +2,12 @@ package com.uav_recon.app.api.entities.db
 
 import org.hibernate.annotations.Type
 import java.time.OffsetDateTime
-import javax.persistence.*
+import javax.persistence.Column
+import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
+import javax.persistence.Table
+import javax.persistence.Transient
 
 @Entity
 @Table(name = "inspections")
@@ -42,6 +47,8 @@ class Inspection(
         @Column(name = "term_rating")
         @Type(type = "pgsql_enum")
         var termRating: InspectionTermRating? = null,
+        @Column(name = "spans_count")
+        var spansCount: Int? = 0,
         @Transient
         var structure: Structure? = null,
         @Transient
