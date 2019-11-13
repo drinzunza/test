@@ -13,7 +13,7 @@ class TokenAuthenticationProvider(private val userService: UserService) : Authen
         if (authentication?.principal is Long) {
             val optional = userService.findById(authentication.principal as Long)
             if (optional.isPresent) {
-                return UsernamePasswordAuthenticationToken(optional.get().email, null)
+                return UsernamePasswordAuthenticationToken(optional.get(), null)
             }
         }
         return null

@@ -32,7 +32,7 @@ internal enum class DefectSummaryFields(val textElement: TextElement.Simple, val
     }
 
     fun getTotalValue(observation: Observation, observationDefectRepository: ObservationDefectRepository): String {
-        val defects = observationDefectRepository.findAllByObservation(observation)
+        val defects = observationDefectRepository.findAllByObservationId(observation.id)
         return when(this) {
             SUB_COMPONENT -> "Total "
             DEFECT, DEFECT_NUMBER, UNIT -> ""

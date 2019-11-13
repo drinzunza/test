@@ -9,6 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import springfox.documentation.builders.PathSelectors
 import springfox.documentation.builders.RequestHandlerSelectors
 import springfox.documentation.spi.DocumentationType
@@ -18,13 +19,7 @@ import java.time.Duration
 
 @Configuration
 @EnableSwagger2
-class MainConfiguration {
-//    @Bean
-//    fun addResourceHandlers(registry: ResourceHandlerRegistry) {
-//        registry
-//                .addResourceHandler("/resources/**")
-//                .addResourceLocations("classpath:static/")
-//    }
+class WebConfiguration(val configuration: UavConfiguration) : WebMvcConfigurer {
 
     @Bean
     fun taskScheduler(): TaskScheduler {
@@ -54,5 +49,10 @@ class MainConfiguration {
     @Bean
     fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()
+    }
+
+    override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
+        registry.addResourceHandler("/photo/**")
+                .addResourceLocations("file:${configuration.files.photosDir}")
     }
 }

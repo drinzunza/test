@@ -1,30 +1,47 @@
 package com.uav_recon.app.api.entities.db
 
-import java.io.Serializable
-import javax.persistence.*
+import com.vladmihalcea.hibernate.type.array.EnumArrayType
+import org.hibernate.annotations.Parameter
+import org.hibernate.annotations.TypeDef
+import javax.persistence.Column
+import javax.persistence.Entity
+import javax.persistence.Table
+import javax.persistence.Transient
 
 @Entity
-@Table(name = "observation_defect")
-class ObservationDefect : Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Int = 0
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "defect_id", referencedColumnName = "id")
-    var defect: Defect? = null
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "condition_id", referencedColumnName = "id")
-    var condition: Condition? = null
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "observation_id", referencedColumnName = "id")
-    var observation: Observation? = null
-    @Column(name = "description")
-    var description: String? = null
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "material_id", referencedColumnName = "id")
-    var material: Material? = null
-    @Column(name = "critical_findings")
-    var criticalFindings: String? = null
-    @Column(name = "size")
-    var size: String? = null
-}
+@Table(name = "observation_defects")
+@TypeDef(
+    typeClass = EnumArrayType::class,
+    defaultForType = Array<CriticalFinding>::class,
+    parameters = [
+        Parameter(
+            name = EnumArrayType.SQL_ARRAY_TYPE,
+            value = "critical_finding"
+        )
+    ]
+)
+class ObservationDefect(
+        uuid: String,
+        id: String,
+        createdBy: Int,
+        updatedBy: Int,
+        @Column(name = "observation_id")
+        val observationId: String,
+        @Column(name = "defect_id")
+        var defectId: String? = null,
+        @Column(name = "condition_id")
+        var conditionId: String? = null,
+        var description: String? = null,
+        @Column(name = "material_id")
+        var materialId: String? = null,
+        @Column(name = "critical_findings", columnDefinition = "critical_finding[]")
+        var criticalFindings: Array<CriticalFinding>?,
+        @Transient
+        var material: Material? = null,
+        @Transient
+        var defect: Defect? = null,
+        @Transient
+        var condition: Condition? = null,
+        @Transient
+        var size: String? = null
+) : MobileAppCreatedEntity(uuid, id, createdBy, updatedBy)
