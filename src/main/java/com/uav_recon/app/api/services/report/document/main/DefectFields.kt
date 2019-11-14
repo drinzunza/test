@@ -11,7 +11,6 @@ internal enum class DefectFields(val title: String) {
 
     OBSERVATION_ID("Observation Id: "),
     COMPONENT("Component: "),
-    SPAN("Span #: "),
     SUB_COMPONENT("Sub-component name: "),
     MATERIAL("Material: "),
     DRAWING_NUMBER("Drawing Number: "),
@@ -33,7 +32,6 @@ internal enum class DefectFields(val title: String) {
         return when (this) {
             OBSERVATION_ID -> observation.code
             COMPONENT -> observation.structuralComponent?.name
-            SPAN -> observation.spanNumber
             SUB_COMPONENT -> observation.subcomponent?.name
             MATERIAL -> defect.material?.name
             DRAWING_NUMBER -> observation.drawingNumber
@@ -67,7 +65,7 @@ internal enum class DefectFields(val title: String) {
     companion object {
 
         private val LEFT_FIELDS = listOf(
-            OBSERVATION_ID, COMPONENT, SPAN, SUB_COMPONENT,
+            OBSERVATION_ID, COMPONENT, SUB_COMPONENT,
             MATERIAL, DRAWING_NUMBER, LOCATION, ROOM_NO
         )
         private val RIGHT_FIELDS = listOf(

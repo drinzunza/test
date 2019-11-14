@@ -46,7 +46,7 @@ uav:
     photos_dir: /uav-recon/photos/
   token:
     secret: WV0TzjM5ZM414ivwUPMj
-    token_expiration_time: 1800
+    token_expiration_time: 86400
   security:
     reset_password_timeout: 15 # in minutes
     reset_password_code_length: 6

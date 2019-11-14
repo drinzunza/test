@@ -22,10 +22,10 @@ class Observation(
         var drawingNumber: String? = null,
         @Column(name = "room_number")
         var roomNumber: String? = null,
-        @Column(name = "span_number")
-        var spanNumber: String? = null,
         @Column(name = "location_description")
         var locationDescription: String? = null,
+        @Column(name = "dimension_number")
+        var dimensionNumber: Int? = 0,
         @Transient
         var structuralComponent: StructuralComponent? = null,
         @Transient

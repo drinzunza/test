@@ -21,5 +21,6 @@ data class InspectionDto(
         val report: InspectionReport?,
         val generalSummary: String?,
         val sgrRating: String?,
-        val termRating: InspectionTermRating?
+        val termRating: InspectionTermRating?,
+        val spansCount: Int?
 ) : Serializable
