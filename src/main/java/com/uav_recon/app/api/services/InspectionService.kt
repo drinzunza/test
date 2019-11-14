@@ -57,17 +57,20 @@ class InspectionService(
 
     @Transactional
     fun save(dto: InspectionDto, updatedBy: Int): InspectionDto {
-        if (dto.observations != null) {
-            observationService.save(dto.observations, dto.uuid, updatedBy)
-        }
         var createdBy = updatedBy
         val inspection = inspectionRepository.findById(dto.uuid)
         if (inspection.isPresent) {
             createdBy = inspection.get().createdBy
         }
-        return inspectionRepository.save(dto.toEntity(
-            weatherService.getWeather(dto.location?.latitude, dto.location?.longitude), createdBy, updatedBy)
-        ).toDto()
+        val saved =
+                inspectionRepository.save(dto.toEntity(weatherService.getWeather(dto.location?.latitude,
+                                                                                 dto.location?.longitude),
+                                                       createdBy,
+                                                       updatedBy))
+        if (dto.observations != null) {
+            observationService.save(dto.observations, dto.uuid, updatedBy)
+        }
+        return saved.toDto()
     }
 
     fun list(): List<InspectionDto> {
