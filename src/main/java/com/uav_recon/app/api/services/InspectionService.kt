@@ -7,6 +7,7 @@ import com.uav_recon.app.api.entities.requests.bridge.LocationDto
 import com.uav_recon.app.api.entities.requests.bridge.Weather
 import com.uav_recon.app.api.repositories.InspectionRepository
 import org.springframework.stereotype.Service
+import java.util.*
 import javax.transaction.Transactional
 
 @Service
@@ -75,6 +76,14 @@ class InspectionService(
 
     fun delete(id: String) {
         inspectionRepository.deleteById(id)
+    }
+
+    fun find(id: String): Optional<InspectionDto> {
+        val optional = inspectionRepository.findById(id)
+        if (optional.isPresent) {
+            return Optional.of(optional.get().toDto());
+        }
+        return Optional.empty();
     }
 
 }

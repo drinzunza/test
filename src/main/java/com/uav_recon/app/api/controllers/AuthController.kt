@@ -18,16 +18,19 @@ import com.uav_recon.app.configurations.TokenManager
 import com.uav_recon.app.configurations.UavConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
-import java.util.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class AuthController(private val userService: UserService,
                      private val tokenManager: TokenManager,
-                     private val configuration: UavConfiguration) {
+                     private val configuration: UavConfiguration) : BaseController() {
 
     private val logger = LoggerFactory.getLogger(AuthController::class.java)
-    private val success = Collections.singletonMap("success", true)
     private val resetPasswordTimeout = configuration.security.resetPasswordTimeout.toLong()
 
     fun User.toInspector() = Inspector(
