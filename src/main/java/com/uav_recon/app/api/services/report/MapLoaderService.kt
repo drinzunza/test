@@ -44,9 +44,9 @@ class MapLoaderService(
 
     private fun getMarkers(inspection: Inspection): String {
         val builder = StringBuilder(DEFAULT_COLOR)
-        observationRepository.findAllByInspectionId(inspection.id).forEach { observation ->
-            observationDefectRepository.findAllByObservationId(observation.id).forEach { defect ->
-                photoRepository.findAllByObservationDefectId(defect.id).firstOrNull {
+        observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.id).forEach { observation ->
+            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).forEach { defect ->
+                photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.id).firstOrNull {
                     it.latitude != null && it.longitude != null
                 }?.let {
                     builder.append(String.format(MARKER_FORMAT, it.latitude, it.longitude))

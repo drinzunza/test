@@ -119,8 +119,8 @@ class MainDocumentFactory(
             page { createGlobalPage(inspection) }
             page { createObservationSummary(inspection) }
 
-            observationRepository.findAllByInspectionId(inspection.id).forEach { observation ->
-                observationDefectRepository.findAllByObservationId(observation.id).forEach { defect ->
+            observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.id).forEach { observation ->
+                observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).forEach { defect ->
                     page { createDefectReportPage(inspection, observation, defect) }
                 }
             }
@@ -280,8 +280,8 @@ class MainDocumentFactory(
     }
 
     private fun formatToValueCount(prefix: String, inspection: Inspection): String {
-        val count = observationRepository.findAllByInspectionId(inspection.id).sumBy { observation: Observation ->
-            observationDefectRepository.findAllByObservationId(observation.id).sumBy { defect: ObservationDefect ->
+        val count = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.id).sumBy { observation: Observation ->
+            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).sumBy { defect: ObservationDefect ->
                 if (defect.criticalFindings?.find { finding -> finding.name.startsWith(prefix) } != null) 1 else 0
             }
         }
@@ -301,7 +301,7 @@ class MainDocumentFactory(
             lineFeed { DOUBLE_LINE_FEED_ELEMENT }
         }
 
-        observationRepository.findAllByInspectionId(inspection.id).forEach { observation ->
+        observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.id).forEach { observation ->
             paragraph {
                 text(observation.structuralComponent?.name ?: "", styles = BOLD_STYLE_LIST)
                 lineFeed { SINGLE_LINE_FEED_ELEMENT }
@@ -323,7 +323,7 @@ class MainDocumentFactory(
     }
 
     private fun Table.Builder.generateDefectRows(observation: Observation) {
-        observationDefectRepository.findAllByObservationId(observation.id).forEach { defect: ObservationDefect ->
+        observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).forEach { defect: ObservationDefect ->
             generateDefectRow {
                 text(it.getValue(observation, defect))
             }
@@ -395,7 +395,7 @@ class MainDocumentFactory(
     }
 
     private fun Table.Builder.rowsPictures(inspection: Inspection, defect: ObservationDefect) {
-        val photos = photoRepository.findAllByObservationDefectId(defect.id.toString())
+        val photos = photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.id.toString())
         for (i in 0..(photos.size - 1) / 2) {
             row {
                 cell {
@@ -419,7 +419,7 @@ class MainDocumentFactory(
         paragraphLeft {
             text { PHOTO_SPACE_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            photoRepository.findAllByObservationDefectId(defect.id.toString()).getOrNull(index)?.let { photo ->
+            photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.id.toString()).getOrNull(index)?.let { photo ->
                 //val resource = fileStorageService.loadFileAsResource(photo.link!!)
                 //picture(photo.file, resource.inputStream, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
                 text { SPACE_ELEMENT }

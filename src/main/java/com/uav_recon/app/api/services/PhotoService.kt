@@ -22,8 +22,8 @@ class PhotoService(val photoRepository: PhotoRepository) {
         drawables = drawables
     )
 
-    fun findAllByObservationDejectId(id: String): List<PhotoDto> {
-        return photoRepository.findAllByObservationDefectId(id).map { p -> p.toDto() }
+    fun findAllByObservationDefectIdAndNotDeleted(id: String): List<PhotoDto> {
+        return photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(id).map { p -> p.toDto() }
     }
 
 }

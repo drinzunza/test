@@ -35,8 +35,8 @@ internal enum class DefectFields(val title: String) {
             SUB_COMPONENT -> observation.subcomponent?.name
             MATERIAL -> defect.material?.name
             DRAWING_NUMBER -> observation.drawingNumber
-            LOCATION -> observationDefectRepository.findAllByObservationId(observation.id).getOrNull(0)?.let {
-                photoRepository.findAllByObservationDefectId(it.id).firstOrNull {
+            LOCATION -> observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).getOrNull(0)?.let {
+                photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(it.id).firstOrNull {
                     it.latitude != null && it.longitude != null
                 }?.let {
                     "${it.latitude}, ${it.longitude}"
@@ -58,7 +58,7 @@ internal enum class DefectFields(val title: String) {
             INSPECTION_DATE -> ""//inspection.startDate?.formatDate(DATE_FORMAT)
             STATIONING -> inspection.structure?.endStationing
             CRITICAL_FINDINGS -> defect.criticalFindings?.joinToString(separator = ",")
-            PHOTO_QTY -> photoRepository.findAllByObservationDefectId(defect.id).size.toString()
+            PHOTO_QTY -> photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.id).size.toString()
         }
     }
 

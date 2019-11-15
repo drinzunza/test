@@ -4,5 +4,5 @@ import com.uav_recon.app.api.entities.db.Photo
 import org.springframework.data.repository.CrudRepository
 
 interface PhotoRepository : CrudRepository<Photo, String> {
-    fun findAllByObservationDefectId(observationDefectId: String): List<Photo>
+    fun findAllByObservationDefectIdAndDeletedIsFalse(observationDefectId: String): List<Photo>
 }
