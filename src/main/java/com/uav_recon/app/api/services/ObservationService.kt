@@ -70,6 +70,9 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
         if (optional.isPresent && optional.get().inspectionId != inspectionId) {
             throw invalidInspectionUuid
         }
+        if (!observationRepository.findById(id).isPresent) {
+            throw Error(102, "Invalid observation uuid")
+        }
         observationRepository.deleteById(id);
     }
 
