@@ -78,6 +78,9 @@ class InspectionService(
     }
 
     fun delete(id: String) {
+        if (!inspectionRepository.findById(id).isPresent) {
+            throw Error(101, "Invalid inspection UUID")
+        }
         inspectionRepository.deleteById(id)
     }
 
