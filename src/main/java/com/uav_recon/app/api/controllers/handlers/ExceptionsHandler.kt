@@ -3,7 +3,7 @@ package com.uav_recon.app.api.controllers.handlers
 import com.uav_recon.app.api.controllers.handlers.Exceptions.BAD_REQUEST
 import com.uav_recon.app.api.controllers.handlers.Exceptions.ERROR
 import com.uav_recon.app.api.entities.responses.Response
-import com.uav_recon.app.api.services.UserService
+import com.uav_recon.app.api.services.Error
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -30,8 +30,8 @@ class ExceptionsHandler(@Value("\${spring.profiles.active}") val profile: String
     }
 
     @ResponseBody
-    @ExceptionHandler(UserService.Error::class)
-    fun handle(e: UserService.Error, r: HttpServletRequest): ResponseEntity<*> {
+    @ExceptionHandler(Error::class)
+    fun handle(e: Error, r: HttpServletRequest): ResponseEntity<*> {
         if (logger.isErrorEnabled) {
             logger.error("Method call (`{}`) failed: {}.", r.requestURI, ExceptionUtils.getStackTrace(e))
         }

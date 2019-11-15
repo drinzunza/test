@@ -7,6 +7,7 @@ import com.uav_recon.app.api.entities.requests.bridge.LocationDto
 import com.uav_recon.app.api.entities.requests.bridge.Weather
 import com.uav_recon.app.api.repositories.InspectionRepository
 import org.springframework.stereotype.Service
+import java.util.*
 import javax.transaction.Transactional
 
 @Service
@@ -56,17 +57,20 @@ class InspectionService(
 
     @Transactional
     fun save(dto: InspectionDto, updatedBy: Int): InspectionDto {
-        if (dto.observations != null) {
-            observationService.save(dto.observations, dto.uuid, updatedBy)
-        }
         var createdBy = updatedBy
         val inspection = inspectionRepository.findById(dto.uuid)
         if (inspection.isPresent) {
             createdBy = inspection.get().createdBy
         }
-        return inspectionRepository.save(dto.toEntity(
-            weatherService.getWeather(dto.location?.latitude, dto.location?.longitude), createdBy, updatedBy)
-        ).toDto()
+        val saved =
+                inspectionRepository.save(dto.toEntity(weatherService.getWeather(dto.location?.latitude,
+                                                                                 dto.location?.longitude),
+                                                       createdBy,
+                                                       updatedBy))
+        if (dto.observations != null) {
+            observationService.save(dto.observations, dto.uuid, updatedBy)
+        }
+        return saved.toDto()
     }
 
     fun list(): List<InspectionDto> {
@@ -75,6 +79,14 @@ class InspectionService(
 
     fun delete(id: String) {
         inspectionRepository.deleteById(id)
+    }
+
+    fun find(id: String): Optional<InspectionDto> {
+        val optional = inspectionRepository.findById(id)
+        if (optional.isPresent) {
+            return Optional.of(optional.get().toDto());
+        }
+        return Optional.empty();
     }
 
 }

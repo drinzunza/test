@@ -11,13 +11,10 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.util.*
 
 @RestController
 @RequestMapping("$VERSION/inspection")
 class InspectionController(private val inspectionService: InspectionService) : BaseController() {
-
-    private val success = Collections.singletonMap("success", true)
 
     @GetMapping
     fun get(): ResponseEntity<List<InspectionDto>> {

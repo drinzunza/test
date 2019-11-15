@@ -118,6 +118,4 @@ class UserService(private val userRepository: UserRepository,
     fun findById(id: Long): Optional<User> {
         return userRepository.findById(id)
     }
-
-    class Error(val code: Int, message: String) : Exception(message)
 }
