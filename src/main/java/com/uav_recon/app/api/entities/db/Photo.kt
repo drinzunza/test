@@ -17,5 +17,7 @@ class Photo(
         var latitude: Double? = null,
         var longitude: Double? = null,
         var altitude: Double? = null,
-        var drawables: String? = null
+        var drawables: String? = null,
+        @Column(name = "is_deleted")
+        var deleted: Boolean? = false
 ) : MobileAppCreatedEntity(uuid, id, createdBy, updatedBy)
