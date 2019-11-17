@@ -46,15 +46,16 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
         if (!inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId).isPresent) {
             throw invalidInspectionUuid
         }
-        if (dto.observationDefects != null) {
-            observationDefectService.save(dto.observationDefects, dto.uuid, updatedBy)
-        }
         var createdBy = updatedBy
         val observation = observationRepository.findById(dto.uuid)
         if (observation.isPresent) {
             createdBy = observation.get().createdBy
         }
-        return observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId)).toDto()
+        val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId))
+        if (dto.observationDefects != null) {
+            observationDefectService.save(dto.observationDefects, inspectionId, dto.uuid, updatedBy)
+        }
+        return saved.toDto()
     }
 
     @Transactional
