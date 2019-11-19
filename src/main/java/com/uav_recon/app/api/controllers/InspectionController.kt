@@ -18,7 +18,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
 
     @GetMapping
     fun get(): ResponseEntity<List<InspectionDto>> {
-        return ResponseEntity.ok(inspectionService.list())
+        return ResponseEntity.ok(inspectionService.listNotDeleted())
     }
 
     @PostMapping

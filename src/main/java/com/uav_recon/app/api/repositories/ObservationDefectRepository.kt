@@ -4,5 +4,5 @@ import com.uav_recon.app.api.entities.db.ObservationDefect
 import org.springframework.data.repository.CrudRepository
 
 interface ObservationDefectRepository : CrudRepository<ObservationDefect, String> {
-    fun findAllByObservationId(observationId: String): List<ObservationDefect>
+    fun findAllByObservationIdAndDeletedIsFalse(observationId: String): List<ObservationDefect>
 }

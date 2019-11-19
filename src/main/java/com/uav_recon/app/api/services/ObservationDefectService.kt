@@ -18,7 +18,7 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         defectId = defectId,
         description = description,
         materialId = materialId,
-        photos = photoService.findAllByObservationDejectId(uuid),
+        photos = photoService.findAllByObservationDefectIdAndNotDeleted(uuid),
         spanNumber = spanNumber
     )
 
@@ -51,8 +51,8 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         return list.map { dto -> save(dto, observationId, updatedBy) }
     }
 
-    fun findAllByObservationId(id: String): List<ObservationDefectDto> {
-        return observationDefectRepository.findAllByObservationId(id).map { o -> o.toDto() }
+    fun findAllByObservationIdAndNotDeleted(id: String): List<ObservationDefectDto> {
+        return observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(id).map { o -> o.toDto() }
     }
 
 }

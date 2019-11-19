@@ -30,7 +30,7 @@ class InspectionService(
         status = status,
         termRating = termRating,
         weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
-        observations = observationService.findAllByInspectionId(uuid),
+        observations = observationService.findAllByInspectionIdAndNotDeleted(uuid),
         spansCount = spansCount
     )
 
@@ -73,15 +73,19 @@ class InspectionService(
         return saved.toDto()
     }
 
-    fun list(): List<InspectionDto> {
-        return inspectionRepository.findAll().map { i -> i.toDto() };
+    fun listNotDeleted(): List<InspectionDto> {
+        return inspectionRepository.findAllByDeletedIsFalse().map { i -> i.toDto() };
     }
 
     fun delete(id: String) {
-        if (!inspectionRepository.findById(id).isPresent) {
+        val optional = inspectionRepository.findById(id)
+        if (optional.isPresent) {
+            val inspection = optional.get()
+            inspection.deleted = true
+            inspectionRepository.save(inspection)
+        } else {
             throw Error(101, "Invalid inspection UUID")
         }
-        inspectionRepository.deleteById(id)
     }
 
     fun find(id: String): Optional<InspectionDto> {

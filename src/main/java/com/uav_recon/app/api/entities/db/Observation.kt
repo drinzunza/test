@@ -26,6 +26,8 @@ class Observation(
         var locationDescription: String? = null,
         @Column(name = "dimension_number")
         var dimensionNumber: Int? = 0,
+        @Column(name = "is_deleted")
+        var deleted: Boolean? = false,
         @Transient
         var structuralComponent: StructuralComponent? = null,
         @Transient

@@ -49,6 +49,8 @@ class Inspection(
         var termRating: InspectionTermRating? = null,
         @Column(name = "spans_count")
         var spansCount: Int? = 0,
+        @Column(name = "is_deleted")
+        var deleted: Boolean? = false,
         @Transient
         var structure: Structure? = null,
         @Transient

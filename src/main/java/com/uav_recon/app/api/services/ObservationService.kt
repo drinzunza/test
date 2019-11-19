@@ -23,7 +23,7 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
         dimensionNumber = dimensionNumber,
         structuralComponentId = structuralComponentId,
         subComponentId = subComponentId,
-        observationDefects = observationDefectService.findAllByObservationId(uuid)
+        observationDefects = observationDefectService.findAllByObservationIdAndNotDeleted(uuid)
     )
 
     fun ObservationDto.toEntity(createdBy: Int, updatedBy: Int, inspectionId: String) = Observation(
@@ -40,9 +40,10 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
         inspectionId = inspectionId
     )
 
+    @Throws(Error::class)
     @Transactional
     fun save(dto: ObservationDto, inspectionId: String, updatedBy: Int): ObservationDto {
-        if (!inspectionRepository.findById(inspectionId).isPresent) {
+        if (!inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId).isPresent) {
             throw invalidInspectionUuid
         }
         if (dto.observationDefects != null) {
@@ -61,19 +62,21 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
         return list.map { dto -> save(dto, inspectionId, updatedBy) }
     }
 
-    fun findAllByInspectionId(id: String): List<ObservationDto> {
-        return observationRepository.findAllByInspectionId(id).map { o -> o.toDto() }
+    fun findAllByInspectionIdAndNotDeleted(id: String): List<ObservationDto> {
+        return observationRepository.findAllByInspectionIdAndDeletedIsFalse(id).map { o -> o.toDto() }
     }
 
     fun delete(id: String, inspectionId: String) {
         val optional = observationRepository.findById(id)
-        if (optional.isPresent && optional.get().inspectionId != inspectionId) {
-            throw invalidInspectionUuid
-        }
-        if (!observationRepository.findById(id).isPresent) {
+        if (!optional.isPresent) {
             throw Error(102, "Invalid observation uuid")
         }
-        observationRepository.deleteById(id);
+        val observation = optional.get()
+        if (observation.inspectionId != inspectionId) {
+            throw invalidInspectionUuid
+        }
+        observation.deleted = true
+        observationRepository.save(observation);
     }
 
 }
