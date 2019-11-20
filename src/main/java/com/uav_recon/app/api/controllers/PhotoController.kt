@@ -6,17 +6,16 @@ import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.api.services.FileStorageService
 import com.uav_recon.app.api.utils.getFileContentType
+import com.uav_recon.app.configurations.ControllerConfiguration
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
+import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.Resource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
 import javax.servlet.http.HttpServletRequest
@@ -32,6 +31,7 @@ class PhotoController(
 
     @PostMapping("${VERSION}/photo")
     fun uploadPhoto(
+            @RequestHeader(X_TOKEN) token: String,
             @RequestParam("latitude") latitude: Double,
             @RequestParam("longitude") longitude: Double,
             @RequestParam("altitude") altitude: Double,
@@ -58,7 +58,7 @@ class PhotoController(
     }
 
     @GetMapping("${VERSION}/photo")
-    fun downloadPhoto(@RequestParam id: String, request: HttpServletRequest): ResponseEntity<Resource> {
+    fun downloadPhoto(@RequestHeader(X_TOKEN) token: String, @RequestParam id: String, request: HttpServletRequest): ResponseEntity<Resource> {
         val photo = photoRepository.findByIdOrNull(id)
         if (photo?.link == null) {
             throw FileStorageException("Photo not found.")

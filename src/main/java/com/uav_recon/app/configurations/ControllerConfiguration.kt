@@ -7,4 +7,5 @@ object ControllerConfiguration {
     const val CONFIRM_SESSION = "Confirm-Session"
     const val REG_SESSION = "Reg-Session"
     const val APPLICATION_ID = "Application-Id"
+    const val X_TOKEN = "X-Token"
 }
