@@ -13,6 +13,7 @@ class UavConfiguration {
     val security = Security()
     val token = Token()
     val files = Files()
+    val server = Server()
 
     class Security {
         @Pattern(regexp = "\\d{1,2}", message = "Must be in range of 1-99 minutes")
@@ -32,6 +33,16 @@ class UavConfiguration {
         @NotBlank
         lateinit var uploadDir: String
         @NotBlank
-        lateinit var photosDir: String
+        lateinit var root: String
+        @NotBlank
+        lateinit var useGoogle: String
+        @NotBlank
+        lateinit var gsBucket: String
+    }
+
+    class Server {
+        @NotBlank
+        lateinit var host: String
+        lateinit var id: String
     }
 }

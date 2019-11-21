@@ -43,10 +43,15 @@ server:
 uav:
   files:
     upload_dir: /uav-recon/files
-    photos_dir: /uav-recon/photos/
+    root: /uav-recon/data/
+    useGoogle: false
+    gsBucket: data_recon_test
   token:
     secret: WV0TzjM5ZM414ivwUPMj
     token_expiration_time: 86400
   security:
     reset_password_timeout: 15 # in minutes
     reset_password_code_length: 6
+  server:
+    host: http://35.223.228.180
+    id:
