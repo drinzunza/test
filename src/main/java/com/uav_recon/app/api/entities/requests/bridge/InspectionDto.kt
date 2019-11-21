@@ -8,7 +8,6 @@ import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class InspectionDto(
-        val id: String,
         val uuid: String,
         val observations: List<ObservationDto>?,
         val isEditable: Boolean?,

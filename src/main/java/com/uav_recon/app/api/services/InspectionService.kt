@@ -17,7 +17,6 @@ class InspectionService(
         val weatherService: WeatherService) {
 
     fun Inspection.toDto() = InspectionDto(
-        id = id,
         uuid = uuid,
         location = if (latitude != null) LocationDto(latitude, longitude, altitude) else null,
         endDate = endDate,
@@ -35,7 +34,7 @@ class InspectionService(
     )
 
     fun InspectionDto.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) = Inspection(
-        id = id,
+        id = "",
         uuid = uuid,
         latitude = location?.latitude,
         longitude = location?.longitude,
