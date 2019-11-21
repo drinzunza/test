@@ -23,8 +23,8 @@ spring:
 
 uav:
   files:
-    upload_dir: /uav-recon/files
-    root: /uav-recon/data/
+    upload_dir: /var/uav-recon/files
+    root: /var/uav-recon/data/
     useGoogle: false
     gsBucket: data_recon_test
   token:
