@@ -73,8 +73,8 @@ class InspectionService(
         return saved.toDto()
     }
 
-    fun listNotDeleted(): List<InspectionDto> {
-        return inspectionRepository.findAllByDeletedIsFalse().map { i -> i.toDto() };
+    fun listNotDeleted(userId: Int): List<InspectionDto> {
+        return inspectionRepository.findAllByDeletedIsFalseAndCreatedBy(userId).map { i -> i.toDto() };
     }
 
     fun delete(id: String) {
