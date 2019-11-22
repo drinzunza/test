@@ -3,12 +3,24 @@ package com.uav_recon.app.api.services
 import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.transaction.Transactional
 
 @Service
 class ObservationDefectService(private val observationDefectRepository: ObservationDefectRepository,
                                private val photoService: PhotoService) {
+
+    private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
+
+    companion object {
+        private const val DELIMITER_ID = "-"
+        private val DELIMETER_REGEX = Regex("$DELIMITER_ID{2,}")
+        private const val OBSERVATION_LETTER_STRUCTURAL = "D"
+        private const val OBSERVATION_LETTER_MAINTENANCE = "M"
+    }
 
     private fun ObservationDefect.toDto() = ObservationDefectDto(
         id = id,
@@ -37,22 +49,84 @@ class ObservationDefectService(private val observationDefectRepository: Observat
     )
 
     @Transactional
-    fun save(dto: ObservationDefectDto, observationId: String, updatedBy: Int): ObservationDefectDto {
+    fun save(dto: ObservationDefectDto, observationId: String, updatedBy: Int, structureId: String): ObservationDefectDto {
         var createdBy = updatedBy
         val observationDefect = observationDefectRepository.findById(dto.uuid)
         if (observationDefect.isPresent) {
             createdBy = observationDefect.get().createdBy
         }
+        if (observationDefectRepository.countById(dto.id) > 0) {
+            logger.info("Observation defect id (${dto.id}) already exists")
+            dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId, true)
+            logger.info("New observation defect id (${dto.id})")
+        }
         return observationDefectRepository.save(dto.toEntity(createdBy, updatedBy, observationId)).toDto()
     }
 
     @Transactional
-    fun save(list: List<ObservationDefectDto>, observationId: String, updatedBy: Int): List<ObservationDefectDto> {
-        return list.map { dto -> save(dto, observationId, updatedBy) }
+    fun save(list: List<ObservationDefectDto>, observationId: String, updatedBy: Int, structureId: String): List<ObservationDefectDto> {
+        return list.map { dto -> save(dto, observationId, updatedBy, structureId) }
     }
 
     fun findAllByObservationIdAndNotDeleted(id: String): List<ObservationDefectDto> {
         return observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(id).map { o -> o.toDto() }
     }
 
+    fun generateObservationDefectDisplayId(inspectorId: String, structureId: String, structuralObservation: Boolean?): String {
+        val observationLetter = structuralObservation?.let {
+            if (structuralObservation) OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE
+        }
+        val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
+        val autoNum = getNewAutoNum(asset = structureId, observationLetter = observationLetter, inspectorId = inspectorId, date = date)
+
+        return generateObservationDefectDisplayId(
+                asset = structureId,
+                observationLetter = observationLetter,
+                autoNum = autoNum,
+                userId = inspectorId,
+                date = date
+        )
+    }
+
+    private fun getNewAutoNum(asset: String, observationLetter: String?, inspectorId: String?, date: String?): String {
+        val prefix = generateObservationDefectDisplayId(asset = asset, autoNum = "")
+
+        val suffix = generateObservationDefectDisplayId(autoNum = "", userId = inspectorId, date = date)
+        val maxId = observationDefectRepository.getMaxDefectDisplayId(prefix, suffix)?.id
+
+        var longId = maxId
+                ?.removeSuffix(suffix)
+                ?.split(DELIMITER_ID)
+                ?.reversed()
+                ?.firstOrNull()
+                ?.toLongOrNull()
+                ?: 0
+
+        while (true) {
+            longId++
+            val autoNum = String.format("%03d", longId)
+            val newId = generateObservationDefectDisplayId(
+                    asset = asset,
+                    observationLetter = observationLetter,
+                    autoNum = autoNum,
+                    userId = inspectorId,
+                    date = date
+            )
+            observationDefectRepository.getObservationDefectsDisplayId(newId).getOrNull(0) ?: return autoNum
+        }
+    }
+
+    private fun generateObservationDefectDisplayId(
+            asset: String? = null,
+            observationLetter: String? = null,
+            autoNum: String? = null,
+            userId: String? = null,
+            date: String? = null
+    ): String {
+        return arrayOf(asset?.replace(' ', '_'), observationLetter, autoNum, userId, date)
+                .filterNotNull()
+                .joinToString(DELIMITER_ID)
+                .replace(" ", "") // StructureId contains spaces
+                .replace(DELIMETER_REGEX, DELIMITER_ID)
+    }
 }

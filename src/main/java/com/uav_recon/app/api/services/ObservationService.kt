@@ -43,11 +43,12 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
     @Throws(Error::class)
     @Transactional
     fun save(dto: ObservationDto, inspectionId: String, updatedBy: Int): ObservationDto {
-        if (!inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId).isPresent) {
+        val inspection = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId)
+        if (!inspection.isPresent) {
             throw invalidInspectionUuid
         }
         if (dto.observationDefects != null) {
-            observationDefectService.save(dto.observationDefects, dto.uuid, updatedBy)
+            observationDefectService.save(dto.observationDefects, dto.uuid, updatedBy, inspection.get().structureId!!)
         }
         var createdBy = updatedBy
         val observation = observationRepository.findById(dto.uuid)
