@@ -12,16 +12,15 @@ import com.uav_recon.app.api.services.report.document.DocumentFactory
 import com.uav_recon.app.api.utils.getFileContentType
 import com.uav_recon.app.api.utils.response
 import com.uav_recon.app.api.utils.toResponse
+import com.uav_recon.app.configurations.ControllerConfiguration
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
+import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
 import org.springframework.core.io.Resource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 
@@ -34,7 +33,7 @@ class ReportController(
         private val fileStorageService: FileStorageService) {
 
     @GetMapping("$VERSION/report")
-    fun getReport(@RequestParam id: Int, request: HttpServletRequest): ResponseEntity<Resource> {
+    fun getReport(@RequestHeader(X_TOKEN) token: String, @RequestParam id: Int, request: HttpServletRequest): ResponseEntity<Resource> {
         val report = reportRepository.findByIdOrNull(id)
         if (report?.file == null) {
             throw FileStorageException("Report not found.")
@@ -49,7 +48,7 @@ class ReportController(
     }
 
     @PostMapping("$VERSION/report")
-    fun generateReport(@RequestParam inspectionId: String): Response<ReportResponse> {
+    fun generateReport(@RequestHeader(X_TOKEN) token: String, @RequestParam inspectionId: String): Response<ReportResponse> {
         val inspection = inspectionRepository.findByIdOrNull(inspectionId)
                 ?: throw FileStorageException("Inspection does not exists.")
 
