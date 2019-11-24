@@ -25,8 +25,9 @@ uav:
   files:
     upload_dir: /var/uav-recon/files
     root: /var/uav-recon/data/
-    useGoogle: false
-    gsBucket: data_recon_test
+    use_google: false
+    gs_bucket: data_recon_test
+    remove_file_on_delete: false
   token:
     secret: sercret
     token_expiration_time: 1800

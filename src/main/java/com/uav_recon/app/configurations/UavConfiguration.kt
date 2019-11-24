@@ -38,6 +38,8 @@ class UavConfiguration {
         lateinit var useGoogle: String
         @NotBlank
         lateinit var gsBucket: String
+        @NotBlank
+        lateinit var removeFileOnDelete: String
     }
 
     class Server {

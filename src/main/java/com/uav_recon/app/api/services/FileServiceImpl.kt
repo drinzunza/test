@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class FileServiceImpl(configuration: UavConfiguration) : FileService {
-    val service: FileService = if (configuration.files.useGoogle.equals("true")) GoogleStorageFileService(
+    val service: FileService = if (configuration.files.useGoogle == "true") GoogleStorageFileService(
         configuration) else LocalStorageFileService(configuration)
 
     override fun save(path: String, bytes: ByteArray): String {

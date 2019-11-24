@@ -9,6 +9,9 @@ import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 
 class LocalStorageFileService(private val configuration: UavConfiguration) : FileService {
+    private val serverId = if (!StringUtils.isBlank(configuration.server.id)) "/${configuration.server.id}" else ""
+    private val linkPrefix = "${configuration.server.host}$serverId/files/"
+
     override fun save(path: String, bytes: ByteArray): String {
         val absolutePath = Paths.get(configuration.files.root.replace("///", ""), path)
         val parentFile = absolutePath.toFile().parentFile
@@ -20,15 +23,14 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         } else {
             Files.write(absolutePath, bytes, StandardOpenOption.CREATE_NEW)
         }
-        val serverId = if (!StringUtils.isBlank(configuration.server.id)) "/${configuration.server.id}" else ""
-        return "${configuration.server.host}$serverId/files/$path"
+        return "$linkPrefix$path"
     }
 
-    override fun get(path: String): ByteArray {
-        return Files.readAllBytes(Paths.get(configuration.files.root, path))
+    override fun get(link: String): ByteArray {
+        return Files.readAllBytes(Paths.get(configuration.files.root, link.replace(linkPrefix, "")))
     }
 
-    override fun delete(path: String) {
-        Files.delete(Paths.get(configuration.files.root, path))
+    override fun delete(link: String) {
+        Files.delete(Paths.get(configuration.files.root, link.replace(linkPrefix, "")))
     }
 }

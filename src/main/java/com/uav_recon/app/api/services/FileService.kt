@@ -12,6 +12,6 @@ interface FileService {
         return save("$userId/$inspectionUuid/$defectUuid/$photoUuid.$format", bytes)
     }
 
-    fun delete(path: String)
-    fun get(path: String): ByteArray
+    fun delete(link: String)
+    fun get(link: String): ByteArray
 }
