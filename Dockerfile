@@ -1,16 +1,16 @@
 FROM openjdk:8-jdk-alpine
-RUN adduser -g '' -D service_user
+#RUN adduser -g '' -D service_user
 
 WORKDIR /src
 COPY . /src
 
 RUN mkdir /var/uav-recon
-RUN chown -R service_user /src
-RUN chown -R service_user /var/uav-recon
+#RUN chown -R service_user /src
+#RUN chown -R service_user /var/uav-recon
 
-USER service_user
+#USER service_user
 
-RUN ./gradlew build --info
+RUN ./gradlew build -x test --info
 RUN ls /src/build/libs
 
 WORKDIR /var/uav-recon
