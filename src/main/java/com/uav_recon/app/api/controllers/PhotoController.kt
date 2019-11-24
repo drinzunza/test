@@ -5,6 +5,7 @@ import com.uav_recon.app.api.entities.requests.bridge.LocationDto
 import com.uav_recon.app.api.entities.requests.bridge.PhotoDto
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.services.PhotoService
+import com.uav_recon.app.configurations.ControllerConfiguration
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -32,6 +34,7 @@ class PhotoController(private val photoService: PhotoService,
 
     @PostMapping
     fun uploadPhoto(
+            @RequestHeader(ControllerConfiguration.X_TOKEN) token: String,
             @PathVariable inspectionId: String,
             @PathVariable observationId: String,
             @PathVariable observationDefectId: String,
@@ -41,12 +44,7 @@ class PhotoController(private val photoService: PhotoService,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ") createdAt: OffsetDateTime?,
             @RequestParam drawables: String?,
             @RequestParam data: MultipartFile): ResponseEntity<*> {
-        return ResponseEntity.ok(photoService.save(PhotoDto(id,
-                                                            uuid,
-                                                            null,
-                                                            createdAt,
-                                                            location,
-                                                            drawables),
+        return ResponseEntity.ok(photoService.save(PhotoDto(id, uuid, null, createdAt, location, drawables),
                                                    data,
                                                    inspectionId,
                                                    observationId,
