@@ -6,7 +6,7 @@ import java.io.Serializable
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ObservationDefectDto(
-        val id: String,
+        var id: String,
         val uuid: String,
         val criticalFindings: List<CriticalFinding>?,
         val defectId: String?,
