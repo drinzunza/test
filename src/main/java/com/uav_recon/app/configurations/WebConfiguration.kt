@@ -52,7 +52,7 @@ class WebConfiguration(val configuration: UavConfiguration) : WebMvcConfigurer {
     }
 
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
-        registry.addResourceHandler("/photo/**")
-                .addResourceLocations("file:${configuration.files.photosDir}")
+        registry.addResourceHandler("/files/**")
+                .addResourceLocations("file:${configuration.files.root}/")
     }
 }

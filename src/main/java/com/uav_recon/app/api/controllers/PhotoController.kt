@@ -1,73 +1,96 @@
 package com.uav_recon.app.api.controllers
 
-import com.uav_recon.app.api.controllers.handlers.FileStorageException
-import com.uav_recon.app.api.entities.db.Photo
-import com.uav_recon.app.api.repositories.ObservationDefectRepository
-import com.uav_recon.app.api.repositories.PhotoRepository
-import com.uav_recon.app.api.services.FileStorageService
-import com.uav_recon.app.api.utils.getFileContentType
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.uav_recon.app.api.entities.requests.bridge.LocationDto
+import com.uav_recon.app.api.entities.requests.bridge.PhotoDto
+import com.uav_recon.app.api.entities.requests.bridge.UpdatePhotoDto
+import com.uav_recon.app.api.services.PhotoService
 import com.uav_recon.app.configurations.ControllerConfiguration
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
-import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
-import org.springframework.core.io.Resource
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.convert.converter.Converter
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.stereotype.Component
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
-import java.util.*
-import javax.servlet.http.HttpServletRequest
+import java.time.OffsetDateTime
+
 
 @RestController
-class PhotoController(
-        private val fileStorageService: FileStorageService,
-        private val photoRepository: PhotoRepository,
-        private val observationDefectRepository: ObservationDefectRepository
-) {
+@RequestMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect" +
+                        "/{observationDefectId}/photo")
+class PhotoController(private val photoService: PhotoService) : BaseController() {
 
     private val logger = LoggerFactory.getLogger(PhotoController::class.java)
 
-    @PostMapping("${VERSION}/photo")
+    @PostMapping
     fun uploadPhoto(
-            @RequestHeader(X_TOKEN) token: String,
-            @RequestParam("latitude") latitude: Double,
-            @RequestParam("longitude") longitude: Double,
-            @RequestParam("altitude") altitude: Double,
-            @RequestParam("startX") startX: Double,
-            @RequestParam("startY") startY: Double,
-            @RequestParam("endX") endX: Double,
-            @RequestParam("endY") endY: Double,
-            @RequestParam("observationDefectId") observationDefectId: String,
-            @RequestParam("file") file: MultipartFile
-    ): ResponseEntity<*> {
-        val now = Date()
-        val extension = file.originalFilename?.substringAfterLast('.', "")
-        val uniqueFileName = "photo_${now.time}.$extension"
-        if (fileStorageService.getFile(uniqueFileName).exists()) {
-            throw FileStorageException("Photo already exists.")
-        }
-
-        val fileName = fileStorageService.storeFile(file, uniqueFileName)
-        val observationDefect = observationDefectRepository.findByIdOrNull(observationDefectId)
-
-        val photo = Photo("", "", 0, 0, "", "")
-        val savedPhoto = photoRepository.save(photo)
-        return ResponseEntity.ok("")
+            @RequestHeader(ControllerConfiguration.X_TOKEN) token: String,
+            @PathVariable inspectionId: String,
+            @PathVariable observationId: String,
+            @PathVariable observationDefectId: String,
+            @RequestParam id: String,
+            @RequestParam uuid: String,
+            @RequestParam location: LocationDto?,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ") createdAt: OffsetDateTime?,
+            @RequestParam drawables: String?,
+            @RequestParam data: MultipartFile): ResponseEntity<*> {
+        return ResponseEntity.ok(photoService.save(PhotoDto(id, uuid, null, createdAt, location, drawables),
+                                                   data,
+                                                   inspectionId,
+                                                   observationId,
+                                                   observationDefectId,
+                                                   getAuthenticatedUserId()))
     }
 
-    @GetMapping("${VERSION}/photo")
-    fun downloadPhoto(@RequestHeader(X_TOKEN) token: String, @RequestParam id: String, request: HttpServletRequest): ResponseEntity<Resource> {
-        val photo = photoRepository.findByIdOrNull(id)
-        if (photo?.link == null) {
-            throw FileStorageException("Photo not found.")
+    @PutMapping("/{uuid}")
+    fun update(@RequestHeader(ControllerConfiguration.X_TOKEN) token: String,
+               @PathVariable inspectionId: String,
+               @PathVariable observationId: String,
+               @PathVariable observationDefectId: String,
+               @PathVariable uuid: String,
+               @RequestBody updateDto: UpdatePhotoDto): ResponseEntity<*> {
+        photoService.update(uuid,
+                            updateDto,
+                            inspectionId,
+                            observationId,
+                            observationDefectId,
+                            getAuthenticatedUserId())
+        return ResponseEntity.ok(success)
+    }
+
+    @DeleteMapping("/{uuid}")
+    fun delete(@RequestHeader(ControllerConfiguration.X_TOKEN) token: String,
+               @PathVariable inspectionId: String,
+               @PathVariable observationId: String,
+               @PathVariable observationDefectId: String,
+               @PathVariable uuid: String): ResponseEntity<*> {
+        photoService.delete(inspectionId, observationId, observationDefectId, uuid)
+        return ResponseEntity.ok(success)
+    }
+
+    @Component
+    class StringToLocationConverter : Converter<String, LocationDto> {
+
+        @Autowired
+        private val objectMapper: ObjectMapper? = null
+
+        override fun convert(source: String): LocationDto? {
+            if (StringUtils.isBlank(source)) {
+                return null
+            }
+            return objectMapper!!.readValue(source, LocationDto::class.java)
         }
-        val resource = fileStorageService.loadFileAsResource(photo.link!!)
-        val contentType = resource.getFileContentType(request)
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.filename + "\"")
-                .body<Resource>(resource)
     }
 }

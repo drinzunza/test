@@ -6,9 +6,9 @@ import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class PhotoDto(
-        val id: String,
+        var id: String,
         val uuid: String,
-        val link: String,
+        var link: String?,
         val createdAt: OffsetDateTime?,
         val location: LocationDto?,
         val drawables: String?

@@ -24,10 +24,16 @@ spring:
 uav:
   files:
     upload_dir: /var/uav-recon/files
-    photos_dir: /var/uav-recon/photos/
+    root: /var/uav-recon/data/
+    use_google: false
+    gs_bucket: data_recon_test
+    remove_file_on_delete: false
   token:
-    secret: WV0TzjM5ZM414ivwUPMj
+    secret: sercret
     token_expiration_time: 1800
   security:
     reset_password_timeout: 15 # in minutes
     reset_password_code_length: 6
+  server:
+    host: http://localhost
+    id:
