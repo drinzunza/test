@@ -72,6 +72,7 @@ class UserService(private val userRepository: UserRepository,
     }
 
     @Transactional
+    @Throws(Error::class)
     fun passwordResetAttempt(email: String?): Long {
         val user = findUser(email)
         val optional = passwordResetAttemptRepository
@@ -98,6 +99,7 @@ class UserService(private val userRepository: UserRepository,
         throw throw Error(1, "Wrong email address")
     }
 
+    @Throws(Error::class)
     fun resetPassword(email: String, code: Int?, password: String?) {
         validatePassword(password)
         val user = findUser(email)
