@@ -93,7 +93,11 @@ class ObservationDefectService(private val observationDefectRepository: Observat
     }
 
     @Transactional
-    fun save(list: List<ObservationDefectDto>, inspectionId: String, observationId: String, updatedBy: Int, structureId: String):
+    fun save(list: List<ObservationDefectDto>,
+             inspectionId: String,
+             observationId: String,
+             updatedBy: Int,
+             structureId: String):
             List<ObservationDefectDto> {
         return list.map { dto -> save(dto, inspectionId, observationId, updatedBy, structureId) }
     }
@@ -102,19 +106,25 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         return observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(id).map { o -> o.toDto() }
     }
 
-    fun generateObservationDefectDisplayId(inspectorId: String, structureId: String, structuralObservation: Boolean?): String {
+    fun generateObservationDefectDisplayId(inspectorId: String,
+                                           structureId: String,
+                                           structuralObservation: Boolean?): String {
         val observationLetter = structuralObservation?.let {
             if (structuralObservation) OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE
         }
         val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
-        val autoNum = getNewAutoNum(asset = structureId, observationLetter = observationLetter, inspectorId = inspectorId, date = date)
+        val autoNum =
+                getNewAutoNum(asset = structureId,
+                              observationLetter = observationLetter,
+                              inspectorId = inspectorId,
+                              date = date)
 
         return generateObservationDefectDisplayId(
-                asset = structureId,
-                observationLetter = observationLetter,
-                autoNum = autoNum,
-                userId = inspectorId,
-                date = date
+            asset = structureId,
+            observationLetter = observationLetter,
+            autoNum = autoNum,
+            userId = inspectorId,
+            date = date
         )
     }
 
@@ -136,11 +146,11 @@ class ObservationDefectService(private val observationDefectRepository: Observat
             longId++
             val autoNum = String.format("%03d", longId)
             val newId = generateObservationDefectDisplayId(
-                    asset = asset,
-                    observationLetter = observationLetter,
-                    autoNum = autoNum,
-                    userId = inspectorId,
-                    date = date
+                asset = asset,
+                observationLetter = observationLetter,
+                autoNum = autoNum,
+                userId = inspectorId,
+                date = date
             )
             observationDefectRepository.getObservationDefectsDisplayId(newId).getOrNull(0) ?: return autoNum
         }

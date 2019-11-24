@@ -54,7 +54,11 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
         }
         val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId))
         if (dto.observationDefects != null) {
-            observationDefectService.save(dto.observationDefects, inspectionId, dto.uuid, updatedBy, inspection.get().structureId!!)
+            observationDefectService.save(dto.observationDefects,
+                                          inspectionId,
+                                          dto.uuid,
+                                          updatedBy,
+                                          inspection.get().structureId!!)
         }
         return saved.toDto()
     }
