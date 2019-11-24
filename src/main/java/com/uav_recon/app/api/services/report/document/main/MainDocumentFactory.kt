@@ -144,7 +144,7 @@ class MainDocumentFactory(
             )
             createElements(
                 TRIPLE_LINE_FEED_ELEMENT,
-                STRUCTURE_ID_ELEMENT, inspection?.structure?.code
+                STRUCTURE_ID_ELEMENT, inspection?.structure?.id
             )
             createElements(prefix = CALTRANS_NO_ELEMENT, text = inspection?.structure?.caltransBridgeNo)
             createElements(prefix = POST_MILE_ELEMENT, text = inspection?.structure?.postmile?.toString())

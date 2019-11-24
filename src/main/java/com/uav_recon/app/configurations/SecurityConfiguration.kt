@@ -5,6 +5,7 @@ import com.uav_recon.app.api.services.UserService
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -40,6 +41,10 @@ class SecurityConfiguration(val tokenManager: TokenManager, val userService: Use
 
     override fun configure(auth: AuthenticationManagerBuilder) {
         auth.authenticationProvider(TokenAuthenticationProvider(userService))
+    }
+
+    override fun configure(web: WebSecurity) {
+        web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**", "/configuration/**", "/swagger-ui.html", "/webjars/**")
     }
 
     inner class CustomAuthenticationEntryPoint : AuthenticationEntryPoint {

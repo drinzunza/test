@@ -4,16 +4,15 @@ import java.io.Serializable
 import javax.persistence.*
 
 @Entity
-@Table(name = "defect")
-class Defect : Serializable {
+@Table(name = "defects")
+class Defect(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Int = 0
+    var id: Int = 0,
     @Column(name = "name")
-    var name: String? = null
+    var name: String? = null,
     @Column(name = "number")
-    var number: Int? = null
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "material_id", referencedColumnName = "id")
-    var material: Material? = null
-}
+    var number: Int? = null,
+    @Column(name = "material_id")
+    var materialId: Int? = null
+) : Serializable
