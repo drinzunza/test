@@ -32,8 +32,10 @@ class ExceptionsHandler(@Value("\${spring.profiles.active}") val profile: String
     @ResponseBody
     @ExceptionHandler(Error::class)
     fun handle(e: Error, r: HttpServletRequest): ResponseEntity<*> {
-        if (logger.isErrorEnabled) {
+        if (logger.isDebugEnabled) {
             logger.error("Method call (`{}`) failed: {}.", r.requestURI, ExceptionUtils.getStackTrace(e))
+        } else {
+            logger.error("Method call (`{}`) failed: {}.", r.requestURI, e.localizedMessage)
         }
         return ResponseEntity.badRequest().body(Response<Any>(e.code, e.message))
     }

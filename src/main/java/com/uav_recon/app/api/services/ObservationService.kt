@@ -72,6 +72,7 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
         return observationRepository.findAllByInspectionIdAndDeletedIsFalse(id).map { o -> o.toDto() }
     }
 
+    @Throws(Error::class)
     fun delete(id: String, inspectionId: String) {
         val optional = observationRepository.findById(id)
         if (!optional.isPresent) {
