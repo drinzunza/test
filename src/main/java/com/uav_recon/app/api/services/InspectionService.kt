@@ -17,7 +17,6 @@ class InspectionService(
         val weatherService: WeatherService) {
 
     fun Inspection.toDto() = InspectionDto(
-        id = id,
         uuid = uuid,
         location = if (latitude != null) LocationDto(latitude, longitude, altitude) else null,
         endDate = endDate,
@@ -35,7 +34,7 @@ class InspectionService(
     )
 
     fun InspectionDto.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) = Inspection(
-        id = id,
+        id = "",
         uuid = uuid,
         latitude = location?.latitude,
         longitude = location?.longitude,
@@ -73,8 +72,8 @@ class InspectionService(
         return saved.toDto()
     }
 
-    fun listNotDeleted(): List<InspectionDto> {
-        return inspectionRepository.findAllByDeletedIsFalse().map { i -> i.toDto() };
+    fun listNotDeleted(userId: Int): List<InspectionDto> {
+        return inspectionRepository.findAllByDeletedIsFalseAndCreatedBy(userId).map { i -> i.toDto() };
     }
 
     fun delete(id: String) {

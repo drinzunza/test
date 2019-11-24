@@ -24,7 +24,7 @@ import com.uav_recon.app.api.entities.responses.photo.PhotoResponse
 // Entities
 
 fun Condition.toResponse(): ConditionResponse {
-    return ConditionResponse(id, description, type, defect?.id)
+    return ConditionResponse(id, description, type, defectId)
 }
 
 /*fun Inspection.toResponse(): InspectionResponse {
@@ -47,15 +47,15 @@ fun Report.toResponse(): ReportResponse {
 }
 
 fun Defect.toResponse(): DefectResponse {
-    return DefectResponse(id, name, number, material?.id)
+    return DefectResponse(id, name, number, materialId)
 }
 
 fun Material.toResponse(): MaterialResponse {
-    return MaterialResponse(id, name, description, measureUnit, subcomponent?.id)
+    return MaterialResponse(id, name, description, measureUnit, subcomponentId)
 }
 
 fun StructureComponent.toResponse(): StructureComponentResponse {
-    return StructureComponentResponse(id, structure?.id, structuralComponent?.id)
+    return StructureComponentResponse(id, structureId, structuralComponentId)
 }
 
 fun Subcomponent.toResponse(): SubcomponentResponse {

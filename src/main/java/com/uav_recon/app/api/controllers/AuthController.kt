@@ -76,35 +76,4 @@ class AuthController(private val userService: UserService,
         userService.resetPassword(request.email, request.code, request.password)
         return ResponseEntity.ok(success)
     }
-
-    @PostMapping("$VERSION/authorization")
-    fun authorization(@RequestBody request: AuthorizationRequest): Response<UserResponse> {
-        return Response()
-    }
-
-    @PostMapping("$VERSION/registration")
-    fun registration(@RequestBody request: RegistrationRequest): Response<RegSession> {
-        return Response()
-    }
-
-    @PostMapping("$VERSION/registration/confirm")
-    fun confirm(@RequestBody request: VerificationCode,
-                @RequestHeader(REG_SESSION) session: String): Response<UserResponse> {
-        return Response()
-    }
-
-    @GetMapping("$VERSION/registration/notReceived")
-    fun confirmAgain(@RequestHeader(REG_SESSION) session: String): Response<RegSession> {
-        return Response()
-    }
-
-    @GetMapping("$VERSION/authentication")
-    fun authentication(@RequestHeader(APP_SESSION) appSession: String): Response<UserResponse> {
-        return Response()
-    }
-
-    @DeleteMapping("$VERSION/authentication/logout")
-    fun logout(@RequestHeader(APP_SESSION) appSession: String): Response<Unit> {
-        return Response()
-    }
 }
