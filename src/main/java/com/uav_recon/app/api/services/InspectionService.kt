@@ -76,6 +76,7 @@ class InspectionService(
         return inspectionRepository.findAllByDeletedIsFalseAndCreatedBy(userId).map { i -> i.toDto() };
     }
 
+    @Throws(Error::class)
     fun delete(id: String) {
         val optional = inspectionRepository.findById(id)
         if (optional.isPresent) {

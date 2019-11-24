@@ -57,12 +57,17 @@ class ObservationDefectService(private val observationDefectRepository: Observat
     fun save(dto: ObservationDefectDto,
              inspectionId: String,
              observationId: String,
-             updatedBy: Int, structureId: String): ObservationDefectDto {
+             updatedBy: Int,
+             passedStructureId: String = ""): ObservationDefectDto {
+        var structureId = passedStructureId
         checkInspectionAndObservationRelationship(inspectionId, observationId)
         var createdBy = updatedBy
         val observationDefect = observationDefectRepository.findById(dto.uuid)
         if (observationDefect.isPresent) {
             createdBy = observationDefect.get().createdBy
+        }
+        if (structureId.isBlank()) {
+            structureId = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId).get().structureId!!
         }
         if (observationDefectRepository.countById(dto.id) > 0) {
             logger.info("Observation defect id (${dto.id}) already exists")
@@ -81,6 +86,7 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         }
     }
 
+    @Throws(Error::class)
     fun delete(id: String, inspectionId: String, observationId: String) {
         checkInspectionAndObservationRelationship(inspectionId, observationId)
         val optional = observationDefectRepository.findById(id)
