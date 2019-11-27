@@ -38,6 +38,8 @@ class ObservationDefect(
         var criticalFindings: Array<CriticalFinding>?,
         @Column(name = "span_number")
         var spanNumber: Int? = 0,
+        @Column(name = "station_marker")
+        var stationMarker: String?,
         @Column(name = "is_deleted")
         var deleted: Boolean? = false,
         @Transient

@@ -35,7 +35,8 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         description = description,
         materialId = materialId,
         photos = photoService.findAllByObservationDefectIdAndNotDeleted(uuid),
-        spanNumber = spanNumber
+        spanNumber = spanNumber,
+        stationMarker = stationMarker
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
@@ -49,7 +50,8 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         conditionId = conditionId,
         criticalFindings = criticalFindings?.toTypedArray(),
         observationId = observationId,
-        spanNumber = spanNumber
+        spanNumber = spanNumber,
+        stationMarker = stationMarker
     )
 
     @Throws(Error::class)
