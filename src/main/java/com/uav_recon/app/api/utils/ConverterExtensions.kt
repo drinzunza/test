@@ -43,7 +43,7 @@ fun Condition.toResponse(): ConditionResponse {
 }*/
 
 fun Report.toResponse(): ReportResponse {
-    return ReportResponse(id, date, file, inspection?.id)
+    return ReportResponse(id, date, file, inspection?.uuid)
 }
 
 fun Defect.toResponse(): DefectResponse {

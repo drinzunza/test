@@ -13,7 +13,6 @@ import javax.persistence.Transient
 @Table(name = "inspections")
 class Inspection(
         uuid: String,
-        id: String,
         createdBy: Int,
         updatedBy: Int,
         @Column(name = "is_editable")
@@ -57,4 +56,4 @@ class Inspection(
         var company: Company? = null,
         @Transient
         var inspector: Inspector? = null
-) : MobileAppCreatedEntity(uuid, id, createdBy, updatedBy)
+) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)

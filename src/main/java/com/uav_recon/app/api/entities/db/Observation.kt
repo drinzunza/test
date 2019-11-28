@@ -9,7 +9,7 @@ import javax.persistence.Transient
 @Table(name = "observations")
 class Observation(
         uuid: String,
-        id: String,
+        val id: String,
         createdBy: Int,
         updatedBy: Int,
         @Column(name = "inspection_id")
@@ -34,4 +34,4 @@ class Observation(
         var code: String? = null,
         @Transient
         var subcomponent: Subcomponent? = null
-) : MobileAppCreatedEntity(uuid, id, createdBy, updatedBy)
+) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
