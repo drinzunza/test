@@ -29,12 +29,11 @@ class InspectionService(
         status = status,
         termRating = termRating,
         weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
-        observations = observationService.findAllByInspectionIdAndNotDeleted(uuid),
+        observations = observationService.findAllByInspectionUuidAndNotDeleted(uuid),
         spansCount = spansCount
     )
 
     fun InspectionDto.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) = Inspection(
-        id = "",
         uuid = uuid,
         latitude = location?.latitude,
         longitude = location?.longitude,

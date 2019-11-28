@@ -68,8 +68,8 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
         return list.map { dto -> save(dto, inspectionId, updatedBy) }
     }
 
-    fun findAllByInspectionIdAndNotDeleted(id: String): List<ObservationDto> {
-        return observationRepository.findAllByInspectionIdAndDeletedIsFalse(id).map { o -> o.toDto() }
+    fun findAllByInspectionUuidAndNotDeleted(uuid: String): List<ObservationDto> {
+        return observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid).map { o -> o.toDto() }
     }
 
     @Throws(Error::class)

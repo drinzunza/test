@@ -22,7 +22,7 @@ import javax.persistence.Transient
 )
 class ObservationDefect(
         uuid: String,
-        id: String,
+        val id: String,
         createdBy: Int,
         updatedBy: Int,
         @Column(name = "observation_id")
@@ -50,4 +50,4 @@ class ObservationDefect(
         var condition: Condition? = null,
         @Transient
         var size: String? = null
-) : MobileAppCreatedEntity(uuid, id, createdBy, updatedBy)
+) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)

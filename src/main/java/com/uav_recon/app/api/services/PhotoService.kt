@@ -21,8 +21,8 @@ class PhotoService(val photoRepository: PhotoRepository,
                    val inspectionRepository: InspectionRepository) {
 
     fun Photo.toDto() = PhotoDto(
-        id = id,
         uuid = uuid,
+        name = name,
         createdAt = createdAt,
         link = link,
         location = LocationDto(
@@ -34,8 +34,8 @@ class PhotoService(val photoRepository: PhotoRepository,
     )
 
     fun PhotoDto.toEntity(createdBy: Int, updatedBy: Int, observationDefectId: String, link: String) = Photo(
-        id = id,
         uuid = uuid,
+        name = name,
         altitude = location?.altitude,
         longitude = location?.longitude,
         latitude = location?.longitude,

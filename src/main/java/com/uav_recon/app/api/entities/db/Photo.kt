@@ -8,16 +8,16 @@ import javax.persistence.Table
 @Table(name = "photos")
 class Photo(
         uuid: String,
-        id: String,
         createdBy: Int,
         updatedBy: Int,
         @Column(name = "observation_defect_id")
         val observationDefectId: String,
         val link: String,
+        var name: String? = null,
         var latitude: Double? = null,
         var longitude: Double? = null,
         var altitude: Double? = null,
         var drawables: String? = null,
         @Column(name = "is_deleted")
         var deleted: Boolean? = false
-) : MobileAppCreatedEntity(uuid, id, createdBy, updatedBy)
+) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)

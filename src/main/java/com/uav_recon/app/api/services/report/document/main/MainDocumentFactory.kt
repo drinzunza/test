@@ -119,7 +119,7 @@ class MainDocumentFactory(
             page { createGlobalPage(inspection) }
             page { createObservationSummary(inspection) }
 
-            observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.id).forEach { observation ->
+            observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).forEach { observation ->
                 observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).forEach { defect ->
                     page { createDefectReportPage(inspection, observation, defect) }
                 }
@@ -280,7 +280,7 @@ class MainDocumentFactory(
     }
 
     private fun formatToValueCount(prefix: String, inspection: Inspection): String {
-        val count = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.id).sumBy { observation: Observation ->
+        val count = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).sumBy { observation: Observation ->
             observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).sumBy { defect: ObservationDefect ->
                 if (defect.criticalFindings?.find { finding -> finding.name.startsWith(prefix) } != null) 1 else 0
             }
@@ -301,7 +301,7 @@ class MainDocumentFactory(
             lineFeed { DOUBLE_LINE_FEED_ELEMENT }
         }
 
-        observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.id).forEach { observation ->
+        observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).forEach { observation ->
             paragraph {
                 text(observation.structuralComponent?.name ?: "", styles = BOLD_STYLE_LIST)
                 lineFeed { SINGLE_LINE_FEED_ELEMENT }
