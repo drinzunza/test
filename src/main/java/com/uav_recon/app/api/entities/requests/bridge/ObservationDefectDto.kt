@@ -2,6 +2,7 @@ package com.uav_recon.app.api.entities.requests.bridge
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.uav_recon.app.api.entities.db.CriticalFinding
+import com.uav_recon.app.api.entities.db.ObservationType
 import java.io.Serializable
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -15,5 +16,7 @@ data class ObservationDefectDto(
         val materialId: String?,
         val photos: List<PhotoDto>?,
         val spanNumber: Int?,
-        val stationMarker: String?
+        val stationMarker: String?,
+        val observationType: ObservationType?,
+        val size: String?
 ) : Serializable

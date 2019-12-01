@@ -2,9 +2,12 @@ package com.uav_recon.app.api.entities.db
 
 import com.vladmihalcea.hibernate.type.array.EnumArrayType
 import org.hibernate.annotations.Parameter
+import org.hibernate.annotations.Type
 import org.hibernate.annotations.TypeDef
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.Table
 import javax.persistence.Transient
 
@@ -42,12 +45,15 @@ class ObservationDefect(
         var stationMarker: String?,
         @Column(name = "is_deleted")
         var deleted: Boolean? = false,
+        @Column(name = "observation_type")
+        @Enumerated(EnumType.STRING)
+        @Type(type = "pgsql_enum")
+        var observationType: ObservationType? = null,
+        var size: String? = null,
         @Transient
         var material: Material? = null,
         @Transient
         var defect: Defect? = null,
         @Transient
-        var condition: Condition? = null,
-        @Transient
-        var size: String? = null
+        var condition: Condition? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
