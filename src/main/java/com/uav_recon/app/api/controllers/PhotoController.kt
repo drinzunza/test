@@ -43,7 +43,7 @@ class PhotoController(private val photoService: PhotoService) : BaseController()
             @RequestParam name: String,
             @RequestParam uuid: String,
             @RequestParam location: LocationDto?,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX") createdAt: OffsetDateTime?,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX") createdAt: OffsetDateTime?,
             @RequestParam drawables: String?,
             @RequestParam data: MultipartFile): ResponseEntity<*> {
         return ResponseEntity.ok(photoService.save(PhotoDto(uuid, null, name, createdAt, location, drawables),
