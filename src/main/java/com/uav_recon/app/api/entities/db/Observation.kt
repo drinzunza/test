@@ -29,7 +29,7 @@ class Observation(
         @Column(name = "is_deleted")
         var deleted: Boolean? = false,
         @Transient
-        var structuralComponent: StructuralComponent? = null,
+        var structuralComponent: Component? = null,
         @Transient
         var code: String? = null,
         @Transient

@@ -11,8 +11,6 @@ import com.uav_recon.app.api.services.report.DocumentWriter
 import com.uav_recon.app.api.services.report.document.DocumentFactory
 import com.uav_recon.app.api.utils.getFileContentType
 import com.uav_recon.app.api.utils.response
-import com.uav_recon.app.api.utils.toResponse
-import com.uav_recon.app.configurations.ControllerConfiguration
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
 import org.springframework.core.io.Resource
@@ -48,7 +46,7 @@ class ReportController(
     }
 
     @PostMapping("$VERSION/report")
-    fun generateReport(@RequestHeader(X_TOKEN) token: String, @RequestParam inspectionId: String): Response<ReportResponse> {
+    fun generateReport(@RequestHeader(X_TOKEN) token: String, @RequestParam inspectionId: String): Response<*> {
         val inspection = inspectionRepository.findByIdOrNull(inspectionId)
                 ?: throw FileStorageException("Inspection does not exists.")
 
@@ -67,6 +65,6 @@ class ReportController(
         documentWriter.writeDocument(document, fileStorageService.getFile(uniqueFileName))
         val savedReport = reportRepository.save(report)
 
-        return savedReport.toResponse().response()
+        return savedReport.response()
     }
 }
