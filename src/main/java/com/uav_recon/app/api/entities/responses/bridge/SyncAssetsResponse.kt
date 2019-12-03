@@ -7,7 +7,7 @@ data class SyncAssetsResponse(
         val conditions: List<ConditionResponse>?,
         val defects: List<DefectResponse>?,
         val materials: List<MaterialResponse>?,
-        val structuralComponents: List<StructuralComponent>?,
+        val structuralComponents: List<Component>?,
         val structures: List<Structure>?,
         val structureComponents: List<StructureComponentResponse>?,
         val subcomponents: List<SubcomponentResponse>?

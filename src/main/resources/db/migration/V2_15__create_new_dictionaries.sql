@@ -1,4 +1,4 @@
-DROP TABLE conditions;
+DROP TABLE  conditions;
 DROP TABLE defects;
 DROP TABLE materials;
 DROP TABLE structural_components;
@@ -25,26 +25,26 @@ CREATE TABLE defects (
 );
 
 CREATE TABLE structure_and_components (
+    id SERIAL PRIMARY KEY,
     structure_id VARCHAR(50) NOT NULL,
-    component_id VARCHAR(50) NOT NULL,
-    CONSTRAINT structure_and_components_pk PRIMARY KEY (structure_id,component_id)
+    component_id VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE structures (
     id VARCHAR(50) PRIMARY KEY NOT NULL,
     name VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL,
-    "primaryOwner" VARCHAR(255),
-    "caltransBridgeNO" VARCHAR(255),
-    "postMile" DOUBLE PRECISION,
-    "beginStationing" TEXT,
-    "endStationing" TEXT
+    "primary_owner" VARCHAR(255),
+    "caltrans_bridge_no" VARCHAR(255),
+    "postmile" DOUBLE PRECISION,
+    "begin_stationing" TEXT,
+    "end_stationing" TEXT
 );
 
 CREATE TABLE sub_component_and_defects (
+    id SERIAL PRIMARY KEY,
     sub_component_id VARCHAR(255) NOT NULL,
-    defect_id VARCHAR(255) NOT NULL,
-    CONSTRAINT sub_component_and_defects_pk PRIMARY KEY (sub_component_id,defect_id)
+    defect_id VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE sub_components (
@@ -2077,7 +2077,7 @@ The total quantity for expansion joints is the sum of all the lengths of each jo
 The total quantity for gasket is the sum of all lengths of each gasket.','length, ft','TunnelMajor_1',NULL),
  ('TunnelSubComponent_56','Miscellaneous metal (e.g. stair stringer supports, escalator supports monorails, grating supports, etc.)',NULL,NULL,NULL,NULL,'TunnelMajor_2',NULL),
  ('TunnelSubComponent_57','Handrails, steel grated walkways, ladders, etc.',NULL,NULL,NULL,NULL,'TunnelMajor_3',NULL);
-INSERT INTO "structures" ("id","name","type","primaryOwner","caltransBridgeNO","postMile","beginStationing","endStationing") VALUES ('BR-L01','Slauson Avenue','BRIDGES_AND_AERIAL_STRUCTURE','Los Angeles Metropoliten','53C1924R',5.2,'160+31
+INSERT INTO "structures" ("id","name","type","primary_owner","caltrans_bridge_no","postmile","begin_stationing","end_stationing") VALUES ('BR-L01','Slauson Avenue','BRIDGES_AND_AERIAL_STRUCTURE','Los Angeles Metropoliten','53C1924R',5.2,'160+31
 (L1 155+29)
 (L2 155+52)','185+59
 (190+60)'),

@@ -4,13 +4,13 @@ import java.io.Serializable
 import javax.persistence.*
 
 @Entity
-@Table(name = "structure_and_components")
-class StructureComponent(
+@Table(name = "sub_component_and_defects")
+class SubcomponentDefect(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         var id: Int = 0,
-        @Column(name = "structure_id")
-        var structureId: String,
-        @Column(name = "component_id")
-        var componentId: String
+        @Column(name = "sub_component_id")
+        var subcomponentId: String,
+        @Column(name = "defect_id")
+        var defectId: String
 ) : Serializable

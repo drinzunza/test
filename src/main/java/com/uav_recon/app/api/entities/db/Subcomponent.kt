@@ -4,14 +4,20 @@ import java.io.Serializable
 import javax.persistence.*
 
 @Entity
-@Table(name = "subcomponent")
-class Subcomponent : Serializable {
+@Table(name = "sub_components")
+class Subcomponent(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Int = 0
-    @Column(name = "name")
-    var name: String? = null
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "structural_component_id", referencedColumnName = "id")
-    var structuralComponent: StructuralComponent? = null
-}
+    var id: String,
+    var name: String,
+    var number: Int? = null,
+    @Column(name = "fdot_bhi_value")
+    var fdotBhiValue: Int? = null,
+    val description: String? = null,
+    @Column(name = "measure_unit")
+    val measureUnit: String? = null,
+    @Column(name = "component_id")
+    val componentId: String,
+    @Column(name = "group_name")
+    val groupName: String
+) : Serializable

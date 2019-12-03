@@ -8,11 +8,9 @@ import javax.persistence.*
 class Condition(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Int = 0,
-    @Column(name = "description")
+    var id: String,
     var description: String? = null,
-    @Column(name = "type")
-    var type: String? = null,
+    var type: String,
     @Column(name = "defect_id")
-    var defectId: Int? = null
+    var defectId: String
 ) : Serializable
