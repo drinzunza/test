@@ -57,7 +57,7 @@ class PhotoService(val photoRepository: PhotoRepository,
                observationId: String,
                observationDefectId: String,
                updatedBy: Int) {
-        checkRelationship(inspectionId, observationId, observationDefectId)
+        //checkRelationship(inspectionId, observationId, observationDefectId)
         val optional = photoRepository.findById(uuid)
         if (!optional.isPresent) {
             throw Error(105, "Invalid photo uuid")
@@ -74,7 +74,7 @@ class PhotoService(val photoRepository: PhotoRepository,
              observationId: String,
              observationDefectId: String,
              updatedBy: Int): PhotoDto {
-        checkRelationship(inspectionId, observationId, observationDefectId)
+        //checkRelationship(inspectionId, observationId, observationDefectId)
         var createdBy = updatedBy
         val link: String?
         val optional = photoRepository.findById(dto.uuid)
@@ -103,7 +103,7 @@ class PhotoService(val photoRepository: PhotoRepository,
                observationId: String,
                observationDefectId: String,
                uuid: String) {
-        checkRelationship(inspectionId, observationId, observationDefectId)
+        //checkRelationship(inspectionId, observationId, observationDefectId)
         val optional = photoRepository.findByUuidAndObservationDefectIdAndDeletedIsFalse(uuid, observationDefectId);
         if (!optional.isPresent) {
             throw Error(105, "Invalid photo uuid")
