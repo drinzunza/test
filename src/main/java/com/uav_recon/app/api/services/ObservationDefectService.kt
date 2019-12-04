@@ -75,8 +75,8 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         if (structureId.isBlank()) {
             structureId = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId).get().structureId!!
         }
-        if (observationDefectRepository.countById(dto.id) > 0) {
-            logger.info("Observation defect id (${dto.id}) already exists")
+        if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
+            logger.info("Observation defect id (${dto.id}) incorrect")
             dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId, true)
             logger.info("New observation defect id (${dto.id})")
         }
