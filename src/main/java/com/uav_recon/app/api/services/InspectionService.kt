@@ -77,7 +77,7 @@ class InspectionService(
 
     @Throws(Error::class)
     fun delete(id: String) {
-        val optional = inspectionRepository.findById(id)
+        val optional = inspectionRepository.findByUuidAndDeletedIsFalse(id)
         if (optional.isPresent) {
             val inspection = optional.get()
             inspection.deleted = true
