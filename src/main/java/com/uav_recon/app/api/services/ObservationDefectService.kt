@@ -95,7 +95,7 @@ class ObservationDefectService(private val observationDefectRepository: Observat
     @Throws(Error::class)
     fun delete(id: String, inspectionId: String, observationId: String) {
         checkInspectionAndObservationRelationship(inspectionId, observationId)
-        val optional = observationDefectRepository.findById(id)
+        val optional = observationDefectRepository.findByUuidAndDeletedIsFalse(id)
         if (!optional.isPresent || optional.get().observationId != observationId) {
             throw Error(103, "Invalid observation defect UUID")
         }
