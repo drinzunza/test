@@ -8,7 +8,9 @@ import javax.persistence.*
 class Defect(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: String,
-    var name: String,
-    var number: Int? = null
+    val id: String,
+    val name: String,
+    val number: Int? = null,
+    @Column(name = "is_deleted")
+    val isDeleted: Boolean? = null
 ) : Serializable

@@ -19,5 +19,7 @@ class Subcomponent(
     @Column(name = "component_id")
     val componentId: String,
     @Column(name = "group_name")
-    val groupName: String
+    val groupName: String? = null,
+    @Column(name = "is_deleted")
+    val isDeleted: Boolean? = null
 ) : Serializable
