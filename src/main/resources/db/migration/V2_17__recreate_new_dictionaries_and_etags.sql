@@ -1,25 +1,76 @@
-TRUNCATE TABLE sub_component_and_defects;
-TRUNCATE TABLE defects;
-TRUNCATE TABLE conditions;
-TRUNCATE TABLE structure_and_components;
-TRUNCATE TABLE components;
-TRUNCATE TABLE sub_components;
-TRUNCATE TABLE structures;
+DROP TABLE sub_component_and_defects;
+DROP TABLE defects;
+DROP TABLE conditions;
+DROP TABLE structure_and_components;
+DROP TABLE components;
+DROP TABLE sub_components;
+DROP TABLE structures;
 
-alter table defects
-	add is_deleted boolean default false;
+CREATE TABLE components (
+    id VARCHAR(50) PRIMARY KEY NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    is_deleted BOOLEAN default false
+);
 
-alter table conditions
-	add is_deleted boolean default false;
+CREATE TABLE conditions (
+    id VARCHAR(50) PRIMARY KEY NOT NULL,
+    description TEXT,
+    type VARCHAR(50) NOT NULL,
+    defect_id VARCHAR(50) NOT NULL,
+    is_deleted BOOLEAN default false
+);
 
-alter table components
-	add is_deleted boolean default false;
+CREATE TABLE defects (
+    id VARCHAR(50) PRIMARY KEY NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    number INT,
+    is_deleted BOOLEAN default false
+);
 
-alter table sub_components
-	add is_deleted boolean default false;
+CREATE TABLE structure_and_components (
+    id SERIAL PRIMARY KEY,
+    structure_id VARCHAR(50) NOT NULL,
+    component_id VARCHAR(50) NOT NULL
+);
 
-alter table structures
-	add is_deleted boolean default false;
+CREATE TABLE structures (
+    id VARCHAR(50) PRIMARY KEY NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    "primary_owner" VARCHAR(255),
+    "caltrans_bridge_no" VARCHAR(255),
+    "postmile" DOUBLE PRECISION,
+    "begin_stationing" TEXT,
+    "end_stationing" TEXT,
+    is_deleted BOOLEAN default false
+);
+
+CREATE TABLE sub_component_and_defects (
+    id SERIAL PRIMARY KEY,
+    sub_component_id VARCHAR(255) NOT NULL,
+    defect_id VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE sub_components (
+    id VARCHAR(50) PRIMARY KEY NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    number INT,
+    fdot_bhi_value INT,
+    description TEXT,
+    measure_unit VARCHAR(50),
+    component_id VARCHAR(50) NOT NULL,
+    group_name VARCHAR(50),
+    is_deleted BOOLEAN default false
+);
+
+CREATE TABLE etags (
+    id SERIAL PRIMARY KEY,
+    hash VARCHAR(50) NOT NULL,
+    change TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO "etags" ("hash","change") VALUES ('f88dd058fe004909615a64f01be66a7', '{"defects":["Defect_2(Bridges)"],"conditions":[],"components":[],"subcomponents":[],"structures":[]}');
 
 INSERT INTO "sub_component_and_defects" ("sub_component_id","defect_id") VALUES ('TunnelSubComponent_2','Defect_1(Tunnels)'),
  ('TunnelSubComponent_3','Defect_1(Tunnels)'),

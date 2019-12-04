@@ -5,4 +5,5 @@ import org.springframework.data.repository.CrudRepository
 
 interface SubcomponentRepository : CrudRepository<Subcomponent, String> {
     fun findAllByComponentId(componentId: String): List<Subcomponent>
+    fun findAllByIdIn(ids: List<String>): List<Subcomponent>
 }
