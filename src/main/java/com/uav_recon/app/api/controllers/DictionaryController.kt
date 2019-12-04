@@ -20,13 +20,13 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
 
     @GetMapping
     fun get(@RequestHeader(X_TOKEN) token: String,
-            @RequestHeader(IF_NONE_MATCH, required = false, defaultValue = "") etag: String
+            @RequestHeader(ETAG, required = false, defaultValue = "") etag: String
     ): ResponseEntity<DictionaryDto> {
         val lastEtagHash = dictionaryService.getLastEtagHash()
         return if (lastEtagHash == etag) {
             ResponseEntity.status(HttpStatus.NOT_MODIFIED).body(null)
         } else {
-            ResponseEntity.ok().header(ETAG, etag)
+            ResponseEntity.ok().header(ETAG, lastEtagHash)
                     .body(dictionaryService.getAll(etag, getAuthenticatedUserId()))
         }
     }
