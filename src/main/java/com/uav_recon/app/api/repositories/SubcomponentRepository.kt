@@ -6,4 +6,6 @@ import org.springframework.data.repository.CrudRepository
 interface SubcomponentRepository : CrudRepository<Subcomponent, String> {
     fun findAllByComponentId(componentId: String): List<Subcomponent>
     fun findAllByIdIn(ids: List<String>): List<Subcomponent>
+    fun findAllByIdInAndIdContains(ids: List<String>, buildType: String): List<Subcomponent>
+    fun findAllByIdContains(buildType: String): List<Subcomponent>
 }

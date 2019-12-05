@@ -1,10 +1,10 @@
 package com.uav_recon.app.api.controllers
 
+import com.uav_recon.app.api.entities.db.BuildType
 import com.uav_recon.app.api.entities.requests.bridge.DictionaryDto
-import com.uav_recon.app.api.repositories.EtagRepository
 import com.uav_recon.app.api.services.DictionaryService
+import com.uav_recon.app.configurations.ControllerConfiguration.BUILD_TYPE
 import com.uav_recon.app.configurations.ControllerConfiguration.ETAG
-import com.uav_recon.app.configurations.ControllerConfiguration.IF_NONE_MATCH
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
 import org.springframework.http.HttpStatus
@@ -20,14 +20,15 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
 
     @GetMapping
     fun get(@RequestHeader(X_TOKEN) token: String,
-            @RequestHeader(ETAG, required = false, defaultValue = "") etag: String
+            @RequestHeader(ETAG, required = false, defaultValue = "") etag: String,
+            @RequestHeader(BUILD_TYPE, required = false, defaultValue = "") buildType: String
     ): ResponseEntity<DictionaryDto> {
         val lastEtagHash = dictionaryService.getLastEtagHash()
         return if (lastEtagHash == etag) {
             ResponseEntity.status(HttpStatus.NOT_MODIFIED).body(null)
         } else {
             ResponseEntity.ok().header(ETAG, lastEtagHash)
-                    .body(dictionaryService.getAll(etag, getAuthenticatedUserId()))
+                    .body(dictionaryService.getAll(etag, BuildType.parse(buildType)))
         }
     }
 }

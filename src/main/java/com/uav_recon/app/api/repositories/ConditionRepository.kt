@@ -7,4 +7,6 @@ import org.springframework.data.repository.CrudRepository
 interface ConditionRepository : CrudRepository<Condition, String> {
     fun findAllByDefectId(defectInt: String): List<Condition>
     fun findAllByIdIn(ids: List<String>): List<Condition>
+    fun findAllByIdInAndIdContains(ids: List<String>, buildType: String): List<Condition>
+    fun findAllByIdContains(buildType: String): List<Condition>
 }

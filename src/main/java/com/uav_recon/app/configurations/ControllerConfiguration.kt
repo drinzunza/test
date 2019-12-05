@@ -9,5 +9,5 @@ object ControllerConfiguration {
     const val APPLICATION_ID = "Application-Id"
     const val X_TOKEN = "X-Token"
     const val ETAG = "ETag"
-    const val IF_NONE_MATCH = "If-None-Match"
+    const val BUILD_TYPE = "BuildType"
 }

@@ -5,4 +5,6 @@ import org.springframework.data.repository.CrudRepository
 
 interface StructureRepository : CrudRepository<Structure, String> {
     fun findAllByIdIn(ids: List<String>): List<Structure>
+    fun findAllByIdInAndTypeContains(ids: List<String>, buildType: String): List<Structure>
+    fun findAllByTypeContains(buildType: String): List<Structure>
 }
