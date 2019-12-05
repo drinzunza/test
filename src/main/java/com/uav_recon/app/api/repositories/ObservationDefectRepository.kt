@@ -7,6 +7,7 @@ import java.util.*
 
 interface ObservationDefectRepository : CrudRepository<ObservationDefect, String> {
     fun findAllByObservationIdAndDeletedIsFalse(observationId: String): List<ObservationDefect>
+    fun findByUuidAndDeletedIsFalse(observationId: String): Optional<ObservationDefect>
     fun findByUuidAndObservationIdAndDeletedIsFalse(uuid: String, observationId: String): Optional<ObservationDefect>
     fun countById(id: String): Long
 

@@ -74,7 +74,7 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
 
     @Throws(Error::class)
     fun delete(id: String, inspectionId: String) {
-        val optional = observationRepository.findById(id)
+        val optional = observationRepository.findByUuidAndDeletedIsFalse(id)
         if (!optional.isPresent) {
             throw Error(102, "Invalid observation uuid")
         }
