@@ -17,6 +17,7 @@ class DictionaryService(
         private val structureComponentRepository: StructureComponentRepository,
         private val structureRepository: StructureRepository,
         private val subcomponentDefectRepository: SubcomponentDefectRepository,
+        private val locationIdRepository: LocationIdRepository,
         private val etagRepository: EtagRepository
 ) {
     private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
@@ -30,6 +31,7 @@ class DictionaryService(
         val subcomponentIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
         val componentIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
         val structureIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
+        val locationIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
 
         etags.forEach {
             val change = try {
@@ -44,6 +46,7 @@ class DictionaryService(
                 subcomponentIds?.addAll(change.subcomponents)
                 componentIds?.addAll(change.components)
                 structureIds?.addAll(change.structures)
+                locationIds?.addAll(change.locationIds)
             }
         }
 
@@ -52,11 +55,26 @@ class DictionaryService(
                 getDefectsByIds(buildType, defectIds),
                 getSubcomponentsByIds(buildType, subcomponentIds),
                 getComponentsByIds(buildType, componentIds),
-                getStructuresByIds(buildType, structureIds))
+                getStructuresByIds(buildType, structureIds),
+                getLocationByIds(buildType, locationIds))
     }
 
     fun getLastEtagHash(): String {
         return etagRepository.findTopByOrderByIdDesc()!!.hash
+    }
+
+    fun getLocationByIds(buildType: BuildType, ids: List<String>?): List<LocationIdDto> {
+        val idPart = buildType.toLocationIdPart()
+        return if (ids != null)
+            if (idPart != null)
+                locationIdRepository.findAllByIdInAndIdContains(ids, idPart).map { s -> s.toDto() }
+            else
+                locationIdRepository.findAllByIdIn(ids).map { s -> s.toDto() }
+        else
+            if (idPart != null)
+                locationIdRepository.findAllByIdContains(idPart).map { s -> s.toDto() }
+            else
+                locationIdRepository.findAll().map { s -> s.toDto() }
     }
 
     fun getConditionsByIds(buildType: BuildType, ids: List<String>?): List<Condition> {
@@ -168,6 +186,16 @@ class DictionaryService(
             name = name,
             isDeleted = isDeleted,
             subComponentIds = subcomponentRepository.findAllByComponentId(id).toSubComponentIds()
+    )
+
+    private fun LocationId.toDto() = LocationIdDto(
+            id = id,
+            structureType = structureType,
+            majorIds = majorIds?.split(','),
+            subComponentIds = subComponentIds?.split(','),
+            alwaysShownSpans = alwaysShownSpans?.split(','),
+            iteratedSpanPatterns = iteratedSpanPatterns?.split(','),
+            isDeleted = isDeleted
     )
 
     private fun List<Condition>.toConditionIds(): List<String> {
