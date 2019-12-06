@@ -13,6 +13,6 @@ data class StructureDto(
         val postmile: Double? = null,
         val beginStationing: String? = null,
         val endStationing: String? = null,
-        val isDeleted: Boolean? = null,
+        val deleted: Boolean? = null,
         val structuralComponentIds: List<String>
 ) : Serializable

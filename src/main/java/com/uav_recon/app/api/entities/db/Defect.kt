@@ -12,5 +12,5 @@ class Defect(
     val name: String,
     val number: Int? = null,
     @Column(name = "is_deleted")
-    val isDeleted: Boolean? = null
+    val deleted: Boolean? = null
 ) : Serializable

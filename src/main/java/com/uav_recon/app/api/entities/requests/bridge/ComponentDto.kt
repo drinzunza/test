@@ -7,6 +7,6 @@ import java.io.Serializable
 data class ComponentDto(
         val id: String,
         val name: String,
-        val isDeleted: Boolean? = null,
+        val deleted: Boolean? = null,
         val subComponentIds: List<String>
 ) : Serializable

@@ -11,5 +11,5 @@ data class LocationIdDto(
     val subComponentIds: List<String>?,
     val alwaysShownSpans: List<String>?,
     val iteratedSpanPatterns: List<String>?,
-    val isDeleted: Boolean? = null
+    val deleted: Boolean? = null
 ) : Serializable

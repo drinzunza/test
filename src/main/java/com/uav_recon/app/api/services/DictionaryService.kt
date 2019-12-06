@@ -152,7 +152,7 @@ class DictionaryService(
             name = name,
             number = number,
             conditionIds = conditionRepository.findAllByDefectId(id).toConditionIds(),
-            isDeleted = isDeleted
+            deleted = deleted
     )
 
     private fun Subcomponent.toDto() = SubcomponentDto(
@@ -164,7 +164,7 @@ class DictionaryService(
             measureUnit = measureUnit,
             componentId = componentId,
             groupName = groupName,
-            isDeleted = isDeleted,
+            deleted = deleted,
             defectIds = subcomponentDefectRepository.findAllBySubcomponentId(id).toDefectIds()
     )
 
@@ -177,14 +177,14 @@ class DictionaryService(
             postmile = postmile,
             beginStationing = beginStationing,
             endStationing = endStationing,
-            isDeleted = isDeleted,
+            deleted = deleted,
             structuralComponentIds = structureComponentRepository.findAllByStructureId(id).toComponentIds()
     )
 
     private fun Component.toDto() = ComponentDto(
             id = id,
             name = name,
-            isDeleted = isDeleted,
+            deleted = deleted,
             subComponentIds = subcomponentRepository.findAllByComponentId(id).toSubComponentIds()
     )
 
@@ -195,7 +195,7 @@ class DictionaryService(
             subComponentIds = subComponentIds?.split(','),
             alwaysShownSpans = alwaysShownSpans?.split(','),
             iteratedSpanPatterns = iteratedSpanPatterns?.split(','),
-            isDeleted = isDeleted
+            deleted = deleted
     )
 
     private fun List<Condition>.toConditionIds(): List<String> {

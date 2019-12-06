@@ -13,6 +13,6 @@ data class SubcomponentDto(
         val measureUnit: String? = null,
         val componentId: String,
         val groupName: String? = null,
-        val isDeleted: Boolean? = null,
+        val deleted: Boolean? = null,
         val defectIds: List<String>
 ) : Serializable
