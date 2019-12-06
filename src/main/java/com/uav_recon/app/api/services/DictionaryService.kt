@@ -1,7 +1,6 @@
 package com.uav_recon.app.api.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.uav_recon.app.api.controllers.AuthController
 import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.repositories.*
@@ -168,7 +167,7 @@ class DictionaryService(
             id = id,
             name = name,
             isDeleted = isDeleted,
-            subComponentIds = subcomponentRepository.findAllByComponentId(id).toStructuralComponentIds()
+            subComponentIds = subcomponentRepository.findAllByComponentId(id).toSubComponentIds()
     )
 
     private fun List<Condition>.toConditionIds(): List<String> {
@@ -189,9 +188,9 @@ class DictionaryService(
         return ids
     }
 
-    private fun List<Subcomponent>.toStructuralComponentIds(): List<String> {
+    private fun List<Subcomponent>.toSubComponentIds(): List<String> {
         val ids = mutableListOf<String>()
-        forEach { ids.add(it.componentId) }
+        forEach { ids.add(it.id) }
         return ids
     }
 }
