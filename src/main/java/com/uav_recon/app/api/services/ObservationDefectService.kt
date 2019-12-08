@@ -1,6 +1,7 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.ObservationDefect
+import com.uav_recon.app.api.entities.db.StructuralType
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
@@ -38,7 +39,8 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         spanNumber = spanNumber,
         stationMarker = stationMarker,
         observationType = observationType,
-        size = size
+        size = size,
+        type = type
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
@@ -55,7 +57,8 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         spanNumber = spanNumber,
         stationMarker = stationMarker,
         observationType = observationType,
-        size = size
+        size = size,
+        type = type
     )
 
     @Throws(Error::class)
@@ -77,7 +80,9 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         }
         if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
             logger.info("Observation defect id (${dto.id}) incorrect")
-            dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId, true)
+            dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId,
+                    dto.type == StructuralType.STRUCTURAL
+            )
             logger.info("New observation defect id (${dto.id})")
         }
         return observationDefectRepository.save(dto.toEntity(createdBy, updatedBy, observationId)).toDto()
