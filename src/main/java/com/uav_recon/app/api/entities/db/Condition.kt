@@ -14,5 +14,5 @@ class Condition(
     @Column(name = "defect_id")
     var defectId: String,
     @Column(name = "is_deleted")
-    val isDeleted: Boolean? = null
+    val deleted: Boolean? = null
 ) : Serializable

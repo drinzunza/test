@@ -21,5 +21,5 @@ class Structure(
     @Column(name = "end_stationing")
     var endStationing: String? = null,
     @Column(name = "is_deleted")
-    val isDeleted: Boolean? = null
+    val deleted: Boolean? = null
 ) : Serializable

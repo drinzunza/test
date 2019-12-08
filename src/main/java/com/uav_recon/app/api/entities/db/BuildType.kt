@@ -19,6 +19,14 @@ enum class BuildType {
         }
     }
 
+    fun toLocationIdPart(): String? {
+        return when(this) {
+            BRIDGES -> "bridges"
+            TUNNELS -> "tunnels"
+            else -> null
+        }
+    }
+
     companion object {
         fun parse(type: String): BuildType {
             return when (type) {

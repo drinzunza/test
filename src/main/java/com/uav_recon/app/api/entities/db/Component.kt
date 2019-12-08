@@ -11,5 +11,5 @@ class Component(
     var id: String,
     var name: String,
     @Column(name = "is_deleted")
-    val isDeleted: Boolean? = null
+    val deleted: Boolean? = null
 ) : Serializable

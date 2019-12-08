@@ -11,4 +11,5 @@ class EtagChange : Serializable {
     val components: List<String> = mutableListOf()
     val subcomponents: List<String> = mutableListOf()
     val structures: List<String> = mutableListOf()
+    val locationIds: List<String> = mutableListOf()
 }
