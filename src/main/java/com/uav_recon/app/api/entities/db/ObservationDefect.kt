@@ -50,6 +50,9 @@ class ObservationDefect(
         @Type(type = "pgsql_enum")
         var observationType: ObservationType? = null,
         var size: String? = null,
+        @Enumerated(EnumType.STRING)
+        @Type(type = "pgsql_enum")
+        var type: StructuralType? = null,
         @Transient
         var material: Material? = null,
         @Transient
