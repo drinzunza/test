@@ -9,5 +9,7 @@ class Component(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: String,
-    var name: String
+    var name: String,
+    @Column(name = "is_deleted")
+    val deleted: Boolean? = null
 ) : Serializable
