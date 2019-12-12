@@ -55,8 +55,8 @@ class SecurityConfiguration(val tokenManager: TokenManager, val userService: Use
                               res: HttpServletResponse,
                               authException: AuthenticationException) {
             res.contentType = "application/json;charset=UTF-8"
-            res.status = 403
-            res.writer.write(mapper.writeValueAsString(mapOf(Pair("code", 403), Pair("message", "Access denied"))))
+            res.status = 401
+            res.writer.write(mapper.writeValueAsString(mapOf(Pair("code", 3), Pair("message", "Unauthorised"))))
             res.writer.flush()
         }
     }
