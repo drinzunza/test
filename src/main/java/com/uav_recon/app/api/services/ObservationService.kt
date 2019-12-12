@@ -58,7 +58,7 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
                                           inspectionId,
                                           dto.uuid,
                                           updatedBy,
-                                          inspection.get().structureId!!)
+                                          inspection.get().structureId)
         }
         return saved.toDto()
     }

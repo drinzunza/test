@@ -67,7 +67,7 @@ class ObservationDefectService(private val observationDefectRepository: Observat
              inspectionId: String,
              observationId: String,
              updatedBy: Int,
-             passedStructureId: String = ""): ObservationDefectDto {
+             passedStructureId: String? = null): ObservationDefectDto {
         var structureId = passedStructureId
         checkInspectionAndObservationRelationship(inspectionId, observationId)
         var createdBy = updatedBy
@@ -75,8 +75,8 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         if (observationDefect.isPresent) {
             createdBy = observationDefect.get().createdBy
         }
-        if (structureId.isBlank()) {
-            structureId = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId).get().structureId!!
+        if (structureId.isNullOrEmpty()) {
+            structureId = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId).get().structureId
         }
         if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
             logger.info("Observation defect id (${dto.id}) incorrect")
@@ -114,7 +114,7 @@ class ObservationDefectService(private val observationDefectRepository: Observat
              inspectionId: String,
              observationId: String,
              updatedBy: Int,
-             structureId: String):
+             structureId: String?):
             List<ObservationDefectDto> {
         return list.map { dto -> save(dto, inspectionId, observationId, updatedBy, structureId) }
     }
@@ -124,14 +124,14 @@ class ObservationDefectService(private val observationDefectRepository: Observat
     }
 
     fun generateObservationDefectDisplayId(inspectorId: String,
-                                           structureId: String,
+                                           structureId: String?,
                                            structuralObservation: Boolean?): String {
         val observationLetter = structuralObservation?.let {
             if (structuralObservation) OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE
         }
         val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
         val autoNum =
-                getNewAutoNum(asset = structureId,
+                getNewAutoNum(asset = structureId ?: "",
                               observationLetter = observationLetter,
                               inspectorId = inspectorId,
                               date = date)
