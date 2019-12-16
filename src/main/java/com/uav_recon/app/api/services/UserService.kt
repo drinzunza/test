@@ -49,7 +49,7 @@ class UserService(private val userRepository: UserRepository,
             throw Error(14, "Invalid position")
         }
 
-        if (userRepository.findFirstByEmail(user.email).isPresent) {
+        if (userRepository.findFirstByEmailIgnoreCase(user.email).isPresent) {
             throw Error(11, "User with this email already registered")
         }
         user.password = passwordEncoder.encode(user.password)
@@ -91,7 +91,7 @@ class UserService(private val userRepository: UserRepository,
 
     private fun findUser(email: String?): User {
         if (email != null) {
-            val optional = userRepository.findFirstByEmail(email)
+            val optional = userRepository.findFirstByEmailIgnoreCase(email)
             if (optional.isPresent) {
                 return optional.get()
             }
