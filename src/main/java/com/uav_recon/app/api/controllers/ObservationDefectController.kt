@@ -19,9 +19,11 @@ import org.springframework.web.bind.annotation.RestController
 class ObservationDefectController(private val observationDefectService: ObservationDefectService) : BaseController() {
 
     @PostMapping
-    fun createOrUpdate(@RequestHeader(X_TOKEN) token: String, @RequestBody
-    observationDefectDto: ObservationDefectDto, @PathVariable inspectionId: String,
-                       @PathVariable observationId: String): ResponseEntity<ObservationDefectDto> {
+    fun createOrUpdate(@RequestHeader(X_TOKEN) token: String,
+                       @RequestBody observationDefectDto: ObservationDefectDto,
+                       @PathVariable inspectionId: String,
+                       @PathVariable observationId: String
+    ): ResponseEntity<ObservationDefectDto> {
         return ResponseEntity.ok(observationDefectService.save(observationDefectDto, inspectionId, observationId,
                                                                getAuthenticatedUserId()))
     }
