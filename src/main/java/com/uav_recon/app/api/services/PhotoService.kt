@@ -23,7 +23,7 @@ class PhotoService(val photoRepository: PhotoRepository,
     fun Photo.toDto() = PhotoDto(
         uuid = uuid,
         name = name,
-        createdAt = createdAt,
+        createdAt = createdAtClient,
         link = link,
         location = LocationDto(
             latitude,
@@ -43,7 +43,8 @@ class PhotoService(val photoRepository: PhotoRepository,
         observationDefectId = observationDefectId,
         link = link,
         createdBy = createdBy,
-        updatedBy = updatedBy
+        updatedBy = updatedBy,
+        createdAtClient = createdAt
     )
 
     fun findAllByObservationDefectIdAndNotDeleted(id: String): List<PhotoDto> {
