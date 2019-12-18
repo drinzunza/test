@@ -11,7 +11,7 @@ data class PhotoDto(
         var link: String?,
         var name: String?,
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-        val createdAt: OffsetDateTime?,
+        var createdAt: OffsetDateTime?,
         val location: LocationDto?,
         val drawables: String?
 ) : Serializable
