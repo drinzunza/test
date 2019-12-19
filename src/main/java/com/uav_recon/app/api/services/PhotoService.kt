@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.services
 
+import com.google.common.io.Files
 import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.requests.bridge.LocationDto
 import com.uav_recon.app.api.entities.requests.bridge.PhotoDto
@@ -11,6 +12,7 @@ import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.configurations.UavConfiguration
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import java.time.OffsetDateTime
 
 @Service
 class PhotoService(val photoRepository: PhotoRepository,
@@ -33,7 +35,8 @@ class PhotoService(val photoRepository: PhotoRepository,
         drawables = drawables
     )
 
-    fun PhotoDto.toEntity(createdBy: Int, updatedBy: Int, observationDefectId: String, link: String) = Photo(
+    fun PhotoDto.toEntity(createdBy: Int, updatedBy: Int, observationDefectId: String, link: String,
+                          createdAtClient: OffsetDateTime?) = Photo(
         uuid = uuid,
         name = name,
         altitude = location?.altitude,
@@ -44,7 +47,7 @@ class PhotoService(val photoRepository: PhotoRepository,
         link = link,
         createdBy = createdBy,
         updatedBy = updatedBy,
-        createdAtClient = createdAt
+        createdAtClient = createdAtClient
     )
 
     fun findAllByObservationDefectIdAndNotDeleted(id: String): List<PhotoDto> {
@@ -78,12 +81,28 @@ class PhotoService(val photoRepository: PhotoRepository,
         //checkRelationship(inspectionId, observationId, observationDefectId)
         var createdBy = updatedBy
         val link: String?
+        val createdAtClient: OffsetDateTime?
+        var name = dto.name
         val optional = photoRepository.findById(dto.uuid)
         if (optional.isPresent) {
             val photo = optional.get()
             createdBy = photo.createdBy
             link = photo.link
+            dto.name = photo.name
+            createdAtClient = photo.createdAtClient
         } else {
+            createdAtClient = dto.createdAt ?: OffsetDateTime.now()
+            if (!dto.name.isNullOrBlank() && photoRepository.findAllByNameAndObservationDefectId(dto.name!!,
+                                                                                                 observationDefectId).isNotEmpty()) {
+                val extension = Files.getFileExtension(dto.name)
+                if (extension.isNotBlank()) {
+                    name =
+                            "${Files.getNameWithoutExtension(dto.name)}_${createdAtClient!!.toEpochSecond()}.${extension}"
+                } else {
+                    name = "${dto.name}_${createdAtClient!!.toEpochSecond()}"
+                }
+            }
+
             val format = getFileFormat(data.contentType)
             link =
                     fileService.save(updatedBy,
@@ -96,7 +115,9 @@ class PhotoService(val photoRepository: PhotoRepository,
         }
 
         dto.link = link
-        return photoRepository.save(dto.toEntity(createdBy, updatedBy, observationDefectId, link)).toDto()
+        dto.name = name
+        return photoRepository.save(dto.toEntity(createdBy, updatedBy, observationDefectId, link, createdAtClient))
+                .toDto()
     }
 
     @Throws(Error::class)
