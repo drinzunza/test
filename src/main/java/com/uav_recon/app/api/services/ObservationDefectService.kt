@@ -151,7 +151,7 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         val prefix = generateObservationDefectDisplayId(asset = asset, autoNum = "")
 
         val suffix = generateObservationDefectDisplayId(autoNum = "", userId = inspectorId, date = date)
-        val maxId = observationDefectRepository.getMaxDefectDisplayId(prefix, suffix)?.id
+        val maxId = observationDefectRepository.findFirstByIdStartsWithAndIdEndsWithOrderByIdDesc(prefix, suffix)?.id
 
         var longId = maxId
                 ?.removeSuffix(suffix)
