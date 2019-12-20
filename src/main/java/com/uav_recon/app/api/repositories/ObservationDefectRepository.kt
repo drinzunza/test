@@ -11,8 +11,7 @@ interface ObservationDefectRepository : CrudRepository<ObservationDefect, String
     fun findByUuidAndObservationIdAndDeletedIsFalse(uuid: String, observationId: String): Optional<ObservationDefect>
     fun countById(id: String): Long
 
-    @Query("SELECT MAX(id) FROM ObservationDefect WHERE id LIKE '%?2' AND id LIKE '?1%'")
-    fun getMaxDefectDisplayId(prefix: String, suffix: String): ObservationDefect?
+    fun findFirstByIdStartsWithAndIdEndsWithOrderByIdDesc(prefix: String, suffix: String): ObservationDefect?
 
     @Query(value = "SELECT id FROM ObservationDefect WHERE id = '?1'")
     fun getObservationDefectsDisplayId(id: String): List<ObservationDefect>
