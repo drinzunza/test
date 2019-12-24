@@ -148,7 +148,8 @@ class ObservationDefectService(private val observationDefectRepository: Observat
     }
 
     private fun getNewAutoNum(asset: String, observationLetter: String?, inspectorId: String?, date: String?): String {
-        val prefix = generateObservationDefectDisplayId(asset = asset, autoNum = "")
+        var prefix = generateObservationDefectDisplayId(asset = asset, autoNum = "")
+        if (prefix == "-") prefix = ""
 
         val suffix = generateObservationDefectDisplayId(autoNum = "", userId = inspectorId, date = date)
         val maxId = observationDefectRepository.findFirstByIdStartsWithAndIdEndsWithOrderByIdDesc(prefix, suffix)?.id
