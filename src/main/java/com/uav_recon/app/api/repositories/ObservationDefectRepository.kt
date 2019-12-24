@@ -12,6 +12,7 @@ interface ObservationDefectRepository : CrudRepository<ObservationDefect, String
     fun countById(id: String): Long
 
     fun findFirstByIdStartsWithAndIdEndsWithOrderByIdDesc(prefix: String, suffix: String): ObservationDefect?
+    fun findAllByIdStartsWithAndIdEndsWith(prefix: String, suffix: String): List<ObservationDefect>
 
     @Query(value = "SELECT id FROM ObservationDefect WHERE id = '?1'")
     fun getObservationDefectsDisplayId(id: String): List<ObservationDefect>
