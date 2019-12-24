@@ -21,10 +21,9 @@ class ObservationDefectService(private val observationDefectRepository: Observat
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
 
     companion object {
-        private const val DELIMITER_ID = "-"
-        private val DELIMETER_REGEX = Regex("$DELIMITER_ID{2,}")
         private const val OBSERVATION_LETTER_STRUCTURAL = "D"
         private const val OBSERVATION_LETTER_MAINTENANCE = "M"
+        private const val OBSERVATION_EMPTY_STRUCTURE = "STR"
     }
 
     private fun ObservationDefect.toDto() = ObservationDefectDto(
@@ -125,70 +124,26 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         return observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(id).map { o -> o.toDto() }
     }
 
-    fun generateObservationDefectDisplayId(inspectorId: String,
-                                           structureId: String?,
-                                           structuralObservation: Boolean?): String {
+    @Throws(Error::class)
+    fun generateObservationDefectDisplayId(inspectorId: String, structureId: String?,
+                                           structuralObservation: Boolean?
+    ): String {
+        val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
         val observationLetter = structuralObservation?.let {
             if (structuralObservation) OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE
         }
-        val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
-        val autoNum =
-                getNewAutoNum(asset = structureId ?: "",
-                              observationLetter = observationLetter,
-                              inspectorId = inspectorId,
-                              date = date)
 
-        return generateObservationDefectDisplayId(
-            asset = structureId,
-            observationLetter = observationLetter,
-            autoNum = autoNum,
-            userId = inspectorId,
-            date = date
-        )
-    }
+        val displayIdRegexp = "${structureId ?: OBSERVATION_EMPTY_STRUCTURE}-$observationLetter-%-$inspectorId-$date"
 
-    private fun getNewAutoNum(asset: String, observationLetter: String?, inspectorId: String?, date: String?): String {
-        var prefix = generateObservationDefectDisplayId(asset = asset, autoNum = "")
-        if (prefix == "-") prefix = ""
-
-        val suffix = generateObservationDefectDisplayId(autoNum = "", userId = inspectorId, date = date)
-        val observationDefects = observationDefectRepository
-                .findAllByIdStartsWithAndIdEndsWith(prefix, suffix)
-        val maxId = observationDefects.maxBy { it.id }?.id
-
-        var longId = maxId
-                ?.removeSuffix(suffix)
-                ?.split(DELIMITER_ID)
-                ?.reversed()
-                ?.firstOrNull()
-                ?.toLongOrNull()
-                ?: 0
-
-        while (true) {
-            longId++
-            val autoNum = String.format("%03d", longId)
-            val newId = generateObservationDefectDisplayId(
-                asset = asset,
-                observationLetter = observationLetter,
-                autoNum = autoNum,
-                userId = inspectorId,
-                date = date
-            )
-            observationDefectRepository.getObservationDefectsDisplayId(newId).getOrNull(0) ?: return autoNum
+        val observationDefects = observationDefectRepository.findAllByIdLike(displayIdRegexp)
+        for (i in 1..1000) {
+            val autoNum = String.format("%03d", i)
+            val displayId = displayIdRegexp.replace("-%-", "-$autoNum-")
+            if (observationDefects.filter { it.id == displayId }.isEmpty()) {
+                return displayId
+            }
         }
-    }
 
-    private fun generateObservationDefectDisplayId(
-            asset: String? = null,
-            observationLetter: String? = null,
-            autoNum: String? = null,
-            userId: String? = null,
-            date: String? = null
-    ): String {
-        return arrayOf(asset?.replace(' ', '_'), observationLetter, autoNum, userId, date)
-                .filterNotNull()
-                .joinToString(DELIMITER_ID)
-                .replace(" ", "") // StructureId contains spaces
-                .replace(DELIMETER_REGEX, DELIMITER_ID)
+        throw Error(245, "Cannot create unique observation defect id")
     }
 }
