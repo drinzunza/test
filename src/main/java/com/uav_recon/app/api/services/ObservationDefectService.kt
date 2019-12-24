@@ -62,6 +62,7 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         type = type
     )
 
+    @Synchronized
     @Throws(Error::class)
     @Transactional
     fun save(dto: ObservationDefectDto,
