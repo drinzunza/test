@@ -1,5 +1,6 @@
 package com.uav_recon.app.configurations
 
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -8,6 +9,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import springfox.documentation.builders.PathSelectors
@@ -20,6 +22,9 @@ import java.time.Duration
 @Configuration
 @EnableSwagger2
 class WebConfiguration(val configuration: UavConfiguration) : WebMvcConfigurer {
+
+    @Autowired
+    private val logRequestInterceptor: LogRequestInterceptor? = null
 
     @Bean
     fun taskScheduler(): TaskScheduler {
@@ -54,5 +59,9 @@ class WebConfiguration(val configuration: UavConfiguration) : WebMvcConfigurer {
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
         registry.addResourceHandler("/files/**")
                 .addResourceLocations("file:${configuration.files.root}/")
+    }
+
+    override fun addInterceptors(registry: InterceptorRegistry) {
+        registry.addInterceptor(logRequestInterceptor!!)
     }
 }
