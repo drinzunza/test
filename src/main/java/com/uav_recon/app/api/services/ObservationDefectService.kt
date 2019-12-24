@@ -152,7 +152,9 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         if (prefix == "-") prefix = ""
 
         val suffix = generateObservationDefectDisplayId(autoNum = "", userId = inspectorId, date = date)
-        val maxId = observationDefectRepository.findFirstByIdStartsWithAndIdEndsWithOrderByIdDesc(prefix, suffix)?.id
+        val observationDefects = observationDefectRepository
+                .findAllByIdStartsWithAndIdEndsWith(prefix, suffix)
+        val maxId = observationDefects.maxBy { it.id }?.id
 
         var longId = maxId
                 ?.removeSuffix(suffix)
