@@ -5,7 +5,6 @@ import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import org.springframework.stereotype.Service
-import java.util.*
 import javax.transaction.Transactional
 
 @Service
@@ -85,14 +84,6 @@ class ObservationService(private val inspectionRepository: InspectionRepository,
         }
         observation.deleted = true
         observationRepository.save(observation);
-    }
-
-    fun findById(id: String): Optional<ObservationDto> {
-        val optional = observationRepository.findById(id)
-        if (optional.isPresent) {
-            return Optional.of(optional.get().toDto())
-        }
-        return Optional.empty()
     }
 
 }

@@ -80,7 +80,7 @@ class PublicLinksController(private val inspectionService: InspectionService, va
         if (sessionInspection != null && (sessionInspection as InspectionDto).uuid == inspectionId) {
             return Optional.of(sessionInspection)
         } else {
-            val optional = inspectionService.findId(inspectionId)
+            val optional = inspectionService.findById(inspectionId)
             if (optional.isPresent) {
                 session.setAttribute(sessionInspectionAttribute, optional.get())
             }
