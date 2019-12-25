@@ -46,6 +46,7 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
     compile "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
     compile "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
     implementation "com.auth0:java-jwt:3.8.3"
