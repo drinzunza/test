@@ -21,5 +21,6 @@ data class ObservationDefectDto(
         val stationMarker: String?,
         val observationType: ObservationType?,
         val size: String?,
-        val type: StructuralType?
+        val type: StructuralType?,
+        val weather: Weather?
 ) : Serializable

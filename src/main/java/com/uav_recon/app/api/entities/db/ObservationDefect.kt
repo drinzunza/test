@@ -55,6 +55,9 @@ class ObservationDefect(
         @Enumerated(EnumType.STRING)
         @Type(type = "pgsql_enum")
         var type: StructuralType? = null,
+        var temperature: Double? = null,
+        var humidity: Double? = null,
+        var wind: Double? = null,
         @Transient
         var material: Material? = null,
         @Transient

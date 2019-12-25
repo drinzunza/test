@@ -1,11 +1,14 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.ObservationDefect
+import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.db.StructuralType
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
+import com.uav_recon.app.api.entities.requests.bridge.Weather
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
+import com.uav_recon.app.api.repositories.PhotoRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
@@ -13,10 +16,14 @@ import java.util.*
 import javax.transaction.Transactional
 
 @Service
-class ObservationDefectService(private val observationDefectRepository: ObservationDefectRepository,
-                               private val observationRepository: ObservationRepository,
-                               private val inspectionRepository: InspectionRepository,
-                               private val photoService: PhotoService) {
+class ObservationDefectService(
+        private val observationDefectRepository: ObservationDefectRepository,
+        private val observationRepository: ObservationRepository,
+        private val inspectionRepository: InspectionRepository,
+        private val photoRepository: PhotoRepository,
+        private val photoService: PhotoService,
+        private val weatherService: WeatherService
+) {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
 
@@ -40,7 +47,8 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         stationMarker = stationMarker,
         observationType = observationType,
         size = size,
-        type = type
+        type = type,
+        weather = getWeather(this)
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
@@ -87,7 +95,9 @@ class ObservationDefectService(private val observationDefectRepository: Observat
             )
             logger.info("New observation defect id (${dto.id})")
         }
-        return observationDefectRepository.save(dto.toEntity(createdBy, updatedBy, observationId)).toDto()
+
+        val saved = observationDefectRepository.save(dto.toEntity(createdBy, updatedBy, observationId))
+        return saveWeather(saved).toDto()
     }
 
     private fun checkInspectionAndObservationRelationship(inspectionId: String, observationId: String) {
@@ -146,5 +156,39 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         }
 
         throw Error(245, "Cannot create unique observation defect id")
+    }
+
+    fun getPhotoWithCoordinates(observationDefect: ObservationDefect?): Photo? {
+        if (observationDefect != null) {
+            photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(observationDefect.uuid).forEach {
+                if (it.latitude != null && it.longitude != null) {
+                    return it
+                }
+            }
+        }
+        return null
+    }
+
+    fun getWeather(observationDefect: ObservationDefect?): Weather? {
+        if (observationDefect?.temperature != null) {
+            return Weather(observationDefect.temperature, observationDefect.humidity, observationDefect.wind)
+        }
+        return null
+    }
+
+    fun saveWeather(observationDefect: ObservationDefect): ObservationDefect {
+        val photo = getPhotoWithCoordinates(observationDefect)
+        val weather = weatherService.getHistoricalWeather(
+                photo?.latitude, photo?.longitude, photo?.createdAtClient?.toEpochSecond()
+        )
+        if (weather != null) {
+            logger.info("Save defect weather ${photo?.latitude}:${photo?.longitude}, " +
+                    "${photo?.createdAtClient}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
+            observationDefect.temperature = weather.temperature
+            observationDefect.humidity = weather.humidity
+            observationDefect.wind = weather.wind
+            return observationDefectRepository.save(observationDefect)
+        }
+        return observationDefect
     }
 }
