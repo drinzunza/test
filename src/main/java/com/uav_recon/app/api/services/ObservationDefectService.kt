@@ -130,13 +130,13 @@ class ObservationDefectService(private val observationDefectRepository: Observat
                                            structuralObservation: Boolean?
     ): String {
         val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
-        val observationLetter = structuralObservation?.let {
-            if (structuralObservation) OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE
-        }
+        val observationLetter = if (structuralObservation != null && structuralObservation)
+            OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE
 
         val displayIdRegexp = "${structureId ?: OBSERVATION_EMPTY_STRUCTURE}-$observationLetter-%-$inspectorId-$date"
 
         val observationDefects = observationDefectRepository.findAllByIdLike(displayIdRegexp)
+        observationDefects.forEach { logger.info("${it.id} - ${it.uuid}") }
         for (i in 1..1000) {
             val autoNum = String.format("%03d", i)
             val displayId = displayIdRegexp.replace("-%-", "-$autoNum-")
