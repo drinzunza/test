@@ -87,7 +87,7 @@ class InspectionService(
         }
     }
 
-    fun find(id: String): Optional<InspectionDto> {
+    fun findId(id: String): Optional<InspectionDto> {
         val optional = inspectionRepository.findById(id)
         if (optional.isPresent) {
             return Optional.of(optional.get().toDto());
