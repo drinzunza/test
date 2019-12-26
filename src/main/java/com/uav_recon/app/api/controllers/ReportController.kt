@@ -3,7 +3,6 @@ package com.uav_recon.app.api.controllers
 import com.uav_recon.app.api.controllers.handlers.FileStorageException
 import com.uav_recon.app.api.entities.db.Report
 import com.uav_recon.app.api.entities.responses.Response
-import com.uav_recon.app.api.entities.responses.bridge.ReportResponse
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ReportRepository
 import com.uav_recon.app.api.services.FileStorageService
