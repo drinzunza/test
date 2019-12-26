@@ -118,13 +118,12 @@ class InspectionService(
 
     fun saveWeather(inspection: Inspection): Inspection {
         if (inspection.temperature == null) {
-            val photo = getPhotoWithCoordinates(inspection)
             val weather = weatherService.getHistoricalWeather(
-                    photo?.latitude, photo?.longitude, photo?.createdAtClient?.toEpochSecond()
+                    inspection.latitude, inspection.longitude, inspection.createdAt?.toEpochSecond()
             )
             if (weather != null) {
-                logger.info("Save inspection weather ${photo?.latitude}:${photo?.longitude}, " +
-                        "${photo?.createdAtClient}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
+                logger.info("Save inspection weather ${inspection.latitude}:${inspection.longitude}, " +
+                        "${inspection.createdAt}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
                 inspection.temperature = weather.temperature
                 inspection.humidity = weather.humidity
                 inspection.wind = weather.wind
