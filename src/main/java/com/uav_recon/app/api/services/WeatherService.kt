@@ -35,8 +35,13 @@ class WeatherService {
         if (latitude == null || longitude == null || timestamp == null) {
             return null
         }
+        return getHistoricalWeather(latitude, longitude, timestamp, true)
+                ?: getHistoricalWeather(latitude, longitude, timestamp, false)
+    }
+
+    fun getHistoricalWeather(latitude: Double?, longitude: Double?, timestamp: Long?, start: Boolean): Weather? {
         try {
-            val url = "$historicalApi?lat=$latitude&lon=$longitude&start=$timestamp&cnt=1&appid=$key"
+            val url = "$historicalApi?lat=$latitude&lon=$longitude&${if (start) "start" else "end"}=$timestamp&cnt=1&appid=$key"
             logger.info("Request weather $url")
             val resp = URL(url).readText()
             val tree = mapper.readTree(resp)
