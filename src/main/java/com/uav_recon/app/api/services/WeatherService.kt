@@ -35,7 +35,7 @@ class WeatherService {
             return null
         }
         try {
-            val url = "$historicalApi?lat=$latitude&lon=$longitude&end=$timestamp&cnt=1&appid=$key"
+            val url = "$historicalApi?lat=$latitude&lon=$longitude&start=$timestamp&cnt=1&appid=$key"
             println(url)
             val resp = URL(url).readText()
             val tree = mapper.readTree(resp)
