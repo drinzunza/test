@@ -37,16 +37,18 @@ class WeatherService {
         }
         try {
             val url = "$historicalApi?lat=$latitude&lon=$longitude&start=$timestamp&cnt=1&appid=$key"
-            println(url)
+            logger.info("Request weather $url")
             val resp = URL(url).readText()
             val tree = mapper.readTree(resp)
             val temp = ((tree.at("/list/0/main/temp").asDouble() * 9 / 5 - 459.67) * 100)
                     .roundToInt() / 100.0
-            return Weather(temp,
+            val weather = Weather(temp,
                     tree.at("/list/0/main/humidity").asDouble(),
                     tree.at("/list/0/wind/speed").asDouble())
+            logger.info("Got weather ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
+            return weather
         } catch (e: Exception) {
-            logger.error("Cannot get weather lat=$latitude lon=$longitude time=$timestamp")
+            logger.error("Cannot get weather", e)
         }
         return null
     }
