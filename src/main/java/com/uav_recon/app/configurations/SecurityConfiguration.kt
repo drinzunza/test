@@ -45,7 +45,7 @@ class SecurityConfiguration(val tokenManager: TokenManager, val userService: Use
 
     override fun configure(web: WebSecurity) {
         web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**", "/configuration/**",
-                                   "/swagger-ui.html", "/webjars/**", "/public/**")
+                                   "/swagger-ui.html", "/webjars/**", "/datarecon/**")
     }
 
     inner class CustomAuthenticationEntryPoint : AuthenticationEntryPoint {

@@ -72,12 +72,12 @@ class ObservationDefectService(
 
     @Synchronized
     @Throws(Error::class)
-    @Transactional
     fun save(dto: ObservationDefectDto,
              inspectionId: String,
              observationId: String,
              updatedBy: Int,
-             passedStructureId: String? = null): ObservationDefectDto {
+             passedStructureId: String? = null
+    ): ObservationDefectDto {
         var structureId = passedStructureId
         checkInspectionAndObservationRelationship(inspectionId, observationId)
         var createdBy = updatedBy
@@ -88,16 +88,26 @@ class ObservationDefectService(
         if (structureId.isNullOrEmpty()) {
             structureId = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId).get().structureId
         }
-        if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
-            logger.info("Observation defect id (${dto.id}) incorrect")
-            dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId,
-                    dto.type == StructuralType.STRUCTURAL
-            )
-            logger.info("New observation defect id (${dto.id})")
-        }
 
-        val saved = observationDefectRepository.save(dto.toEntity(createdBy, updatedBy, observationId))
-        return saveWeather(saved).toDto()
+        try {
+            val entity = dto.toEntity(createdBy, updatedBy, observationId)
+            val saved = observationDefectRepository.save(entity)
+            return saveWeather(saved).toDto()
+        } catch (e: Exception) {
+            logger.error("Error saving observation defect", e)
+            if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
+                logger.info("Observation defect id (${dto.id}) incorrect")
+                dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId,
+                        dto.type == StructuralType.STRUCTURAL
+                )
+                logger.info("New observation defect id (${dto.id})")
+
+                val entity = dto.toEntity(createdBy, updatedBy, observationId)
+                val saved = observationDefectRepository.save(entity)
+                return saveWeather(saved).toDto()
+            }
+        }
+        throw Error(242, "Error saving observation defect")
     }
 
     private fun checkInspectionAndObservationRelationship(inspectionId: String, observationId: String) {
@@ -121,7 +131,6 @@ class ObservationDefectService(
         observationDefectRepository.save(defect);
     }
 
-    @Transactional
     fun save(list: List<ObservationDefectDto>,
              inspectionId: String,
              observationId: String,
