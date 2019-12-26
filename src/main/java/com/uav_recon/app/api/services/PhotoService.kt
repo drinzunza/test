@@ -1,6 +1,7 @@
 package com.uav_recon.app.api.services
 
 import com.google.common.io.Files
+import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.requests.bridge.LocationDto
@@ -76,7 +77,7 @@ class PhotoService(
         val photo = optional.get()
         photo.drawables = updateDto.drawables
         photoRepository.save(photo)
-        saveObservationDefectWeather(photo)
+        saveWeather(photo)
     }
 
     @Throws(Error::class)
@@ -125,7 +126,7 @@ class PhotoService(
         dto.link = link
         dto.name = name
         val photo = dto.toEntity(createdBy, updatedBy, observationDefectId, link, createdAtClient)
-        saveObservationDefectWeather(photo)
+        saveWeather(photo)
         return photoRepository.save(photo).toDto()
     }
 
@@ -163,12 +164,12 @@ class PhotoService(
         }
     }
 
-    fun saveObservationDefectWeather(photo: Photo?): ObservationDefect? {
-        if (photo?.latitude != null && photo.observationDefectId.isNotEmpty()) {
+    fun saveWeather(photo: Photo?) {
+        if (photo?.latitude != null) {
             val observationDefect = observationDefectRepository
                     .findFirstByUuidAndDeletedIsFalse(photo.observationDefectId)
 
-            if (observationDefect != null) {
+            if (observationDefect != null && observationDefect.temperature == null) {
                 val weather = weatherService.getHistoricalWeather(
                         photo.latitude, photo.longitude, photo.createdAtClient?.toEpochSecond()
                 )
@@ -178,11 +179,12 @@ class PhotoService(
                     observationDefect.temperature = weather.temperature
                     observationDefect.humidity = weather.humidity
                     observationDefect.wind = weather.wind
-                    return observationDefectRepository.save(observationDefect)
+                    observationDefectRepository.save(observationDefect)
                 }
+            } else {
+                logger.info("Photo defect weather already set or null ($observationDefect, ${observationDefect?.temperature})")
             }
         }
-        return null
     }
 
     private fun getFileFormat(contentType: String?) =
