@@ -153,7 +153,7 @@ class ObservationDefectService(
         for (i in 1..5000) {
             val autoNum = String.format("%03d", i)
             val displayId = displayIdRegexp.replace("-%-", "-$autoNum-")
-            if (observationDefects.filter { it.id == displayId }.isEmpty()) {
+            if (observationDefects.none { it.id == displayId }) {
                 return displayId
             }
         }
