@@ -1,6 +1,7 @@
 package com.uav_recon.app.api.services
 
 import com.google.common.io.Files
+import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.requests.bridge.LocationDto
 import com.uav_recon.app.api.entities.requests.bridge.PhotoDto
@@ -10,17 +11,23 @@ import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.configurations.UavConfiguration
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
 
 @Service
-class PhotoService(val photoRepository: PhotoRepository,
-                   val configuration: UavConfiguration,
-                   val fileService: FileService,
-                   val observationDefectRepository: ObservationDefectRepository,
-                   val observationRepository: ObservationRepository,
-                   val inspectionRepository: InspectionRepository) {
+class PhotoService(
+        private val photoRepository: PhotoRepository,
+        private val configuration: UavConfiguration,
+        private val fileService: FileService,
+        private val observationDefectRepository: ObservationDefectRepository,
+        private val observationRepository: ObservationRepository,
+        private val inspectionRepository: InspectionRepository,
+        private val weatherService: WeatherService
+) {
+
+    private val logger = LoggerFactory.getLogger(PhotoService::class.java)
 
     fun Photo.toDto() = PhotoDto(
         uuid = uuid,
@@ -69,6 +76,7 @@ class PhotoService(val photoRepository: PhotoRepository,
         val photo = optional.get()
         photo.drawables = updateDto.drawables
         photoRepository.save(photo)
+        saveObservationDefectWeather(photo)
     }
 
     @Throws(Error::class)
@@ -116,8 +124,9 @@ class PhotoService(val photoRepository: PhotoRepository,
 
         dto.link = link
         dto.name = name
-        return photoRepository.save(dto.toEntity(createdBy, updatedBy, observationDefectId, link, createdAtClient))
-                .toDto()
+        val photo = dto.toEntity(createdBy, updatedBy, observationDefectId, link, createdAtClient)
+        saveObservationDefectWeather(photo)
+        return photoRepository.save(photo).toDto()
     }
 
     @Throws(Error::class)
@@ -152,6 +161,28 @@ class PhotoService(val photoRepository: PhotoRepository,
                                                                                      observationId).isPresent) {
             throw Error(102, "Invalid observation defect UUID")
         }
+    }
+
+    fun saveObservationDefectWeather(photo: Photo?): ObservationDefect? {
+        if (photo?.latitude != null && photo.observationDefectId.isNotEmpty()) {
+            val observationDefect = observationDefectRepository
+                    .findFirstByUuidAndDeletedIsFalse(photo.observationDefectId)
+
+            if (observationDefect != null) {
+                val weather = weatherService.getHistoricalWeather(
+                        photo.latitude, photo.longitude, photo.createdAtClient?.toEpochSecond()
+                )
+                if (weather != null) {
+                    logger.info("Save photo weather ${photo.latitude}:${photo.longitude}, " +
+                            "${photo.createdAtClient}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
+                    observationDefect.temperature = weather.temperature
+                    observationDefect.humidity = weather.humidity
+                    observationDefect.wind = weather.wind
+                    return observationDefectRepository.save(observationDefect)
+                }
+            }
+        }
+        return null
     }
 
     private fun getFileFormat(contentType: String?) =

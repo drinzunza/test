@@ -11,4 +11,5 @@ interface ObservationDefectRepository : CrudRepository<ObservationDefect, String
     fun findByUuidAndObservationIdAndDeletedIsFalse(uuid: String, observationId: String): Optional<ObservationDefect>
     fun countById(id: String): Long
     fun findAllByIdLike(idRegexp: String): List<ObservationDefect>
+    fun findFirstByUuidAndDeletedIsFalse(observationDefectId: String): ObservationDefect?
 }
