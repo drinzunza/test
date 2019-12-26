@@ -19,7 +19,7 @@ import kotlin.collections.ArrayList
 
 
 @Controller
-@RequestMapping("public/{userId}")
+@RequestMapping("datarecon/{userId}")
 class PublicLinksController(private val inspectionService: InspectionService, val fileService: FileService) {
     val errorMessageAttribute = "errorMessage"
 
@@ -105,7 +105,7 @@ class PublicLinksController(private val inspectionService: InspectionService, va
         }
         val inspectionDto = optional.get()
 
-        val inspectionUrl = "/public/$userId/$inspectionId"
+        val inspectionUrl = "/datarecon/$userId/$inspectionId"
         parents.add(Parent(inspectionUrl, "Inspection $inspectionId"))
         if (observationId == null) {
             title = "Inspection ${inspectionDto.uuid}"
