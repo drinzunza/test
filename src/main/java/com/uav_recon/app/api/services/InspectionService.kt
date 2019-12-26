@@ -71,9 +71,7 @@ class InspectionService(
         if (inspection.isPresent) {
             createdBy = inspection.get().createdBy
         }
-        val saved = inspectionRepository.save(dto.toEntity(
-                weatherService.getWeather(dto.location?.latitude,dto.location?.longitude), createdBy, updatedBy)
-        )
+        val saved = inspectionRepository.save(dto.toEntity(null, createdBy, updatedBy))
         saveWeather(saved)
         if (dto.observations != null) {
             observationService.save(dto.observations, dto.uuid, updatedBy)
@@ -119,17 +117,21 @@ class InspectionService(
     }
 
     fun saveWeather(inspection: Inspection): Inspection {
-        val photo = getPhotoWithCoordinates(inspection)
-        val weather = weatherService.getHistoricalWeather(
-                photo?.latitude, photo?.longitude, photo?.createdAtClient?.toEpochSecond()
-        )
-        if (weather != null) {
-            logger.info("Save inspection weather ${photo?.latitude}:${photo?.longitude}, " +
-                    "${photo?.createdAtClient}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
-            inspection.temperature = weather.temperature
-            inspection.humidity = weather.humidity
-            inspection.wind = weather.wind
-            return inspectionRepository.save(inspection)
+        if (inspection.temperature == null) {
+            val photo = getPhotoWithCoordinates(inspection)
+            val weather = weatherService.getHistoricalWeather(
+                    photo?.latitude, photo?.longitude, photo?.createdAtClient?.toEpochSecond()
+            )
+            if (weather != null) {
+                logger.info("Save inspection weather ${photo?.latitude}:${photo?.longitude}, " +
+                        "${photo?.createdAtClient}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
+                inspection.temperature = weather.temperature
+                inspection.humidity = weather.humidity
+                inspection.wind = weather.wind
+                return inspectionRepository.save(inspection)
+            }
+        } else {
+            logger.info("Inspection weather already set")
         }
         return inspection
     }

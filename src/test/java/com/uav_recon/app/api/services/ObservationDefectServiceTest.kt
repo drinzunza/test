@@ -82,7 +82,8 @@ class ObservationDefectServiceTest {
                                          null,
                                          null,
                                          null,
-                                         null)
+                                         null,
+                                    null)
             save(dto)
         }
         while (futures.any { f -> !f.isDone }) Thread.sleep(300)

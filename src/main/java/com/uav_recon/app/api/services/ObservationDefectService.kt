@@ -177,17 +177,21 @@ class ObservationDefectService(
     }
 
     fun saveWeather(observationDefect: ObservationDefect): ObservationDefect {
-        val photo = getPhotoWithCoordinates(observationDefect)
-        val weather = weatherService.getHistoricalWeather(
-                photo?.latitude, photo?.longitude, photo?.createdAtClient?.toEpochSecond()
-        )
-        if (weather != null) {
-            logger.info("Save defect weather ${photo?.latitude}:${photo?.longitude}, " +
-                    "${photo?.createdAtClient}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
-            observationDefect.temperature = weather.temperature
-            observationDefect.humidity = weather.humidity
-            observationDefect.wind = weather.wind
-            return observationDefectRepository.save(observationDefect)
+        if (observationDefect.temperature == null) {
+            val photo = getPhotoWithCoordinates(observationDefect)
+            val weather = weatherService.getHistoricalWeather(
+                    photo?.latitude, photo?.longitude, photo?.createdAtClient?.toEpochSecond()
+            )
+            if (weather != null) {
+                logger.info("Save defect weather ${photo?.latitude}:${photo?.longitude}, " +
+                        "${photo?.createdAtClient}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
+                observationDefect.temperature = weather.temperature
+                observationDefect.humidity = weather.humidity
+                observationDefect.wind = weather.wind
+                return observationDefectRepository.save(observationDefect)
+            }
+        } else {
+            logger.info("Defect weather already set")
         }
         return observationDefect
     }
