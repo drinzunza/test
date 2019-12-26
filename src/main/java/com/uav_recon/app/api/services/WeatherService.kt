@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.lang.Exception
 import java.net.URL
+import kotlin.math.roundToInt
 
 @Service
 class WeatherService {
@@ -39,7 +40,9 @@ class WeatherService {
             println(url)
             val resp = URL(url).readText()
             val tree = mapper.readTree(resp)
-            return Weather(tree.at("/list/0/main/temp").asDouble() * 9/5 - 459.67,
+            val temp = ((tree.at("/list/0/main/temp").asDouble() * 9 / 5 - 459.67) * 100)
+                    .roundToInt() / 100.0
+            return Weather(temp,
                     tree.at("/list/0/main/humidity").asDouble(),
                     tree.at("/list/0/wind/speed").asDouble())
         } catch (e: Exception) {
