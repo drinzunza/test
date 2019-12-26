@@ -45,11 +45,15 @@ class WeatherService {
             logger.info("Request weather $url")
             val resp = URL(url).readText()
             val tree = mapper.readTree(resp)
-            val temp = ((tree.at("/list/0/main/temp").asDouble() * 9 / 5 - 459.67) * 100)
-                    .roundToInt() / 100.0
-            val weather = Weather(temp,
-                    tree.at("/list/0/main/humidity").asDouble(),
-                    tree.at("/list/0/wind/speed").asDouble())
+            val temp = tree.at("/list/0/main/temp").asDouble()
+            val humidity = tree.at("/list/0/main/humidity").asDouble()
+            val speed = tree.at("/list/0/wind/speed").asDouble()
+            if (temp == 0.0 && humidity == 0.0 && speed == 0.0) {
+                logger.error("No weather")
+                return null
+            }
+
+            val weather = Weather(((temp * 9 / 5 - 459.67) * 100).roundToInt() / 100.0, humidity, speed)
             logger.info("Got weather ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
             return weather
         } catch (e: Exception) {
