@@ -1,8 +1,6 @@
 package com.uav_recon.app.api.services
 
 import com.google.common.io.Files
-import com.uav_recon.app.api.entities.db.Inspection
-import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.requests.bridge.LocationDto
 import com.uav_recon.app.api.entities.requests.bridge.PhotoDto
@@ -86,7 +84,8 @@ class PhotoService(
              inspectionId: String,
              observationId: String,
              observationDefectId: String,
-             updatedBy: Int): PhotoDto {
+             updatedBy: Int
+    ): PhotoDto {
         //checkRelationship(inspectionId, observationId, observationDefectId)
         var createdBy = updatedBy
         val link: String?
@@ -101,26 +100,19 @@ class PhotoService(
             createdAtClient = photo.createdAtClient
         } else {
             createdAtClient = dto.createdAt ?: OffsetDateTime.now()
-            if (!dto.name.isNullOrBlank() && photoRepository.findAllByNameAndObservationDefectId(dto.name!!,
-                                                                                                 observationDefectId).isNotEmpty()) {
+            if (!dto.name.isNullOrBlank() && photoRepository
+                            .findAllByNameAndObservationDefectId(dto.name!!, observationDefectId).isNotEmpty()) {
                 val extension = Files.getFileExtension(dto.name)
                 if (extension.isNotBlank()) {
-                    name =
-                            "${Files.getNameWithoutExtension(dto.name)}_${createdAtClient!!.toEpochSecond()}.${extension}"
+                    name = "${Files.getNameWithoutExtension(dto.name)}_${createdAtClient!!.toEpochSecond()}.${extension}"
                 } else {
                     name = "${dto.name}_${createdAtClient!!.toEpochSecond()}"
                 }
             }
 
             val format = getFileFormat(data.contentType)
-            link =
-                    fileService.save(updatedBy,
-                                     inspectionId,
-                                     observationId,
-                                     observationDefectId,
-                                     dto.uuid,
-                                     format,
-                                     data.bytes)
+            link = fileService.save(updatedBy, inspectionId, observationId, observationDefectId,
+                    dto.uuid, dto.drawables, format, data.bytes)
         }
 
         dto.link = link

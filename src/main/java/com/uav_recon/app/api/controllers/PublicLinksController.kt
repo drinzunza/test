@@ -2,6 +2,7 @@ package com.uav_recon.app.api.controllers
 
 import com.google.api.client.util.IOUtils
 import com.uav_recon.app.api.entities.requests.bridge.InspectionDto
+import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.api.services.FileService
 import com.uav_recon.app.api.services.InspectionService
 import org.springframework.http.MediaType
@@ -17,10 +18,13 @@ import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
 import kotlin.collections.ArrayList
 
-
 @Controller
 @RequestMapping("datarecon/{userId}")
-class PublicLinksController(private val inspectionService: InspectionService, val fileService: FileService) {
+class PublicLinksController(
+        private val inspectionService: InspectionService,
+        private val fileService: FileService,
+        private val photoRepository: PhotoRepository
+) {
     val errorMessageAttribute = "errorMessage"
 
     @GetMapping("/{inspectionId}")
@@ -47,7 +51,7 @@ class PublicLinksController(private val inspectionService: InspectionService, va
     @GetMapping("/{inspectionId}/{observationId}/{observationDefectId}/{photoName}")
     @Throws(IOException::class)
     fun getImageAsByteArray(@PathVariable userId: Long, @PathVariable inspectionId: String, @PathVariable
-    observationId: String, @PathVariable observationDefectId: String, @PathVariable
+        observationId: String, @PathVariable observationDefectId: String, @PathVariable
                             photoName: String, response: HttpServletResponse, session: HttpSession) {
         val optional = getInspection(inspectionId, session)
         if (optional.isPresent) {
@@ -58,7 +62,8 @@ class PublicLinksController(private val inspectionService: InspectionService, va
                     val photos = defects[0].photos?.filter { p -> p.name == photoName }
                     if (photos != null && photos.size == 1) {
                         response.contentType = MediaType.IMAGE_JPEG_VALUE
-                        IOUtils.copy(ByteArrayInputStream(fileService.get(photos[0].link!!)), response.outputStream)
+                        IOUtils.copy(ByteArrayInputStream(
+                                fileService.get(photos[0].link!!, photos[0].drawables, true)), response.outputStream)
                     }
                 }
             }
