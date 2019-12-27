@@ -9,7 +9,7 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
     private val storage = StorageOptions.getDefaultInstance().getService();
     private val linkPrefix = "https://storage.cloud.google.com/"
 
-    override fun save(path: String, bytes: ByteArray): String {
+    override fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String {
         storage.create(BlobInfo.newBuilder(configuration.files.gsBucket, path).build(), bytes)
         return "$linkPrefix$path"
     }
@@ -18,7 +18,7 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
         storage.delete(BlobId.of(configuration.files.gsBucket, link.replace(linkPrefix, "")))
     }
 
-    override fun get(link: String): ByteArray {
+    override fun get(link: String, drawables: String?, withRect: Boolean): ByteArray {
         return storage.get(BlobId.of(configuration.files.gsBucket, link.replace(linkPrefix, ""))).getContent()
     }
 }

@@ -8,16 +8,15 @@ class FileServiceImpl(configuration: UavConfiguration) : FileService {
     val service: FileService = if (configuration.files.useGoogle == "true") GoogleStorageFileService(
         configuration) else LocalStorageFileService(configuration)
 
-    override fun save(path: String, bytes: ByteArray): String {
-        return service.save(path, bytes)
+    override fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String {
+        return service.save(path, bytes, format, drawables)
     }
 
-    override fun delete(path: String) {
-        service.delete(path)
+    override fun delete(link: String) {
+        service.delete(link)
     }
 
-    override fun get(path: String): ByteArray {
-        return service.get(path)
+    override fun get(link: String, drawables: String?, withRect: Boolean): ByteArray {
+        return service.get(link, drawables, withRect)
     }
-
 }
