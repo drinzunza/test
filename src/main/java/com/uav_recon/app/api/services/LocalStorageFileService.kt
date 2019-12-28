@@ -10,10 +10,13 @@ import java.awt.Graphics2D
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
+import java.util.stream.Stream
 import javax.imageio.ImageIO
 import kotlin.math.abs
 
@@ -40,17 +43,19 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         return "$linkPrefix$path"
     }
 
-    override fun get(link: String, drawables: String?, withRect: Boolean): ByteArray {
+    override fun get(link: String, drawables: String?, withRect: Boolean): InputStream {
         val path = link.replace(linkPrefix, "")
-        val clearPath = Paths.get(configuration.files.root, path)
-        val rectPath = Paths.get(configuration.files.root, getRectLink(path))
+        val clearPath = File(configuration.files.root, path)
+        val rectPath = File(configuration.files.root, getRectLink(path))
         if (withRect) {
-            if (Files.notExists(rectPath)) {
-                val bytes = Files.readAllBytes(clearPath)
-                saveWithRect(bytes, getRect(drawables), rectPath.toFile(), "jpg")
+            if (!rectPath.exists()) {
+                val bytes = clearPath.readBytes()
+                saveWithRect(bytes, getRect(drawables), rectPath, "jpg")
             }
         }
-        return Files.readAllBytes(if (withRect) rectPath else clearPath)
+
+        return FileInputStream(if (withRect) rectPath else clearPath)
+
     }
 
     override fun delete(link: String) {
