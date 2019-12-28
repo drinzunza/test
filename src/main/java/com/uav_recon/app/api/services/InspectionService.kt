@@ -119,7 +119,7 @@ class InspectionService(
     fun saveWeather(inspection: Inspection): Inspection {
         if (inspection.temperature == null) {
             val weather = weatherService.getHistoricalWeather(
-                    inspection.latitude, inspection.longitude, inspection.createdAt?.toEpochSecond()
+                    inspection.latitude, inspection.longitude, inspection.startDate?.toEpochSecond()
             )
             if (weather != null) {
                 logger.info("Save inspection weather ${inspection.latitude}:${inspection.longitude}, " +
