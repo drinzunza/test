@@ -1,11 +1,14 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.ObservationDefect
+import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.db.StructuralType
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
+import com.uav_recon.app.api.entities.requests.bridge.Weather
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
+import com.uav_recon.app.api.repositories.PhotoRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
@@ -13,18 +16,21 @@ import java.util.*
 import javax.transaction.Transactional
 
 @Service
-class ObservationDefectService(private val observationDefectRepository: ObservationDefectRepository,
-                               private val observationRepository: ObservationRepository,
-                               private val inspectionRepository: InspectionRepository,
-                               private val photoService: PhotoService) {
+class ObservationDefectService(
+        private val observationDefectRepository: ObservationDefectRepository,
+        private val observationRepository: ObservationRepository,
+        private val inspectionRepository: InspectionRepository,
+        private val photoRepository: PhotoRepository,
+        private val photoService: PhotoService,
+        private val weatherService: WeatherService
+) {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
 
     companion object {
-        private const val DELIMITER_ID = "-"
-        private val DELIMETER_REGEX = Regex("$DELIMITER_ID{2,}")
         private const val OBSERVATION_LETTER_STRUCTURAL = "D"
         private const val OBSERVATION_LETTER_MAINTENANCE = "M"
+        private const val OBSERVATION_EMPTY_STRUCTURE = "STR"
     }
 
     private fun ObservationDefect.toDto() = ObservationDefectDto(
@@ -41,7 +47,8 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         stationMarker = stationMarker,
         observationType = observationType,
         size = size,
-        type = type
+        type = type,
+        weather = getWeather(this)
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
@@ -63,13 +70,14 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         type = type
     )
 
+    @Synchronized
     @Throws(Error::class)
-    @Transactional
     fun save(dto: ObservationDefectDto,
              inspectionId: String,
              observationId: String,
              updatedBy: Int,
-             passedStructureId: String? = null): ObservationDefectDto {
+             passedStructureId: String? = null
+    ): ObservationDefectDto {
         var structureId = passedStructureId
         checkInspectionAndObservationRelationship(inspectionId, observationId)
         var createdBy = updatedBy
@@ -80,14 +88,26 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         if (structureId.isNullOrEmpty()) {
             structureId = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId).get().structureId
         }
-        if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
-            logger.info("Observation defect id (${dto.id}) incorrect")
-            dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId,
-                    dto.type == StructuralType.STRUCTURAL
-            )
-            logger.info("New observation defect id (${dto.id})")
+
+        try {
+            val entity = dto.toEntity(createdBy, updatedBy, observationId)
+            val saved = observationDefectRepository.save(entity)
+            return saveWeather(saved).toDto()
+        } catch (e: Exception) {
+            logger.error("Error saving observation defect", e)
+            if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
+                logger.info("Observation defect id (${dto.id}) incorrect")
+                dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId,
+                        dto.type == StructuralType.STRUCTURAL
+                )
+                logger.info("New observation defect id (${dto.id})")
+
+                val entity = dto.toEntity(createdBy, updatedBy, observationId)
+                val saved = observationDefectRepository.save(entity)
+                return saveWeather(saved).toDto()
+            }
         }
-        return observationDefectRepository.save(dto.toEntity(createdBy, updatedBy, observationId)).toDto()
+        throw Error(242, "Error saving observation defect")
     }
 
     private fun checkInspectionAndObservationRelationship(inspectionId: String, observationId: String) {
@@ -111,7 +131,6 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         observationDefectRepository.save(defect);
     }
 
-    @Transactional
     fun save(list: List<ObservationDefectDto>,
              inspectionId: String,
              observationId: String,
@@ -125,67 +144,67 @@ class ObservationDefectService(private val observationDefectRepository: Observat
         return observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(id).map { o -> o.toDto() }
     }
 
-    fun generateObservationDefectDisplayId(inspectorId: String,
-                                           structureId: String?,
-                                           structuralObservation: Boolean?): String {
-        val observationLetter = structuralObservation?.let {
-            if (structuralObservation) OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE
-        }
-        val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
-        val autoNum =
-                getNewAutoNum(asset = structureId ?: "",
-                              observationLetter = observationLetter,
-                              inspectorId = inspectorId,
-                              date = date)
-
-        return generateObservationDefectDisplayId(
-            asset = structureId,
-            observationLetter = observationLetter,
-            autoNum = autoNum,
-            userId = inspectorId,
-            date = date
-        )
-    }
-
-    private fun getNewAutoNum(asset: String, observationLetter: String?, inspectorId: String?, date: String?): String {
-        val prefix = generateObservationDefectDisplayId(asset = asset, autoNum = "")
-
-        val suffix = generateObservationDefectDisplayId(autoNum = "", userId = inspectorId, date = date)
-        val maxId = observationDefectRepository.getMaxDefectDisplayId(prefix, suffix)?.id
-
-        var longId = maxId
-                ?.removeSuffix(suffix)
-                ?.split(DELIMITER_ID)
-                ?.reversed()
-                ?.firstOrNull()
-                ?.toLongOrNull()
-                ?: 0
-
-        while (true) {
-            longId++
-            val autoNum = String.format("%03d", longId)
-            val newId = generateObservationDefectDisplayId(
-                asset = asset,
-                observationLetter = observationLetter,
-                autoNum = autoNum,
-                userId = inspectorId,
-                date = date
-            )
-            observationDefectRepository.getObservationDefectsDisplayId(newId).getOrNull(0) ?: return autoNum
-        }
-    }
-
-    private fun generateObservationDefectDisplayId(
-            asset: String? = null,
-            observationLetter: String? = null,
-            autoNum: String? = null,
-            userId: String? = null,
-            date: String? = null
+    @Throws(Error::class)
+    fun generateObservationDefectDisplayId(inspectorId: String, structureId: String?,
+                                           structuralObservation: Boolean?
     ): String {
-        return arrayOf(asset?.replace(' ', '_'), observationLetter, autoNum, userId, date)
-                .filterNotNull()
-                .joinToString(DELIMITER_ID)
-                .replace(" ", "") // StructureId contains spaces
-                .replace(DELIMETER_REGEX, DELIMITER_ID)
+        val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
+        val observationLetter = if (structuralObservation != null && structuralObservation)
+            OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE
+
+        val structure = (structureId ?: OBSERVATION_EMPTY_STRUCTURE).replace(" ", "_")
+        val displayIdRegexp = "$structure-$observationLetter-%-$inspectorId-$date"
+
+        val observationDefects = observationDefectRepository.findAllByIdLike(displayIdRegexp)
+        observationDefects.forEach {
+            logger.info("Exist ${it.id} - ${it.uuid}")
+        }
+        for (i in 1..5000) {
+            val autoNum = String.format("%03d", i)
+            val displayId = displayIdRegexp.replace("-%-", "-$autoNum-")
+            if (observationDefects.none { it.id == displayId }) {
+                return displayId
+            }
+        }
+
+        throw Error(245, "Cannot create unique observation defect id")
+    }
+
+    fun getPhotoWithCoordinates(observationDefect: ObservationDefect?): Photo? {
+        if (observationDefect != null) {
+            photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(observationDefect.uuid).forEach {
+                if (it.latitude != null && it.longitude != null) {
+                    return it
+                }
+            }
+        }
+        return null
+    }
+
+    fun getWeather(observationDefect: ObservationDefect?): Weather? {
+        if (observationDefect?.temperature != null) {
+            return Weather(observationDefect.temperature, observationDefect.humidity, observationDefect.wind)
+        }
+        return null
+    }
+
+    fun saveWeather(observationDefect: ObservationDefect): ObservationDefect {
+        if (observationDefect.temperature == null) {
+            val photo = getPhotoWithCoordinates(observationDefect)
+            val weather = weatherService.getHistoricalWeather(
+                    photo?.latitude, photo?.longitude, photo?.createdAtClient?.toEpochSecond()
+            )
+            if (weather != null) {
+                logger.info("Save defect weather ${photo?.latitude}:${photo?.longitude}, " +
+                        "${photo?.createdAtClient}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
+                observationDefect.temperature = weather.temperature
+                observationDefect.humidity = weather.humidity
+                observationDefect.wind = weather.wind
+                return observationDefectRepository.save(observationDefect)
+            }
+        } else {
+            logger.info("Defect weather already set")
+        }
+        return observationDefect
     }
 }

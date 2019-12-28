@@ -7,4 +7,5 @@ import java.util.*
 interface InspectionRepository : JpaRepository<Inspection, String> {
     fun findAllByDeletedIsFalseAndCreatedBy(userId: Int) : List<Inspection>
     fun findByUuidAndDeletedIsFalse(id: String) : Optional<Inspection>
+    fun findFirstByUuidAndDeletedIsFalse(id: String) : Inspection?
 }

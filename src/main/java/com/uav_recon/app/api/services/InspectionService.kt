@@ -1,11 +1,16 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.Inspection
+import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.requests.bridge.InspectionDto
 import com.uav_recon.app.api.entities.requests.bridge.InspectionReport
 import com.uav_recon.app.api.entities.requests.bridge.LocationDto
 import com.uav_recon.app.api.entities.requests.bridge.Weather
 import com.uav_recon.app.api.repositories.InspectionRepository
+import com.uav_recon.app.api.repositories.ObservationDefectRepository
+import com.uav_recon.app.api.repositories.ObservationRepository
+import com.uav_recon.app.api.repositories.PhotoRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.transaction.Transactional
@@ -13,8 +18,14 @@ import javax.transaction.Transactional
 @Service
 class InspectionService(
         val inspectionRepository: InspectionRepository,
+        val photoRepository: PhotoRepository,
+        val observationRepository: ObservationRepository,
+        val observationDefectRepository: ObservationDefectRepository,
         val observationService: ObservationService,
-        val weatherService: WeatherService) {
+        val weatherService: WeatherService
+) {
+
+    private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
 
     fun Inspection.toDto() = InspectionDto(
         uuid = uuid,
@@ -60,11 +71,8 @@ class InspectionService(
         if (inspection.isPresent) {
             createdBy = inspection.get().createdBy
         }
-        val saved =
-                inspectionRepository.save(dto.toEntity(weatherService.getWeather(dto.location?.latitude,
-                                                                                 dto.location?.longitude),
-                                                       createdBy,
-                                                       updatedBy))
+        val saved = inspectionRepository.save(dto.toEntity(null, createdBy, updatedBy))
+        saveWeather(saved)
         if (dto.observations != null) {
             observationService.save(dto.observations, dto.uuid, updatedBy)
         }
@@ -87,7 +95,7 @@ class InspectionService(
         }
     }
 
-    fun find(id: String): Optional<InspectionDto> {
+    fun findById(id: String): Optional<InspectionDto> {
         val optional = inspectionRepository.findById(id)
         if (optional.isPresent) {
             return Optional.of(optional.get().toDto());
@@ -95,4 +103,35 @@ class InspectionService(
         return Optional.empty();
     }
 
+    fun getPhotoWithCoordinates(inspection: Inspection): Photo? {
+        observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).forEach { observation ->
+            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).forEach { observationDefect ->
+                photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(observationDefect.uuid).forEach {
+                    if (it.latitude != null && it.longitude != null) {
+                        return it
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    fun saveWeather(inspection: Inspection): Inspection {
+        if (inspection.temperature == null) {
+            val weather = weatherService.getHistoricalWeather(
+                    inspection.latitude, inspection.longitude, inspection.startDate?.toEpochSecond()
+            )
+            if (weather != null) {
+                logger.info("Save inspection weather ${inspection.latitude}:${inspection.longitude}, " +
+                        "${inspection.createdAt}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
+                inspection.temperature = weather.temperature
+                inspection.humidity = weather.humidity
+                inspection.wind = weather.wind
+                return inspectionRepository.save(inspection)
+            }
+        } else {
+            logger.info("Inspection weather already set")
+        }
+        return inspection
+    }
 }
