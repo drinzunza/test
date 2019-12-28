@@ -83,20 +83,26 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
     }
 
     @Synchronized
+    @Throws(Error::class)
     private fun saveWithRect(bytes: ByteArray, rect: Rect?, file: File, format: String) {
         val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
-        if (rect != null) {
-            val image: BufferedImage = ImageIO.read(bytes.inputStream())
-            val g = image.graphics as Graphics2D
-            g.stroke = BasicStroke(8.0f)
-            g.color = Color.GREEN
-            g.drawRect(
-                    (image.width * rect.startX).toInt(),
-                    (image.height * rect.startY).toInt(),
-                    (image.width * abs(rect.endX - rect.startX)).toInt(),
-                    (image.height * abs(rect.endY - rect.startY)).toInt())
-            ImageIO.write(image, needFormat, file)
+        try {
+            if (rect != null) {
+                val image: BufferedImage = ImageIO.read(bytes.inputStream())
+                val g = image.graphics as Graphics2D
+                g.stroke = BasicStroke(8.0f)
+                g.color = Color.GREEN
+                g.drawRect(
+                        (image.width * rect.startX).toInt(),
+                        (image.height * rect.startY).toInt(),
+                        (image.width * abs(rect.endX - rect.startX)).toInt(),
+                        (image.height * abs(rect.endY - rect.startY)).toInt())
+                ImageIO.write(image, needFormat, file)
+            }
+            logger.info("Saved image with rect ${file.absolutePath}")
+        } catch (e: Exception) {
+            logger.error("Invalid image data", e)
+            throw Error(104, "Invalid image data")
         }
-        logger.info("Saved image with rect ${file.absolutePath}")
     }
 }
