@@ -50,7 +50,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
                 saveWithRect(bytes, getRect(drawables), rectPath.toFile(), "jpg")
             }
         }
-        return Files.readAllBytes(clearPath)
+        return Files.readAllBytes(if (withRect) rectPath else clearPath)
     }
 
     override fun delete(link: String) {
