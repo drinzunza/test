@@ -1,5 +1,7 @@
 package com.uav_recon.app.api.services
 
+import java.io.InputStream
+
 interface FileService {
     fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String
     fun save(userId: Int,
@@ -14,5 +16,5 @@ interface FileService {
     }
 
     fun delete(link: String)
-    fun get(link: String, drawables: String?, withRect: Boolean = false): ByteArray
+    fun get(link: String, drawables: String?, withRect: Boolean = false): InputStream
 }
