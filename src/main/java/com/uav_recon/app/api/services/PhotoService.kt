@@ -174,7 +174,7 @@ class PhotoService(
                     observationDefectRepository.save(observationDefect)
                 }
             } else {
-                logger.info("Photo defect weather already set or null ($observationDefect, ${observationDefect?.temperature})")
+                logger.info("Photo defect weather already set or null (id=${observationDefect?.id}, temp=${observationDefect?.temperature})")
             }
         }
     }
