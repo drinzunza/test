@@ -6,6 +6,10 @@ import com.uav_recon.app.api.repositories.PasswordResetAttemptRepository
 import com.uav_recon.app.api.repositories.UserRepository
 import com.uav_recon.app.configurations.UavConfiguration
 import org.apache.commons.lang3.RandomStringUtils
+import org.springframework.security.core.userdetails.User.UserBuilder
+import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.lang.Long.max
@@ -21,7 +25,7 @@ class UserService(private val userRepository: UserRepository,
                   private val passwordResetAttemptRepository: PasswordResetAttemptRepository,
                   private val passwordEncoder: PasswordEncoder,
                   private val emailService: EmailService,
-                  private val configuration: UavConfiguration) {
+                  private val configuration: UavConfiguration) : UserDetailsService {
 
     private val emailPattern =
             Pattern.compile("^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&’*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$")
@@ -119,5 +123,20 @@ class UserService(private val userRepository: UserRepository,
 
     fun findById(id: Long): Optional<User> {
         return userRepository.findById(id)
+    }
+
+    override fun loadUserByUsername(username: String): UserDetails {
+        val user: Optional<User> = userRepository.findFirstByEmailIgnoreCase(username)
+
+        var builder: UserBuilder?
+        if (user.isPresent) {
+            builder = org.springframework.security.core.userdetails.User.withUsername(username)
+            builder.password(user.get().password)
+            builder.roles("USER")
+        } else {
+            throw UsernameNotFoundException("User not found.")
+        }
+
+        return builder.build()
     }
 }

@@ -6,6 +6,6 @@
 </head>
 <body>
 <h2 style="color: red">Error</h2>
-<p th:text="${errorMessage}"></p>
+<p th:text="${errorMessage == null} ? 'An unexpected error has occurred. Please contact your system administrator.' : ${errorMessage}"></p>
 </body>
 </html>
