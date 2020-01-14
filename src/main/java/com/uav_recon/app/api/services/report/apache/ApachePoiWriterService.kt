@@ -23,12 +23,7 @@ import java.math.BigInteger
 private const val FORMAT_COLOR = "%06X"
 
 @Service
-class ApachePoiWriterService(
-        private val mapLoaderService: MapLoaderService,
-        private val config: UavConfiguration,
-        private val fileStorageService: FileStorageService,
-        private val resources: Resources
-) : DocumentWriter {
+class ApachePoiWriterService(private val resources: Resources) : DocumentWriter {
 
     private val logger = LoggerFactory.getLogger(ApachePoiWriterService::class.java)
 
@@ -39,18 +34,11 @@ class ApachePoiWriterService(
         System.setProperty("org.apache.poi.javax.xml.stream.XMLEventFactory", "com.fasterxml.aalto.stax.EventFactoryImpl")
     }
 
-    override fun writeDocument(document: Document, file: File) {
+    override fun writeDocument(document: Document, filePath: String) {
         val wordDocument = XWPFDocument(resources.template.inputStream()) // Need to save styles
         document.writeTo(wordDocument)
-        try {
-            FileOutputStream(file).use {
-                wordDocument.write(it)
-            }
-        } catch (e: IncompatibleClassChangeError) {
-            e.printStackTrace()
-            FileOutputStream(file).use {
-                wordDocument.write(it)
-            }
+        FileOutputStream(filePath).use {
+            wordDocument.write(it)
         }
     }
 

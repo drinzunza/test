@@ -2,6 +2,7 @@ package com.uav_recon.app.api.services.report.document.main
 
 import com.uav_recon.app.api.beans.resources.Resources
 import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
@@ -52,6 +53,7 @@ private val LOGO_HEIGHT = (LOGO_WIDTH * 394.0 / 1773.0).roundToInt()
 @Service
 class MainDocumentFactory(
         private val mapLoaderService: MapLoaderService,
+        private val inspectionRepository: InspectionRepository,
         private val observationService: ObservationService,
         private val observationRepository: ObservationRepository,
         private val observationDefectRepository: ObservationDefectRepository,
@@ -126,7 +128,7 @@ class MainDocumentFactory(
     }
 
     override fun generateDocument(report: Report): Document {
-        val inspection = report.inspection!!
+        val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(report.inspectionId)!!
 
         return Document.create {
             border { BORDER }
@@ -146,7 +148,7 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createTitlePage(report: Report) {
-        val inspection = report.inspection!!
+        val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(report.inspectionId)!!
 
         paragraph {
             createElements(
@@ -181,7 +183,7 @@ class MainDocumentFactory(
             )
             lineFeed { LineFeedElement.Simple(4) }
             text { REPORT_NO_ELEMENT }
-            text(report.id.toString(), styles = ITALIC_STYLE_LIST)
+            text(report.uuid, styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             text { REPORT_DATE_ELEMENT }
             text(formatDate(), styles = ITALIC_STYLE_LIST)

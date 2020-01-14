@@ -1,0 +1,9 @@
+CREATE TABLE "reports" (
+	"uuid"	VARCHAR(50) PRIMARY KEY NOT NULL,
+	"link"	VARCHAR(255) NOT NULL,
+	"inspection_id"	VARCHAR(50) NOT NULL,
+	"created_by" INT NOT NULL,
+    "updated_by" INT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
