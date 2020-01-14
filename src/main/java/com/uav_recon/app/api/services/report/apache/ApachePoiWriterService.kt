@@ -6,19 +6,14 @@ import com.uav_recon.app.api.services.report.DocumentWriter
 import com.uav_recon.app.api.services.report.MapLoaderService
 import com.uav_recon.app.api.services.report.document.models.Document
 import com.uav_recon.app.api.services.report.document.models.Page
+import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.services.report.document.models.body.Paragraph
-import com.uav_recon.app.api.services.report.document.models.body.Paragraph.Alignment.*
 import com.uav_recon.app.api.services.report.document.models.body.Table
-import com.uav_recon.app.api.services.report.document.models.elements.LineFeedElement
-import com.uav_recon.app.api.services.report.document.models.elements.LinkTextElement
-import com.uav_recon.app.api.services.report.document.models.elements.PictureElement
-import com.uav_recon.app.api.services.report.document.models.elements.TextElement
+import com.uav_recon.app.api.services.report.document.models.elements.*
 import com.uav_recon.app.configurations.UavConfiguration
 import org.apache.poi.util.Units
 import org.apache.poi.xwpf.usermodel.*
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.STBorder
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.STPageBorderOffset
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblWidth
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -47,31 +42,91 @@ class ApachePoiWriterService(
     override fun writeDocument(document: Document, file: File) {
         val wordDocument = XWPFDocument(resources.template.inputStream()) // Need to save styles
         document.writeTo(wordDocument)
-        FileOutputStream(file).use {
-            wordDocument.write(it)
+        try {
+            FileOutputStream(file).use {
+                wordDocument.write(it)
+            }
+        } catch (e: IncompatibleClassChangeError) {
+            e.printStackTrace()
+            FileOutputStream(file).use {
+                wordDocument.write(it)
+            }
         }
     }
 
     private fun Document.writeTo(doc: XWPFDocument) {
-        border?.let {
-            doc.addBorder(it, pageWidth, pageHeight)
-        }
         pages.forEachIndexed { index, page ->
-            doc.addPage(index, page)
+            doc.addPage(this, page, index == pages.size - 1)
         }
     }
 
-    private fun XWPFDocument.addPage(index: Int, page: Page) {
-        if (index > 0) {
-            paragraph {
-                textRun { addBreak(BreakType.PAGE) }
-            }
-        }
+    private fun XWPFDocument.addPage(doc: Document, page: Page, isLastPage: Boolean) {
         page.elements.forEach { body ->
-            when(body) {
+            when (body) {
                 is Paragraph -> addParagraph(body)
                 is Table -> addTable(body)
-                else -> logger.info("Unsupported body type $body")
+                else -> logger.error("Unsupported body type $body")
+            }
+        }
+
+        addBorderAndOrientation(doc.border, page.orientation, doc.pageWidth, doc.pageHeight, isLastPage)
+    }
+
+    private fun XWPFDocument.addBorderAndOrientation(
+            border: Document.Border?,
+            orientation: Page.Orientation,
+            pageWidth: Int,
+            pageHeight: Int,
+            isLastPage: Boolean
+    ) {
+        val section: CTSectPr = if (isLastPage) {
+            // createParagraph add empty page at the end
+            document.body.run {
+                if (isSetSectPr) sectPr else addNewSectPr()
+            }
+        } else {
+            createParagraph().ctp.run {
+                val paragraphProperty = if (isSetPPr) pPr else addNewPPr()
+                val section = if (paragraphProperty.isSetSectPr) paragraphProperty.sectPr else paragraphProperty.addNewSectPr()
+                section.also { paragraphProperty.sectPr = it }
+            }
+        }
+
+        val pageSize: CTPageSz = if (section.isSetPgSz) section.pgSz else section.addNewPgSz()
+        when (orientation) {
+            Page.Orientation.PORTRAIT -> {
+                pageSize.orient = STPageOrientation.PORTRAIT
+                pageSize.h = pageHeight.toBigInteger()
+                pageSize.w = pageWidth.toBigInteger()
+            }
+            Page.Orientation.LANDSCAPE -> {
+                pageSize.orient = STPageOrientation.LANDSCAPE
+                pageSize.w = pageHeight.toBigInteger()
+                pageSize.h = pageWidth.toBigInteger()
+            }
+        }
+
+        border?.let {
+            val pageBorders: CTPageBorders = if (section.isSetPgBorders) section.pgBorders else section.addNewPgBorders()
+            pageBorders.addBorder(border)
+        }
+    }
+
+    private fun CTPageBorders.addBorder(border: Document.Border) {
+        this.offsetFrom = STPageBorderOffset.PAGE
+        for (b in 0..3) {
+            val ctBorder = when (b) {
+                0 -> if (isSetTop) top else addNewTop()
+                1 -> if (isSetBottom) bottom else addNewBottom()
+                2 -> if (isSetLeft) left else addNewLeft()
+                else -> if (isSetRight) right else addNewRight()
+            }
+            ctBorder.setVal(STBorder.THREE_D_EMBOSS)
+
+            ctBorder.sz = border.size.toBigInteger()
+            ctBorder.space = border.space.toBigInteger()
+            border.color?.let { color ->
+                ctBorder.color = color
             }
         }
     }
@@ -99,7 +154,45 @@ class ApachePoiWriterService(
                             cell.paragraph?.let {
                                 paragraph { addParagraph(it) }
                             }
+                            verticalAlignment = when (cell.verticalAlignment) {
+                                Alignment.START -> XWPFTableCell.XWPFVertAlign.TOP
+                                Alignment.END -> XWPFTableCell.XWPFVertAlign.BOTTOM
+                                else -> XWPFTableCell.XWPFVertAlign.CENTER
+                            }
                         }
+                    }
+                }
+            }
+            applyMerges(value.merges)
+        }
+    }
+
+    private fun XWPFTable.applyMerges(merges: List<Table.Merge>) {
+        merges.forEach { merge ->
+            when (merge.direction) {
+                Table.Merge.Direction.HORIZONTAL -> {
+                    val row = getRow(merge.mainAxisIndex)
+                    val mergeStarter = CTHMerge.Factory.newInstance().apply {
+                        `val` = STMerge.RESTART
+                    }
+                    val mergeFinisher = CTHMerge.Factory.newInstance().apply {
+                        `val` = STMerge.CONTINUE
+                    }
+                    row.getCell(merge.startAxisIndex).ctTc.tcPr.hMerge = mergeStarter
+                    for (i in (merge.startAxisIndex + 1)..merge.endAxisIndex) {
+                        row.getCell(i).ctTc.tcPr.hMerge = mergeFinisher
+                    }
+                }
+                Table.Merge.Direction.VERTICAL -> {
+                    val mergeStarter = CTVMerge.Factory.newInstance().apply {
+                        `val` = STMerge.RESTART
+                    }
+                    val mergeFinisher = CTVMerge.Factory.newInstance().apply {
+                        `val` = STMerge.CONTINUE
+                    }
+                    getRow(merge.startAxisIndex).getCell(merge.mainAxisIndex).ctTc.tcPr.vMerge = mergeStarter
+                    for (i in (merge.startAxisIndex + 1)..merge.endAxisIndex) {
+                        getRow(i).getCell(merge.mainAxisIndex).ctTc.tcPr.vMerge = mergeFinisher
                     }
                 }
             }
@@ -107,14 +200,22 @@ class ApachePoiWriterService(
     }
 
     private fun XWPFParagraph.addParagraph(value: Paragraph) {
-        value.alignment?.let { alignment = it.toAlignment() }
+        value.alignment?.let {
+            alignment = when (it) {
+                Alignment.START -> ParagraphAlignment.LEFT
+                Alignment.CENTER -> ParagraphAlignment.CENTER
+                Alignment.END -> ParagraphAlignment.RIGHT
+                Alignment.BOTH -> ParagraphAlignment.BOTH
+            }
+        }
         value.list.forEach {
-            when(it) {
+            when (it) {
                 is LineFeedElement -> blankLines(it.count)
                 is LinkTextElement -> addLinkText(it)
                 is TextElement -> addText(it)
                 is PictureElement -> addPicture(it)
-                else -> logger.info("Unsupported element $it")
+                is IconLinkElement -> addIconLink(it)
+                else -> logger.error("Unsupported element $it")
             }
         }
     }
@@ -123,7 +224,7 @@ class ApachePoiWriterService(
         textRun {
             isItalic = value.styles.contains(TextElement.Typeface.ITALIC)
             isBold = value.styles.contains(TextElement.Typeface.BOLD)
-            isStrikeThrough = value.styles.contains(TextElement.Typeface.STRIKE)
+            isStrike = value.styles.contains(TextElement.Typeface.STRIKE)
             if (value.styles.contains(TextElement.Typeface.UNDERLINE)) underline = UnderlinePatterns.SINGLE
             value.textSize?.let { fontSize = it }
             value.textColor?.let { color = it }
@@ -132,64 +233,44 @@ class ApachePoiWriterService(
     }
 
     private fun XWPFParagraph.addLinkText(value: LinkTextElement) {
-        val link = value.text
-        val rId = part.packagePart.addExternalRelationship(link, XWPFRelation.HYPERLINK.relation).id
-        val cthyperLink = ctp.addNewHyperlink()
-        cthyperLink.id = rId
-        cthyperLink.addNewR()
-        val hyperlinkRun = XWPFHyperlinkRun(cthyperLink, cthyperLink.getRArray(0), this)
-        value.textColor?.let {
-            hyperlinkRun.color = it
+        linkRun(value.text) {
+            value.textColor?.let {
+                color = it
+            }
+            value.textSize?.let { fontSize = it }
+            underline = UnderlinePatterns.SINGLE
+
+            isItalic = value.styles.contains(TextElement.Typeface.ITALIC)
+            isBold = value.styles.contains(TextElement.Typeface.BOLD)
+            isStrike = value.styles.contains(TextElement.Typeface.STRIKE)
+            setText(value.text)
         }
-        value.textSize?.let { hyperlinkRun.fontSize = it }
-        hyperlinkRun.underline = UnderlinePatterns.SINGLE
-
-        hyperlinkRun.isItalic = value.styles.contains(TextElement.Typeface.ITALIC)
-        hyperlinkRun.isBold = value.styles.contains(TextElement.Typeface.BOLD)
-        hyperlinkRun.isStrikeThrough = value.styles.contains(TextElement.Typeface.STRIKE)
-
-        hyperlinkRun.setText(link)
     }
 
     private fun XWPFParagraph.addPicture(value: PictureElement) {
         textRun { addPicture(value) }
     }
 
-    private fun XWPFDocument.addBorder(border: Document.Border, pageWidth: Int?, pageHeight: Int?) {
-        val ctDocument = document
-        val ctBody = ctDocument.body
-        val ctSectPr = if (ctBody.isSetSectPr) ctBody.sectPr else ctBody.addNewSectPr()
-        val ctPageSz = if (ctSectPr.isSetPgSz) ctSectPr.pgSz else ctSectPr.addNewPgSz()
-        //paper size letter
-        pageWidth?.let { ctPageSz.w = BigInteger.valueOf(pageWidth.toLong()) }
-        pageHeight?.let { ctPageSz.h = BigInteger.valueOf(pageHeight.toLong()) }
-        //page borders
-        val ctPageBorders = if (ctSectPr.isSetPgBorders) ctSectPr.pgBorders else ctSectPr.addNewPgBorders()
-        ctPageBorders.offsetFrom = STPageBorderOffset.PAGE
-        for (b in 0..3) {
-            val ctBorder = when(b) {
-                0 -> if (ctPageBorders.isSetTop) ctPageBorders.top else ctPageBorders.addNewTop()
-                1 -> if (ctPageBorders.isSetBottom) ctPageBorders.bottom else ctPageBorders.addNewBottom()
-                2 -> if (ctPageBorders.isSetLeft) ctPageBorders.left else ctPageBorders.addNewLeft()
-                else -> if (ctPageBorders.isSetRight) ctPageBorders.right else ctPageBorders.addNewRight()
-            }
-            ctBorder.setVal(STBorder.THREE_D_EMBOSS)
-
-            ctBorder.sz = BigInteger.valueOf(border.size.toLong())
-            ctBorder.space = BigInteger.valueOf(border.space.toLong())
-            border.color?.let {
-                //ctBorder.color = it
-            }
+    private fun XWPFParagraph.addIconLink(value: IconLinkElement) {
+        linkRun(value.link) {
+            val stream = resources.getData(value.name)?.inputStream()
+            addPicture(
+                stream,
+                XWPFDocument.PICTURE_TYPE_PNG,
+                value.link,
+                Units.toEMU(value.size),
+                Units.toEMU(value.size)
+            )
         }
     }
 
-    private fun Paragraph.Alignment.toAlignment(): ParagraphAlignment? {
-        return when(this) {
-            LEFT -> ParagraphAlignment.LEFT
-            CENTER -> ParagraphAlignment.CENTER
-            RIGHT -> ParagraphAlignment.RIGHT
-            BOTH -> ParagraphAlignment.BOTH
-        }
+    private fun XWPFParagraph.linkRun(link: String?, block: XWPFHyperlinkRun.() -> Unit) {
+        val rId = part.packagePart.addExternalRelationship(link, XWPFRelation.HYPERLINK.relation).id
+        val cthyperLink = ctp.addNewHyperlink()
+        cthyperLink.id = rId
+        cthyperLink.addNewR()
+        val hyperlinkRun = XWPFHyperlinkRun(cthyperLink, cthyperLink.getRArray(0), this)
+        hyperlinkRun.block()
     }
 
     private fun XWPFDocument.paragraph(block: XWPFParagraph.() -> Unit) = block(createParagraph())

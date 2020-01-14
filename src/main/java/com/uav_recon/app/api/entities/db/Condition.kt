@@ -10,7 +10,7 @@ class Condition(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: String,
     var description: String? = null,
-    var type: String,
+    var type: ConditionType,
     @Column(name = "defect_id")
     var defectId: String,
     @Column(name = "is_deleted")

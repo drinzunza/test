@@ -3,21 +3,19 @@ package com.uav_recon.app.api.services.report.document.models
 interface Document {
 
     companion object {
-
         inline fun create(lambda: Builder.() -> Unit) = Builder().apply(lambda).build()
-
     }
 
     val border: Border?
     val pages: List<Page>
-    val pageWidth: Int?
-    val pageHeight: Int?
+    val pageWidth: Int
+    val pageHeight: Int
 
     data class Simple(
             override val border: Border?,
             override val pages: List<Page>,
-            override val pageWidth: Int?,
-            override val pageHeight: Int?
+            override val pageWidth: Int,
+            override val pageHeight: Int
     ) : Document
 
     interface Border {
@@ -38,8 +36,8 @@ interface Document {
 
         var border: Border? = null
         val list = mutableListOf<Page>()
-        var pageWidth: Int? = null
-        var pageHeight: Int? = null
+        var pageWidth: Int = (8.5 * 1440).toInt()
+        var pageHeight: Int = 11 * 1440
 
         inline fun border(init: () -> Border) {
             border = init()
@@ -47,14 +45,6 @@ interface Document {
 
         inline fun page(init: Page.Builder.() -> Unit) {
             list.add(Page.create(init))
-        }
-
-        inline fun pageWidth(init: () -> Int) {
-            pageWidth = init()
-        }
-
-        inline fun pageHeight(init: () -> Int) {
-            pageHeight = init()
         }
 
         fun build(): Document = Simple(border, list, pageWidth, pageHeight)

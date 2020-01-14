@@ -1,27 +1,15 @@
 package com.uav_recon.app.api.services.report.document.models.body
 
-import com.uav_recon.app.api.services.report.document.models.elements.Element
-import com.uav_recon.app.api.services.report.document.models.elements.LineFeedElement
-import com.uav_recon.app.api.services.report.document.models.elements.PictureElement
-import com.uav_recon.app.api.services.report.document.models.elements.TextElement
+import com.uav_recon.app.api.services.report.document.models.elements.*
 import java.io.InputStream
 
 interface Paragraph : BodyElement {
 
     companion object {
-
         inline fun create(lambda: Builder.() -> Unit) = Builder().apply(lambda).build()
-
     }
 
     val alignment: Alignment?
-
-    enum class Alignment {
-        LEFT,
-        CENTER,
-        RIGHT,
-        BOTH
-    }
 
     data class Simple(
             override val alignment: Alignment?,
@@ -61,8 +49,10 @@ interface Paragraph : BodyElement {
             list.add(PictureElement.Simple(name, inputStream, width, height))
         }
 
+        fun iconLink(link: String, drawableRes: String, size: Double) {
+            list.add(IconLinkElement.Simple(link, drawableRes, size))
+        }
+
         fun build(): Paragraph = Simple(alignment, list)
-
     }
-
 }

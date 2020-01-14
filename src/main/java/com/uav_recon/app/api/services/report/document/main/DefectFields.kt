@@ -1,18 +1,26 @@
 package com.uav_recon.app.api.services.report.document.main
 
+import com.uav_recon.app.api.entities.db.ConditionType
 import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.entities.db.Observation
 import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
-import com.uav_recon.app.api.services.report.document.models.body.Paragraph
+import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory.Companion.DATE_FORMAT
+import com.uav_recon.app.api.services.report.document.models.body.Alignment
+import com.uav_recon.app.api.utils.formatDate
+import com.uav_recon.app.api.utils.normalName
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.time.OffsetDateTime
+import java.util.*
 
 internal enum class DefectFields(val title: String) {
 
     OBSERVATION_ID("Observation Id: "),
     COMPONENT("Component: "),
+    SPAN("Span #: "),
     SUB_COMPONENT("Sub-component name: "),
-    MATERIAL("Material: "),
     DRAWING_NUMBER("Drawing Number: "),
     LOCATION("Location: "),
     ROOM_NO("Room No.: "),
@@ -30,17 +38,20 @@ internal enum class DefectFields(val title: String) {
                  photoRepository: PhotoRepository
     ): String? {
         return when (this) {
-            OBSERVATION_ID -> observation.code
+            OBSERVATION_ID -> observation.id
             COMPONENT -> observation.structuralComponent?.name
+            SPAN -> defect.span
             SUB_COMPONENT -> observation.subcomponent?.name
-            MATERIAL -> defect.material?.name
             DRAWING_NUMBER -> observation.drawingNumber
-            LOCATION -> observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).getOrNull(0)?.let {
-                photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(it.id).firstOrNull {
-                    it.latitude != null && it.longitude != null
-                }?.let {
-                    "${it.latitude}, ${it.longitude}"
+            LOCATION -> {
+                val observationDefect = observationDefectRepository
+                        .findAllByObservationIdAndDeletedIsFalse(observation.id).firstOrNull()
+                val photo = observationDefect?.let { photoRepository
+                        .findAllByObservationDefectIdAndDeletedIsFalse(observationDefect.uuid).firstOrNull {
+                            it.latitude != null && it.longitude != null
+                        }
                 }
+                photo?.let { "${it.latitude}, ${it.longitude}"}
             }
             ROOM_NO -> observation.roomNumber
             DEFECT -> defect.id
@@ -48,36 +59,34 @@ internal enum class DefectFields(val title: String) {
             DEFECT_NAME -> defect.defect?.name
             DEFECT_CONDITION -> defect.condition.let {
                 when (it?.type) {
-                    "GOOD" -> "1 - ${it.type}"
-                    "FAIR" -> "2 - ${it.type}"
-                    "POOR" -> "3 - ${it.type}"
-                    "SEVERE" -> "4 - ${it.type}"
+                    ConditionType.GOOD -> "1 - ${it.type}"
+                    ConditionType.FAIR -> "2 - ${it.type}"
+                    ConditionType.POOR -> "3 - ${it.type}"
+                    ConditionType.SEVERE -> "4 - ${it.type}"
                     else -> "5 - ${it?.type}"
                 }
             }
-            INSPECTION_DATE -> ""//inspection.startDate?.formatDate(DATE_FORMAT)
+            INSPECTION_DATE -> inspection.startDate?.formatDate(DATE_FORMAT)
             STATIONING -> inspection.structure?.endStationing
-            CRITICAL_FINDINGS -> defect.criticalFindings?.joinToString(separator = ",")
-            PHOTO_QTY -> photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.id).size.toString()
+            CRITICAL_FINDINGS -> if (!defect.criticalFindings.isNullOrEmpty())
+                defect.criticalFindings?.joinToString(", ") { it.normalName } else ""
+            PHOTO_QTY -> photoRepository.countByObservationDefectIdAndDeletedIsFalse(defect.uuid).toString()
         }
     }
 
     companion object {
+        internal val HOURS_AND_MINS_FORMAT = SimpleDateFormat("HH:mm", Locale.getDefault())
+        internal val DEFAULT_FORMAT = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
-        private val LEFT_FIELDS = listOf(
-            OBSERVATION_ID, COMPONENT, SUB_COMPONENT,
-            MATERIAL, DRAWING_NUMBER, LOCATION, ROOM_NO
-        )
+        private val LEFT_FIELDS = listOf(OBSERVATION_ID, COMPONENT, SUB_COMPONENT, LOCATION, STATIONING)
         private val RIGHT_FIELDS = listOf(
-            DEFECT, DEFECT_NUMBER, DEFECT_NAME, DEFECT_CONDITION,
-            INSPECTION_DATE, STATIONING, CRITICAL_FINDINGS, PHOTO_QTY
+            INSPECTION_DATE, DEFECT, DEFECT_NUMBER, DEFECT_NAME, DEFECT_CONDITION, CRITICAL_FINDINGS, PHOTO_QTY
         )
 
-        val CELLS_ALIGNMENT_MAP: Map<Paragraph.Alignment, List<DefectFields>> = mapOf(
-            Paragraph.Alignment.LEFT to LEFT_FIELDS,
-            Paragraph.Alignment.RIGHT to RIGHT_FIELDS
+        val CELLS_ALIGNMENT_MAP: Map<Alignment, List<DefectFields>> = mapOf(
+            Alignment.START to LEFT_FIELDS,
+            Alignment.END to RIGHT_FIELDS
         )
 
     }
-
 }

@@ -8,5 +8,4 @@ interface LinkTextElement : TextElement {
         override val textColor: String? = "#0000FF",
         override val styles: List<TextElement.Typeface> = listOf(TextElement.Typeface.UNDERLINE)
     ) : LinkTextElement
-
 }
