@@ -29,21 +29,17 @@ open class SecurityConfiguration {
     open class ApiWebSecurityConfigurerAdapter(val tokenManager: TokenManager, val userService: UserService) :
             WebSecurityConfigurerAdapter() {
 
-        private val AUTH_PATH = "/api/v1/auth/**"
-        private val API_PATH_PATTERN = "/api/**"
-        private val API_FILES_PATTERN = "/files/**"
+        protected val AUTH_PATH = "/api/v1/auth/**"
+        protected val API_PATH_PATTERN = "/api/**"
 
         @Throws(Exception::class)
         override fun configure(http: HttpSecurity) {
             val tokenAuthenticationFilter =
                     TokenAuthenticationFilter(tokenManager, SkipPathRequestMatcher(listOf(AUTH_PATH)))
-            http.csrf().disable()
-                    .antMatcher(API_PATH_PATTERN)
-                    .antMatcher(API_FILES_PATTERN)
+            http.csrf().disable().antMatcher(API_PATH_PATTERN)
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().authorizeRequests()
                     .antMatchers(AUTH_PATH).permitAll()
-                    .antMatchers(API_FILES_PATTERN).authenticated()
                     .antMatchers(API_PATH_PATTERN).authenticated()
                     .and().exceptionHandling().authenticationEntryPoint(CustomAuthenticationEntryPoint())
                     .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
@@ -65,6 +61,26 @@ open class SecurityConfiguration {
                 res.writer.write(mapper.writeValueAsString(mapOf(Pair("code", 3), Pair("message", "Unauthorised"))))
                 res.writer.flush()
             }
+        }
+    }
+
+    @Configuration
+    @Order(2)
+    open class FilesWebSecurityConfigurerAdapter(override val tokenManager: TokenManager, override val userService: UserService) :
+            ApiWebSecurityConfigurerAdapter(tokenManager, userService) {
+
+        private val API_FILES_PATTERN = "/files/**"
+
+        @Throws(Exception::class)
+        override fun configure(http: HttpSecurity) {
+            val tokenAuthenticationFilter =
+                    TokenAuthenticationFilter(tokenManager, SkipPathRequestMatcher(listOf(AUTH_PATH)))
+            http.csrf().disable().antMatcher(API_FILES_PATTERN)
+                    .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .and().authorizeRequests()
+                    .antMatchers(API_FILES_PATTERN).authenticated()
+                    .and().exceptionHandling().authenticationEntryPoint(CustomAuthenticationEntryPoint())
+                    .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         }
     }
 
