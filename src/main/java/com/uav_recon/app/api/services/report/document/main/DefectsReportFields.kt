@@ -1,8 +1,7 @@
 package com.uav_recon.app.api.services.report.document.main
 
 import com.uav_recon.app.api.entities.db.*
-import com.uav_recon.app.api.repositories.ObservationDefectRepository
-import com.uav_recon.app.api.repositories.ObservationRepository
+import com.uav_recon.app.api.repositories.*
 import com.uav_recon.app.api.services.report.ReportConstants
 import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.services.report.document.models.body.Table
@@ -133,9 +132,16 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                       inspection: Inspection, inspector: User,
                       type: StructuralType, server: String,
                       observationRepository: ObservationRepository,
-                      observationDefectRepository: ObservationDefectRepository) {
+                      observationDefectRepository: ObservationDefectRepository,
+                      componentRepository: ComponentRepository,
+                      subcomponentRepository: SubcomponentRepository,
+                      defectRepository: DefectRepository,
+                      conditionRepository: ConditionRepository
+        ) {
             builder.apply {
-                fillRow(inspection, inspector, type, server, observationRepository, observationDefectRepository)
+                fillRow(inspection, inspector, type, server,
+                        observationRepository, observationDefectRepository, componentRepository,
+                        subcomponentRepository, defectRepository, conditionRepository)
             }
         }
 
@@ -147,11 +153,16 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                 inspection: Inspection, inspector: User,
                 type: StructuralType, server: String,
                 observationRepository: ObservationRepository,
-                observationDefectRepository: ObservationDefectRepository
+                observationDefectRepository: ObservationDefectRepository,
+                componentRepository: ComponentRepository,
+                subcomponentRepository: SubcomponentRepository,
+                defectRepository: DefectRepository,
+                conditionRepository: ConditionRepository
         ) {
             var i = 0
             var observationIndex = 0
             observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).forEach { observation ->
+                observation.fillObjects(componentRepository, subcomponentRepository)
                 var haveDefectsToShow = true
                 observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid)
                     .filter { type == it.type }
@@ -160,6 +171,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                         listOf()
                     }
                     .forEachIndexed { defectIndex, defect ->
+                        defect.fillObjects(defectRepository, conditionRepository)
                         row {
                             values().forEach {
                                 cell {
@@ -215,6 +227,32 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                         i++
                     }
                 if (haveDefectsToShow) observationIndex++
+            }
+        }
+
+        private fun Observation.fillObjects(componentRepository: ComponentRepository, subcomponentRepository: SubcomponentRepository) {
+            if (structuralComponent == null) {
+                structuralComponent = structuralComponentId?.let {
+                    componentRepository.findFirstById(structuralComponentId!!)
+                }
+            }
+            if (subcomponent == null) {
+                subcomponent = subComponentId?.let {
+                    subcomponentRepository.findFirstById(subComponentId!!)
+                }
+            }
+        }
+
+        private fun ObservationDefect.fillObjects(defectRepository: DefectRepository, conditionRepository: ConditionRepository) {
+            if (defect == null) {
+                defect = defectId?.let {
+                    defectRepository.findFirstById(defectId!!)
+                }
+            }
+            if (condition == null) {
+                condition = conditionId?.let {
+                    conditionRepository.findFirstById(conditionId!!)
+                }
             }
         }
     }

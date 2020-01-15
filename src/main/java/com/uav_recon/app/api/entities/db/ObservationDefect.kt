@@ -59,8 +59,6 @@ class ObservationDefect(
         var humidity: Double? = null,
         var wind: Double? = null,
         @Transient
-        var material: Material? = null,
-        @Transient
         var defect: Defect? = null,
         @Transient
         var condition: Condition? = null

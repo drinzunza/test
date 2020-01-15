@@ -96,7 +96,7 @@ class ObservationService(
     fun getCsValue(observation: Observation, conditionType: ConditionType): Int {
         return when (conditionType) {
             ConditionType.GOOD ->
-                getTotalQuantity(observation) - ConditionType.LIST_EXCLUDING_GOOD.sumBy { getCsValue(observation, conditionType) }
+                getTotalQuantity(observation) - ConditionType.LIST_EXCLUDING_GOOD.sumBy { getCsValue(observation, it) }
             else -> when (observation.subcomponent?.measureUnit?.toLowerCase()) {
                 MEASURE_TYPE_EACH -> calculateCsProcessB(observation, conditionType)
                 else -> calculateCsProcessA(observation, conditionType)

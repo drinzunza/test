@@ -1,11 +1,14 @@
 package com.uav_recon.app.api.services.report.document.main
 
 import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.repositories.ComponentRepository
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
+import com.uav_recon.app.api.repositories.SubcomponentRepository
 import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory.Companion.DATE_FORMAT
 import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.utils.formatDate
+import com.uav_recon.app.api.utils.normalName
 
 private const val NONE = "NONE"
 
@@ -29,7 +32,6 @@ internal enum class DefectFields(val title: String) {
 
     fun getValue(inspection: Inspection, structure: Structure?,
                  observation: Observation, defect: ObservationDefect,
-                 observationDefectRepository: ObservationDefectRepository,
                  photoRepository: PhotoRepository
     ): String? {
         return when (this) {
@@ -40,14 +42,8 @@ internal enum class DefectFields(val title: String) {
             ROOM_NO -> observation.roomNumber
             DEFECT_ID, OBSERVATION_ID -> defect.id
             DEFECT_NAME, OBSERVATION_NAME -> defect.defect?.name
-            DEFECT_CONDITION -> (if (defect.type == StructuralType.STRUCTURAL) defect else null)?.condition.let {
-                when (it?.type) {
-                    ConditionType.GOOD -> "1 - ${it.type}"
-                    ConditionType.FAIR -> "2 - ${it.type}"
-                    ConditionType.POOR -> "3 - ${it.type}"
-                    ConditionType.SEVERE -> "4 - ${it.type}"
-                    else -> "5 - ${it?.type}"
-                }
+            DEFECT_CONDITION -> (if (defect.type == StructuralType.STRUCTURAL) defect else null)?.condition?.let {
+                "${it.type.ordinal + 1} - ${it.type.normalName}"
             }
             INSPECTION_DATE -> inspection.startDate?.formatDate(DATE_FORMAT)
             STATIONING -> defect.stationMarker

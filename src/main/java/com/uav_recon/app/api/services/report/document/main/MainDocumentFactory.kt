@@ -59,6 +59,10 @@ class MainDocumentFactory(
         private val structureRepository: StructureRepository,
         private val userRepository: UserRepository,
         private val photoRepository: PhotoRepository,
+        private val componentRepository: ComponentRepository,
+        private val subcomponentRepository: SubcomponentRepository,
+        private val defectRepository: DefectRepository,
+        private val conditionRepository: ConditionRepository,
         private val resources: Resources,
         private val configuration: UavConfiguration,
         private val fileService: FileService
@@ -139,7 +143,9 @@ class MainDocumentFactory(
             page { createObservationSummary(inspection) }
 
             observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).forEach { observation ->
+                observation.fillObjects()
                 observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).forEach { defect ->
+                    defect.fillObjects()
                     page { createDefectReportPage(inspection, inspector, structure, observation, defect) }
                 }
             }
@@ -316,7 +322,9 @@ class MainDocumentFactory(
             lineFeed { DOUBLE_LINE_FEED_ELEMENT }
         }
 
-        observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid)
+        val observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid)
+        observations.forEach { it.fillObjects() }
+        observations
             .sortedBy { it.structuralComponent?.name }
             .groupBy { it.structuralComponent }
             .forEach {
@@ -356,7 +364,7 @@ class MainDocumentFactory(
                         paragraph {
                             alignment { it.key }
                             it.value.forEach { field ->
-                                elementsKeyValue(field.title, field.getValue(inspection, structure, observation, defect, observationDefectRepository, photoRepository), SMALL_TEXT_SIZE)
+                                elementsKeyValue(field.title, field.getValue(inspection, structure, observation, defect, photoRepository), SMALL_TEXT_SIZE)
                             }
                         }
                     }
@@ -447,7 +455,9 @@ class MainDocumentFactory(
         table {
             width { TABLE_WIDTH_LANDSCAPE }
             DefectsReportFields.buildHeaderRows(this)
-            DefectsReportFields.buildRows( this, inspection, inspector, type, configuration.server.host, observationRepository, observationDefectRepository)
+            DefectsReportFields.buildRows( this, inspection, inspector, type, configuration.server.host,
+                    observationRepository, observationDefectRepository, componentRepository,
+                    subcomponentRepository, defectRepository, conditionRepository)
         }
     }
 
@@ -491,5 +501,31 @@ class MainDocumentFactory(
         }
 
         return "$server/datarecon/$inspectorId/${inspection.uuid}/${observation?.id}/${observationDefect?.id}/$name"
+    }
+
+    private fun Observation.fillObjects() {
+        if (structuralComponent == null) {
+            structuralComponent = structuralComponentId?.let {
+                componentRepository.findFirstById(structuralComponentId!!)
+            }
+        }
+        if (subcomponent == null) {
+            subcomponent = subComponentId?.let {
+                subcomponentRepository.findFirstById(subComponentId!!)
+            }
+        }
+    }
+
+    private fun ObservationDefect.fillObjects() {
+        if (defect == null) {
+            defect = defectId?.let {
+                defectRepository.findFirstById(defectId!!)
+            }
+        }
+        if (condition == null) {
+            condition = conditionId?.let {
+                conditionRepository.findFirstById(conditionId!!)
+            }
+        }
     }
 }
