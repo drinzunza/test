@@ -7,6 +7,7 @@ import com.uav_recon.app.api.services.report.ReportConstants
 import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.services.report.document.models.body.Table
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement
+import com.uav_recon.app.api.utils.toDate
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.roundToInt
@@ -179,7 +180,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                                             DEFECT_ID -> buildText(defect.id)
                                             SUB_COMPONENT -> buildText(getComponentName(defectIndex == 0, observation))
                                             LOCATION_ID -> buildText(defect.span ?: TEXT_NOT_APPLICABLE)
-                                            DATE -> buildText(inspection.endDate?.let { SimpleDateFormat("MM/dd/yy", Locale.US).format(Date(it.toEpochSecond())) }
+                                            DATE -> buildText(inspection.endDate?.let { SimpleDateFormat("MM/dd/yy", Locale.US).format(it.toDate()) }
                                                 ?: EMPTY_CELL_VALUE)
                                             STATION -> buildText(defect.stationMarker ?: EMPTY_CELL_VALUE)
                                             DESCRIPTION -> when (type) {

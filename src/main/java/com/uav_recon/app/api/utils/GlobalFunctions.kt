@@ -55,9 +55,13 @@ fun Date?.formatDate(formatter: DateFormat = DEFAULT_FORMAT): String? {
 val <E : Enum<E>> Enum<E>.normalName: String
     get() = name[0] + name.substring(1).toLowerCase(Locale.US)
 
+fun OffsetDateTime.toDate(): Date {
+    return Date(toEpochSecond() * 1000)
+}
+
 fun OffsetDateTime?.formatDate(formatter: DateFormat = DEFAULT_FORMAT): String? {
     this?.let {
-        return formatter.format(Date(this.toEpochSecond()))
+        return formatter.format(toDate())
     }
     return null
 }

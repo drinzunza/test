@@ -20,11 +20,13 @@ import com.uav_recon.app.api.services.report.document.models.elements.TextElemen
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement.Typeface.BOLD
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement.Typeface.ITALIC
 import com.uav_recon.app.api.utils.formatDate
+import com.uav_recon.app.api.utils.toDate
 import com.uav_recon.app.configurations.UavConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
+import java.time.OffsetDateTime
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -184,7 +186,7 @@ class MainDocumentFactory(
             text(formatDate(), styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             text { INSPECTION_DATE_ELEMENT }
-            text(formatDate(Date(inspection?.startDate?.toEpochSecond() ?: Date().time)), styles = ITALIC_STYLE_LIST)
+            text(formatDate(inspection?.startDate?.toDate() ?: Date()), styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             text { WEATHER_ELEMENT }
             text(inspection?.getWeatherText() ?: "", styles = ITALIC_STYLE_LIST)
