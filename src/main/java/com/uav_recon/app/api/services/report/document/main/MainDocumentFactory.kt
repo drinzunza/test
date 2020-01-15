@@ -73,7 +73,6 @@ class MainDocumentFactory(
         private const val TERM_RATING = "Term Rating"
         private const val INSPECTED_BY_FORMAT = "Inspected by: %s (User id: %s)"
 
-        private const val LOCATION_DESCRIPTION = "Location description: "
         private const val DEFECT_DESCRIPTION = "Defect description: "
 
         private val BORDER: Document.Border = Document.Border.Simple(BORDER_SIZE, BORDER_SPACE, ReportConstants.COLOR_BLACK)
@@ -109,17 +108,13 @@ class MainDocumentFactory(
 
         private val OBSERVATION_SUMMARY_ELEMENT = TextElement.Simple("Summary of Observations by", styles = BOLD_STYLE_LIST)
         private val MAJOR_STRUCTURAL_ELEMENT = TextElement.Simple("Major Structural Component", styles = BOLD_STYLE_LIST)
-        private val OBSERVATION_ID_ELEMENT = TextElement.Simple("Observation Id: ", styles = BOLD_STYLE_LIST)
 
         private val OBSERVATION_REPORT_SUMMARY_ELEMENT = TextElement.Simple("Observation Report Summary", styles = ITALIC_BOLD_STYLE_LIST)
         private val DEFECT_PHOTOS_ELEMENT = TextElement.Simple("Inspection Photographs of Defects", styles = ITALIC_BOLD_STYLE_LIST)
 
         private val SPACE_ELEMENT = TextElement.Simple("----", textSize = 6, textColor = ReportConstants.COLOR_WHITE)
         private val PHOTO_SPACE_ELEMENT = TextElement.Simple("    --    ", textColor = ReportConstants.COLOR_WHITE)
-        private val INSPECTOR_SIGNATURE_ELEMENT = TextElement.Simple(
-            "Inspector's signature:                                                            Date:                        ",
-            styles = ITALIC_STYLE_LIST
-        )
+
         private val STRUCTURAL_DEFECTS_REPORT_ELEMENT =
             TextElement.Simple("Field Inspection Report - Structural Defects", styles = BOLD_STYLE_LIST)
         private val NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT =
@@ -353,8 +348,8 @@ class MainDocumentFactory(
             borders { false }
             width { TABLE_WIDTH_PORTRAIT }
             row {
-                DefectFields.CELLS_ALIGNMENT_MAP.forEach {
-                    cell {
+                DefectFields.getCellAlignmentMap(defect).forEach {
+                cell {
                         width { TABLE_WIDTH_PORTRAIT / 2 }
                         paragraph {
                             alignment { it.key }
@@ -368,7 +363,6 @@ class MainDocumentFactory(
         }
 
         paragraphLeft {
-            elementsKeyValue(LOCATION_DESCRIPTION, observation.locationDescription, SMALL_TEXT_SIZE)
             elementsKeyValue(DEFECT_DESCRIPTION, defect.description, SMALL_TEXT_SIZE)
         }
 
@@ -381,11 +375,6 @@ class MainDocumentFactory(
             width { (TABLE_WIDTH_PORTRAIT * 0.8).toInt() }
             borders { false }
             rowsPictures(inspection, inspector, defect)
-        }
-
-        paragraph {
-            lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            text { INSPECTOR_SIGNATURE_ELEMENT }
         }
     }
 

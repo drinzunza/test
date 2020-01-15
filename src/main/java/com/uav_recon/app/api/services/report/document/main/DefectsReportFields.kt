@@ -181,7 +181,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                                             LOCATION_ID -> buildText(defect.span ?: TEXT_NOT_APPLICABLE)
                                             DATE -> buildText(inspection.endDate?.let { SimpleDateFormat("MM/dd/yy", Locale.US).format(it) }
                                                 ?: EMPTY_CELL_VALUE)
-                                            STATION -> buildText(defect.getWeatherText() ?: EMPTY_CELL_VALUE)
+                                            STATION -> buildText(defect.stationMarker ?: EMPTY_CELL_VALUE)
                                             DESCRIPTION -> when (type) {
                                                 StructuralType.MAINTENANCE -> buildText(TEXT_MAINTENANCE_ITEM)
                                                 StructuralType.STRUCTURAL -> buildText(defect.defect?.name)

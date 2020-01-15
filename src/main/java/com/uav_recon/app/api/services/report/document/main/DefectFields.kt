@@ -6,29 +6,26 @@ import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory.Companion.DATE_FORMAT
 import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.utils.formatDate
-import com.uav_recon.app.api.utils.normalName
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.time.OffsetDateTime
-import java.util.*
+
+private const val NONE = "NONE"
 
 internal enum class DefectFields(val title: String) {
 
-    OBSERVATION_ID("Observation Id: "),
     COMPONENT("Component: "),
     SPAN("Span #: "),
     SUB_COMPONENT("Sub-component name: "),
     DRAWING_NUMBER("Drawing Number: "),
-    LOCATION("Location: "),
     ROOM_NO("Room No.: "),
-    DEFECT("Defect ID: "),
-    DEFECT_NUMBER("Defect Number: "),
+    DEFECT_ID("Defect ID: "),
+    OBSERVATION_ID("Observation ID: "),
     DEFECT_NAME("Defect Name: "),
+    OBSERVATION_NAME("Observation Name: "),
     DEFECT_CONDITION("Defect Condition State: "),
     INSPECTION_DATE("Inspection date: "),
     STATIONING("Stationing: "),
     CRITICAL_FINDINGS("Critical Findings: "),
-    PHOTO_QTY("Photo QTY's: ");
+    PHOTO_QTY("Photo QTY's: "),
+    LOCATION_ID("Location ID: ");
 
     fun getValue(inspection: Inspection, structure: Structure?,
                  observation: Observation, defect: ObservationDefect,
@@ -36,25 +33,13 @@ internal enum class DefectFields(val title: String) {
                  photoRepository: PhotoRepository
     ): String? {
         return when (this) {
-            OBSERVATION_ID -> observation.id
             COMPONENT -> observation.structuralComponent?.name
             SPAN -> defect.span
             SUB_COMPONENT -> observation.subcomponent?.name
             DRAWING_NUMBER -> observation.drawingNumber
-            LOCATION -> {
-                val observationDefect = observationDefectRepository
-                        .findAllByObservationIdAndDeletedIsFalse(observation.id).firstOrNull()
-                val photo = observationDefect?.let { photoRepository
-                        .findAllByObservationDefectIdAndDeletedIsFalse(observationDefect.uuid).firstOrNull {
-                            it.latitude != null && it.longitude != null
-                        }
-                }
-                photo?.let { "${it.latitude}, ${it.longitude}"}
-            }
             ROOM_NO -> observation.roomNumber
-            DEFECT -> defect.id
-            DEFECT_NUMBER -> defect.defect?.number?.toString()
-            DEFECT_NAME -> defect.defect?.name
+            DEFECT_ID, OBSERVATION_ID -> defect.id
+            DEFECT_NAME, OBSERVATION_NAME -> defect.defect?.name
             DEFECT_CONDITION -> (if (defect.type == StructuralType.STRUCTURAL) defect else null)?.condition.let {
                 when (it?.type) {
                     ConditionType.GOOD -> "1 - ${it.type}"
@@ -65,26 +50,39 @@ internal enum class DefectFields(val title: String) {
                 }
             }
             INSPECTION_DATE -> inspection.startDate?.formatDate(DATE_FORMAT)
-            STATIONING -> structure?.endStationing
-            CRITICAL_FINDINGS -> if (!defect.criticalFindings.isNullOrEmpty())
-                defect.criticalFindings?.joinToString(", ") { it.normalName } else ""
+            STATIONING -> defect.stationMarker
+            CRITICAL_FINDINGS -> if (defect.criticalFindings.isNullOrEmpty()) NONE else defect.criticalFindings?.size.toString()
             PHOTO_QTY -> photoRepository.countByObservationDefectIdAndDeletedIsFalse(defect.uuid).toString()
+
+            LOCATION_ID -> defect.span
         }
     }
 
     companion object {
-        internal val HOURS_AND_MINS_FORMAT = SimpleDateFormat("HH:mm", Locale.getDefault())
-        internal val DEFAULT_FORMAT = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
-        private val LEFT_FIELDS = listOf(OBSERVATION_ID, COMPONENT, SUB_COMPONENT, LOCATION, STATIONING)
-        private val RIGHT_FIELDS = listOf(
-            INSPECTION_DATE, DEFECT, DEFECT_NUMBER, DEFECT_NAME, DEFECT_CONDITION, CRITICAL_FINDINGS, PHOTO_QTY
+        private val LEFT_FIELDS = listOf(COMPONENT, SUB_COMPONENT, STATIONING, LOCATION_ID)
+        private val STRUCTURAL_RIGHT_FIELDS = listOf(
+            INSPECTION_DATE, DEFECT_ID, DEFECT_NAME, DEFECT_CONDITION, CRITICAL_FINDINGS, PHOTO_QTY
+        )
+        private val MAINTENANCE_RIGHT_FIELDS = listOf(
+            INSPECTION_DATE, OBSERVATION_ID, OBSERVATION_NAME, CRITICAL_FINDINGS, PHOTO_QTY
         )
 
-        val CELLS_ALIGNMENT_MAP: Map<Alignment, List<DefectFields>> = mapOf(
+        private val STRUCTURAL_ALIGNMENT_MAP =  mapOf(
             Alignment.START to LEFT_FIELDS,
-            Alignment.END to RIGHT_FIELDS
+            Alignment.END to STRUCTURAL_RIGHT_FIELDS
+        )
+        private val MAINTENANCE_ALIGNMENT_MAP =  mapOf(
+            Alignment.START to LEFT_FIELDS,
+            Alignment.END to MAINTENANCE_RIGHT_FIELDS
         )
 
+        fun getCellAlignmentMap(defect: ObservationDefect): Map<Alignment, List<DefectFields>> {
+            return when (defect.type) {
+                StructuralType.STRUCTURAL -> STRUCTURAL_ALIGNMENT_MAP
+                StructuralType.MAINTENANCE -> MAINTENANCE_ALIGNMENT_MAP
+                else -> STRUCTURAL_ALIGNMENT_MAP
+            }
+        }
     }
 }
