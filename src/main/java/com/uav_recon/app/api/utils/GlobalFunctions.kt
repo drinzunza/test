@@ -1,11 +1,13 @@
 package com.uav_recon.app.api.utils
 
 import com.uav_recon.app.api.entities.responses.Response
+import com.uav_recon.app.api.services.report.document.main.DefectFields
 import com.uav_recon.app.api.utils.DateExtensions.Companion.DEFAULT_FORMAT
 import org.springframework.core.io.Resource
 import java.io.IOException
 import java.text.DateFormat
 import java.text.SimpleDateFormat
+import java.time.OffsetDateTime
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 
@@ -46,6 +48,16 @@ class DateExtensions {
 fun Date?.formatDate(formatter: DateFormat = DEFAULT_FORMAT): String? {
     this?.let {
         return formatter.format(this)
+    }
+    return null
+}
+
+val <E : Enum<E>> Enum<E>.normalName: String
+    get() = name[0] + name.substring(1).toLowerCase(Locale.US)
+
+fun OffsetDateTime?.formatDate(formatter: DateFormat = DEFAULT_FORMAT): String? {
+    this?.let {
+        return formatter.format(Date(this.toEpochSecond()))
     }
     return null
 }

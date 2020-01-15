@@ -39,23 +39,31 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         } else {
             Files.write(absolutePath, bytes, StandardOpenOption.CREATE_NEW)
         }
-        saveWithRect(bytes, getRect(drawables), absolutePathWithRect.toFile(), format)
+        if (drawables != null) {
+            saveWithRect(bytes, getRect(drawables), absolutePathWithRect.toFile(), format)
+        }
         return "$linkPrefix$path"
     }
 
     override fun get(link: String, drawables: String?, withRect: Boolean): InputStream {
+        return FileInputStream(getFile(link, drawables, withRect))
+    }
+
+    override fun getPath(link: String, drawables: String?, withRect: Boolean): String {
+        return getFile(link, drawables, withRect).absolutePath
+    }
+
+    fun getFile(link: String, drawables: String?, withRect: Boolean): File {
         val path = link.replace(linkPrefix, "")
         val clearPath = File(configuration.files.root, path)
         val rectPath = File(configuration.files.root, getRectLink(path))
-        if (withRect) {
+        if (withRect && drawables != null) {
             if (!rectPath.exists()) {
                 val bytes = clearPath.readBytes()
                 saveWithRect(bytes, getRect(drawables), rectPath, "jpg")
             }
         }
-
-        return FileInputStream(if (withRect) rectPath else clearPath)
-
+        return if (withRect) rectPath else clearPath
     }
 
     override fun delete(link: String) {

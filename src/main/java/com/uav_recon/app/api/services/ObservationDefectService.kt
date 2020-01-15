@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.transaction.Transactional
 
 @Service
 class ObservationDefectService(

@@ -9,4 +9,5 @@ interface ConditionRepository : CrudRepository<Condition, String> {
     fun findAllByIdIn(ids: List<String>): List<Condition>
     fun findAllByIdInAndIdContains(ids: List<String>, buildType: String): List<Condition>
     fun findAllByIdContains(buildType: String): List<Condition>
+    fun findFirstById(id: String): Condition?
 }

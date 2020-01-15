@@ -9,12 +9,10 @@ interface TextElement : Element {
     val styles: List<Typeface>
 
     enum class Typeface {
-
         BOLD,
         ITALIC,
         UNDERLINE,
         STRIKE
-
     }
 
     data class Simple(
@@ -23,5 +21,4 @@ interface TextElement : Element {
         override val textColor: String? = null,
         override val styles: List<Typeface> = emptyList()
     ) : TextElement
-
 }
