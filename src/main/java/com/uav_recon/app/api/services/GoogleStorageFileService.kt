@@ -24,4 +24,12 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
                 .getContent()
                 .inputStream()
     }
+
+    override fun getPath(link: String, drawables: String?, withRect: Boolean): String {
+        // TODO fix
+        return ""
+        //return storage.get(BlobId.of(configuration.files.gsBucket, link.replace(linkPrefix, "")))
+        //        .getContent()
+        //        .inputStream()
+    }
 }

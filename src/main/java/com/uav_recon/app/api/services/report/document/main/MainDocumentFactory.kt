@@ -1,30 +1,37 @@
 package com.uav_recon.app.api.services.report.document.main
 
-import com.uav_recon.app.api.entities.db.Inspection
-import com.uav_recon.app.api.entities.db.Observation
-import com.uav_recon.app.api.entities.db.ObservationDefect
-import com.uav_recon.app.api.entities.db.Report
-import com.uav_recon.app.api.repositories.ObservationDefectRepository
-import com.uav_recon.app.api.repositories.ObservationRepository
-import com.uav_recon.app.api.repositories.PhotoRepository
-import com.uav_recon.app.api.services.FileStorageService
+import com.uav_recon.app.api.beans.resources.Resources
+import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.repositories.*
+import com.uav_recon.app.api.services.FileService
+import com.uav_recon.app.api.services.ObservationService
 import com.uav_recon.app.api.services.report.MapLoaderService
+import com.uav_recon.app.api.services.report.ReportConstants
 import com.uav_recon.app.api.services.report.document.DocumentFactory
 import com.uav_recon.app.api.services.report.document.models.Document
 import com.uav_recon.app.api.services.report.document.models.Page
 import com.uav_recon.app.api.services.report.document.models.body.Paragraph
-import com.uav_recon.app.api.services.report.document.models.body.Paragraph.Alignment.RIGHT
 import com.uav_recon.app.api.services.report.document.models.body.Table
 import com.uav_recon.app.api.services.report.document.models.body.Table.Row
 import com.uav_recon.app.api.services.report.document.models.elements.Element
 import com.uav_recon.app.api.services.report.document.models.elements.LineFeedElement
+import com.uav_recon.app.api.services.report.document.models.elements.LinkTextElement
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement.Typeface.BOLD
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement.Typeface.ITALIC
 import com.uav_recon.app.api.utils.formatDate
+import com.uav_recon.app.api.utils.toDate
+import com.uav_recon.app.configurations.UavConfiguration
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
+import java.time.OffsetDateTime
 import java.util.*
+import kotlin.math.roundToInt
+
+internal const val EMPTY_CELL_VALUE = ""
+internal const val SMALL_TABLE_TEXT_SIZE = 8
 
 private const val BORDER_SIZE = 2
 private const val BORDER_SPACE = 24
@@ -36,18 +43,32 @@ private const val PICTURE_STREAM_SIZE = 720
 private const val MAP_PICTURE_WIDTH = 450
 private const val MAP_PICTURE_HEIGHT = 250
 private const val DEFECT_PHOTO_SIZE = 160
-private const val TABLE_WIDTH = 9350
-private const val PAGE_WIDTH = (8.5 * 1440).toInt()
-private const val PAGE_HEIGHT = (11 * 1440)
+internal const val TABLE_WIDTH_PORTRAIT = 9350
+internal const val TABLE_WIDTH_LANDSCAPE = 13050
+internal const val TEXT_NOT_APPLICABLE = "N/A"
+private const val LOGO_WIDTH = 190
+private val LOGO_HEIGHT = (LOGO_WIDTH * 394.0 / 1773.0).roundToInt()
 
 @Service
 class MainDocumentFactory(
         private val mapLoaderService: MapLoaderService,
+        private val inspectionRepository: InspectionRepository,
+        private val observationService: ObservationService,
         private val observationRepository: ObservationRepository,
         private val observationDefectRepository: ObservationDefectRepository,
+        private val structureRepository: StructureRepository,
+        private val userRepository: UserRepository,
         private val photoRepository: PhotoRepository,
-        private val fileStorageService: FileStorageService
+        private val componentRepository: ComponentRepository,
+        private val subcomponentRepository: SubcomponentRepository,
+        private val defectRepository: DefectRepository,
+        private val conditionRepository: ConditionRepository,
+        private val resources: Resources,
+        private val configuration: UavConfiguration,
+        private val fileService: FileService
 ) : DocumentFactory {
+
+    private val logger = LoggerFactory.getLogger(MainDocumentFactory::class.java)
 
     companion object {
         internal val DATE_FORMAT = SimpleDateFormat("MM/dd/yyyy", Locale.US)
@@ -58,10 +79,9 @@ class MainDocumentFactory(
         private const val TERM_RATING = "Term Rating"
         private const val INSPECTED_BY_FORMAT = "Inspected by: %s (User id: %s)"
 
-        private const val LOCATION_DESCRIPTION = "Location description: "
         private const val DEFECT_DESCRIPTION = "Defect description: "
 
-        private val BORDER: Document.Border = Document.Border.Simple(BORDER_SIZE, BORDER_SPACE, "#000000")
+        private val BORDER: Document.Border = Document.Border.Simple(BORDER_SIZE, BORDER_SPACE, ReportConstants.COLOR_BLACK)
         internal val BOLD_STYLE_LIST = listOf(BOLD)
         internal val ITALIC_STYLE_LIST = listOf(ITALIC)
         internal val ITALIC_BOLD_STYLE_LIST = listOf(ITALIC, BOLD)
@@ -72,15 +92,15 @@ class MainDocumentFactory(
 
         private val STRUCTURE_TYPE_ELEMENT = TextElement.Simple("Structure Type: ", styles = BOLD_STYLE_LIST)
         private val STRUCTURE_ID_ELEMENT = TextElement.Simple("Structure ID: ", styles = BOLD_STYLE_LIST)
-        private val CALTRANS_NO_ELEMENT = TextElement.Simple("Caltrans Bridge No.", styles = BOLD_STYLE_LIST)
-        private val POST_MILE_ELEMENT = TextElement.Simple("Post Mile: ", styles = BOLD_STYLE_LIST)
-        private val STATIONING_ELEMENT = TextElement.Simple("Stationing", styles = BOLD_STYLE_LIST)
+        private val CALTRANS_NO_ELEMENT =
+            TextElement.Simple("Caltrans Bridge No.: ", textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
+        private val POST_MILE_ELEMENT = TextElement.Simple("Post Mile: ", textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
+        private val STATIONING_ELEMENT = TextElement.Simple("Stationing: ", textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
         private val PRIMARY_OWNER_ELEMENT =
-            TextElement.Simple("Primary Owner: ", textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
+            TextElement.Simple("Primary Owner: ", styles = BOLD_STYLE_LIST)
         private val STRUCTURE_NAME_ELEMENT =
-            TextElement.Simple("Structure Name: ", textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
-        private val REPORT_PREPARED_ELEMENT = TextElement.Simple("Inspection Report Prepared ", styles = BOLD_STYLE_LIST)
-        private val BY_ELEMENT = TextElement.Simple("by: ", styles = BOLD_STYLE_LIST)
+            TextElement.Simple("Structure Name: ", styles = BOLD_STYLE_LIST)
+        private val REPORT_PREPARED_ELEMENT = TextElement.Simple("Inspection Report Prepared by:", styles = BOLD_STYLE_LIST)
         private val REPORT_NO_ELEMENT = TextElement.Simple("Inspection Report No.: ")
         private val REPORT_DATE_ELEMENT = TextElement.Simple("Report Date: ")
         private val INSPECTION_DATE_ELEMENT = TextElement.Simple("Inspection Date(s): ")
@@ -94,109 +114,110 @@ class MainDocumentFactory(
 
         private val OBSERVATION_SUMMARY_ELEMENT = TextElement.Simple("Summary of Observations by", styles = BOLD_STYLE_LIST)
         private val MAJOR_STRUCTURAL_ELEMENT = TextElement.Simple("Major Structural Component", styles = BOLD_STYLE_LIST)
-        private val OBSERVATION_ID_ELEMENT = TextElement.Simple("Observation Id: ", styles = BOLD_STYLE_LIST)
 
         private val OBSERVATION_REPORT_SUMMARY_ELEMENT = TextElement.Simple("Observation Report Summary", styles = ITALIC_BOLD_STYLE_LIST)
         private val DEFECT_PHOTOS_ELEMENT = TextElement.Simple("Inspection Photographs of Defects", styles = ITALIC_BOLD_STYLE_LIST)
 
-        private val SPACE_ELEMENT = TextElement.Simple("----", textSize = 6, textColor = "#FFFFFF")
-        private val PHOTO_SPACE_ELEMENT = TextElement.Simple("    --    ", textColor = "#FFFFFF")
-        private val INSPECTOR_SIGNATURE_ELEMENT = TextElement.Simple(
-            "Inspector's signature:                                                            Date:                        ",
-            styles = ITALIC_STYLE_LIST
-        )
+        private val SPACE_ELEMENT = TextElement.Simple("----", textSize = 6, textColor = ReportConstants.COLOR_WHITE)
+        private val PHOTO_SPACE_ELEMENT = TextElement.Simple("    --    ", textColor = ReportConstants.COLOR_WHITE)
+
+        private val STRUCTURAL_DEFECTS_REPORT_ELEMENT =
+            TextElement.Simple("Field Inspection Report - Structural Defects", styles = BOLD_STYLE_LIST)
+        private val NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT =
+            TextElement.Simple("Field Inspection Report - Non-structural Defects", styles = BOLD_STYLE_LIST)
     }
 
     override fun generateDocument(report: Report): Document {
-        val inspection = report.inspection!!
+        val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(report.inspectionId)!!
+        val structure = inspection.structureId?.let { structureRepository.findFirstById(inspection.structureId!!) }
+        val company = Company(1, "Alta Vista Solutions")
+        val inspector = userRepository.findFirstById(inspection.updatedBy.toLong())!!
 
         return Document.create {
             border { BORDER }
-            pageWidth { PAGE_WIDTH }
-            pageHeight { PAGE_HEIGHT }
 
-            page { createTitlePage(report) }
+            page { createTitlePage(report, inspection, inspector, structure, company) }
             page { createGlobalPage(inspection) }
+            page { createStructuralDefectsReport(inspection, inspector) }
+            page { createNonStructuralDefectsReport(inspection, inspector) }
             page { createObservationSummary(inspection) }
 
             observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).forEach { observation ->
-                observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).forEach { defect ->
-                    page { createDefectReportPage(inspection, observation, defect) }
+                observation.fillObjects()
+                observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).forEach { defect ->
+                    defect.fillObjects()
+                    page { createDefectReportPage(inspection, inspector, structure, observation, defect) }
                 }
             }
         }
     }
 
-    private fun Page.Builder.createTitlePage(report: Report) {
-        val inspection = report.inspection
-
-        val beginStationing = inspection?.structure?.beginStationing
-        val endStationing = inspection?.structure?.endStationing
-
-        val stationing = if (beginStationing != null && endStationing != null) {
-            "$beginStationing to $endStationing"
-        } else beginStationing ?: endStationing ?: ""
-
+    private fun Page.Builder.createTitlePage(report: Report, inspection: Inspection?, inspector: User?, structure: Structure?, company: Company?) {
         paragraph {
             createElements(
                 TRIPLE_LINE_FEED_ELEMENT,
-                STRUCTURE_TYPE_ELEMENT, inspection?.structure?.type
+                STRUCTURE_TYPE_ELEMENT, structure?.type ?: ""
+            )
+            createElements(prefix = STRUCTURE_ID_ELEMENT, text = structure?.id)
+            createElements(prefix = STRUCTURE_NAME_ELEMENT, text = structure?.name)
+            createElements(prefix = PRIMARY_OWNER_ELEMENT, text = structure?.primaryOwner)
+            lineFeed { LineFeedElement.Simple(1) }
+            createElements(
+                prefix = CALTRANS_NO_ELEMENT,
+                text = structure?.caltransBridgeNo,
+                textStyles = listOf(),
+                textSize = SMALL_TEXT_SIZE
             )
             createElements(
-                TRIPLE_LINE_FEED_ELEMENT,
-                STRUCTURE_ID_ELEMENT, inspection?.structure?.id
+                prefix = POST_MILE_ELEMENT,
+                text = structure?.postmile?.toString(),
+                textStyles = listOf(),
+                textSize = SMALL_TEXT_SIZE
             )
-            createElements(prefix = CALTRANS_NO_ELEMENT, text = inspection?.structure?.caltransBridgeNo)
-            createElements(prefix = POST_MILE_ELEMENT, text = inspection?.structure?.postmile?.toString())
-            createElements(prefix = STATIONING_ELEMENT, text = stationing)
-            createElements(
-                DOUBLE_LINE_FEED_ELEMENT,
-                PRIMARY_OWNER_ELEMENT,
-                TextElement.Simple(inspection?.structure?.primaryOwner, textSize = SMALL_TEXT_SIZE)
-            )
-            createElements(
-                DOUBLE_LINE_FEED_ELEMENT,
-                STRUCTURE_NAME_ELEMENT,
-                TextElement.Simple(inspection?.structure?.name, textSize = SMALL_TEXT_SIZE)
-            )
+            createElements(prefix = STATIONING_ELEMENT, text = inspection?.getStationing(structure) ?: "", textStyles = listOf(), textSize = SMALL_TEXT_SIZE)
             lineFeed { LineFeedElement.Simple(7) }
             text { REPORT_PREPARED_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            text { BY_ELEMENT }
-            text(inspection?.company?.name ?: "")
+            picture(
+                company?.name ?: "",
+                resources.getData("logo_altavista.png")!!.inputStream(),
+                LOGO_WIDTH,
+                LOGO_HEIGHT
+            )
             lineFeed { LineFeedElement.Simple(4) }
             text { REPORT_NO_ELEMENT }
-            text(report.id.toString(), styles = ITALIC_STYLE_LIST)
+            text(report.id, styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             text { REPORT_DATE_ELEMENT }
             text(formatDate(), styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             text { INSPECTION_DATE_ELEMENT }
-            //text(formatDate(inspection?.startDate), styles = ITALIC_STYLE_LIST)
+            text(formatDate(inspection?.startDate?.toDate() ?: Date()), styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             text { WEATHER_ELEMENT }
-            text(inspection?.temperature?.let { "T ${inspection.temperature}F Hum ${inspection.humidity}% Wind ${inspection.wind} m/h" } ?: "", styles = ITALIC_STYLE_LIST)
+            text(inspection?.getWeatherText() ?: "", styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
         }
         paragraphLeft {
             lineFeed { LineFeedElement.Simple(9) }
             text {
-                val fullName = "${inspection?.inspector?.firstName} ${inspection?.inspector?.lastName}"
-                val userId = inspection?.inspector?.id?.toString() ?: ""
+                val fullName = if (inspector != null) "${inspector.firstName} ${inspector.lastName}" else ""
+                val userId = inspector?.id ?: ""
                 TextElement.Simple(String.format(INSPECTED_BY_FORMAT, fullName, userId), textSize = 8)
             }
         }
-
     }
 
     private fun formatDate(date: Date? = Date()): String = date.formatDate(DATE_FORMAT) ?: ""
 
     private fun Paragraph.Builder.createElements(
             topLineFeed: Element? = SINGLE_LINE_FEED_ELEMENT, prefix: TextElement,
-            text: String?, textStyles: List<TextElement.Typeface> = listOf(ITALIC),
+            text: String?,
+            textStyles: List<TextElement.Typeface> = listOf(ITALIC),
+            textSize: Int? = null,
             bottomLineFeed: Element? = null
     ) {
-        createElements(topLineFeed, prefix, TextElement.Simple(text ?: "", styles = textStyles), bottomLineFeed)
+        createElements(topLineFeed, prefix, TextElement.Simple(text ?: "", styles = textStyles, textSize = textSize), bottomLineFeed)
     }
 
     private fun Paragraph.Builder.createElements(
@@ -221,7 +242,7 @@ class MainDocumentFactory(
             }
         }
         table {
-            width { TABLE_WIDTH }
+            width { TABLE_WIDTH_PORTRAIT }
             row {
                 cell {
                     paragraph {
@@ -237,9 +258,9 @@ class MainDocumentFactory(
             row {
                 cell {
                     paragraph {
-                        val values = listOf<String>("Structural", "Safety", "Other")
+                        val values = CriticalFinding.values()
                         values.forEachIndexed { index, value ->
-                            text(formatToValueCount(value, inspection), styles = ITALIC_STYLE_LIST)
+                            text(value.formatToValueCount(inspection), styles = ITALIC_STYLE_LIST)
                             if (index != values.size - 1) lineFeed { SINGLE_LINE_FEED_ELEMENT }
                         }
                     }
@@ -251,7 +272,6 @@ class MainDocumentFactory(
                         lineFeed { SINGLE_LINE_FEED_ELEMENT }
                         text(formatRating(TERM_RATING, inspection.termRating), styles = ITALIC_STYLE_LIST)
                     }
-
                 }
             }
         }
@@ -261,7 +281,7 @@ class MainDocumentFactory(
         }
 
         table {
-            width { TABLE_WIDTH }
+            width { TABLE_WIDTH_PORTRAIT }
             row {
                 cell {
                     paragraph {
@@ -279,14 +299,15 @@ class MainDocumentFactory(
         }
     }
 
-    private fun formatToValueCount(prefix: String, inspection: Inspection): String {
-        val count = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).sumBy { observation: Observation ->
-            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).sumBy { defect: ObservationDefect ->
-                if (defect.criticalFindings?.find { finding -> finding.name.startsWith(prefix) } != null) 1 else 0
-            }
+    private fun CriticalFinding.formatToValueCount(inspection: Inspection): String {
+        val prefix = when (this) {
+            CriticalFinding.STRUCTURAL -> "Structural"
+            CriticalFinding.SAFETY -> "Safety"
+            CriticalFinding.OTHER -> "Other"
         }
+        val count = inspection.getCriticalFindingCount(this).toString()
 
-        return String.format(FORMAT_KEY_VALUE, prefix, count.toString())
+        return String.format(FORMAT_KEY_VALUE, prefix, count)
     }
 
     private fun formatRating(key: String, value: Any?, suffix: String? = null): String {
@@ -301,70 +322,49 @@ class MainDocumentFactory(
             lineFeed { DOUBLE_LINE_FEED_ELEMENT }
         }
 
-        observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).forEach { observation ->
-            paragraph {
-                text(observation.structuralComponent?.name ?: "", styles = BOLD_STYLE_LIST)
-                lineFeed { SINGLE_LINE_FEED_ELEMENT }
-                text { OBSERVATION_ID_ELEMENT }
-                text(observation.id.toString())
-                lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            }
-            table {
-                width { TABLE_WIDTH }
-                row {
-                    cells { DefectSummaryFields.CELL_LIST }
+        val observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid)
+        observations.forEach { it.fillObjects() }
+        observations
+            .sortedBy { it.structuralComponent?.name }
+            .groupBy { it.structuralComponent }
+            .forEach {
+                val component = it.key ?: return@forEach
+                val list = it.value.map {
+                    DefectSummaryFields.ObservationData(it, observationService)
                 }
-                generateDefectRows(observation)
-            }
-            paragraph {
-                lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            }
-        }
-    }
+                val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
 
-    private fun Table.Builder.generateDefectRows(observation: Observation) {
-        observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id).forEach { defect: ObservationDefect ->
-            generateDefectRow {
-                text(it.getValue(observation, defect))
-            }
-        }
-        // Total
-        generateDefectRow {
-            if (it == DefectSummaryFields.SUB_COMPONENT) alignment { RIGHT }
-            text(it.getTotalValue(observation, observationDefectRepository), styles = BOLD_STYLE_LIST)
-        }
-    }
-
-    private inline fun Table.Builder.generateDefectRow(paragraphBlock: Paragraph.Builder.(DefectSummaryFields) -> Unit) {
-        row {
-            DefectSummaryFields.values().forEach { field ->
-                cell {
-                    field.cellWidth?.let { width -> width { width } }
-                    paragraph {
-                        paragraphBlock(field)
+                table {
+                    width { TABLE_WIDTH_PORTRAIT }
+                    DefectSummaryFields.buildHeaderRows(this, component.name, totalHealthIndex)
+                    list.forEach {
+                        row {
+                            DefectSummaryFields.buildCells(this, it)
+                        }
                     }
                 }
+                paragraph {
+                    lineFeed { DOUBLE_LINE_FEED_ELEMENT }
+                }
             }
-        }
     }
 
-    private fun Page.Builder.createDefectReportPage(inspection: Inspection, observation: Observation, defect: ObservationDefect) {
+    private fun Page.Builder.createDefectReportPage(inspection: Inspection, inspector: User, structure: Structure?, observation: Observation, defect: ObservationDefect) {
         paragraph {
             text { OBSERVATION_REPORT_SUMMARY_ELEMENT }
         }
 
         table {
             borders { false }
-            width { TABLE_WIDTH }
+            width { TABLE_WIDTH_PORTRAIT }
             row {
-                DefectFields.CELLS_ALIGNMENT_MAP.forEach {
-                    cell {
-                        width { TABLE_WIDTH / 2 }
+                DefectFields.getCellAlignmentMap(defect).forEach {
+                cell {
+                        width { TABLE_WIDTH_PORTRAIT / 2 }
                         paragraph {
                             alignment { it.key }
                             it.value.forEach { field ->
-                                elementsKeyValue(field.title,
-                                        field.getValue(inspection, observation, defect, observationDefectRepository, photoRepository), SMALL_TEXT_SIZE)
+                                elementsKeyValue(field.title, field.getValue(inspection, structure, observation, defect, photoRepository), SMALL_TEXT_SIZE)
                             }
                         }
                     }
@@ -373,7 +373,6 @@ class MainDocumentFactory(
         }
 
         paragraphLeft {
-            elementsKeyValue(LOCATION_DESCRIPTION, observation.locationDescription, SMALL_TEXT_SIZE)
             elementsKeyValue(DEFECT_DESCRIPTION, defect.description, SMALL_TEXT_SIZE)
         }
 
@@ -383,23 +382,18 @@ class MainDocumentFactory(
         }
 
         table {
-            width { (TABLE_WIDTH * 0.8).toInt() }
+            width { (TABLE_WIDTH_PORTRAIT * 0.8).toInt() }
             borders { false }
-            rowsPictures(inspection, defect)
-        }
-
-        paragraph {
-            lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            text { INSPECTOR_SIGNATURE_ELEMENT }
+            rowsPictures(inspection, inspector, defect)
         }
     }
 
-    private fun Table.Builder.rowsPictures(inspection: Inspection, defect: ObservationDefect) {
-        val photos = photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.id.toString())
-        for (i in 0..(photos.size - 1) / 2) {
+    private fun Table.Builder.rowsPictures(inspection: Inspection, inspector: User, defect: ObservationDefect) {
+        val photosSize = photoRepository.countByObservationDefectIdAndDeletedIsFalse(defect.uuid).toInt()
+        for (i in 0..(photosSize - 1) / 2) {
             row {
                 cell {
-                    paragraphPhoto(inspection, defect, i * 2)
+                    paragraphPhoto(inspection, inspector, defect, i * 2)
                 }
                 cell {
                     width { PICTURE_SPACE_CELL_WIDTH }
@@ -409,25 +403,28 @@ class MainDocumentFactory(
                     }
                 }
                 cell {
-                    paragraphPhoto(inspection, defect, i * 2 + 1)
+                    paragraphPhoto(inspection, inspector, defect, i * 2 + 1)
                 }
             }
         }
     }
 
-    private fun Row.Cell.Builder.paragraphPhoto(inspection: Inspection, defect: ObservationDefect, index: Int) {
+    private fun Row.Cell.Builder.paragraphPhoto(inspection: Inspection, inspector: User, defect: ObservationDefect, index: Int) {
         paragraphLeft {
             text { PHOTO_SPACE_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.id.toString()).getOrNull(index)?.let { photo ->
-                //val resource = fileStorageService.loadFileAsResource(photo.link!!)
-                //picture(photo.file, resource.inputStream, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
-                text { SPACE_ELEMENT }
-                lineFeed { SINGLE_LINE_FEED_ELEMENT }
-                //text(photo.file, textSize = 6)
-                lineFeed { SINGLE_LINE_FEED_ELEMENT }
-                inspection.inspector?.let {
-                    //text { LinkTextElement.Simple(photo.file, textSize = 6) } // TODO add link
+            photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.uuid).getOrNull(index)?.let { photo ->
+                try {
+                    fileService.get(photo.link, photo.drawables, true)?.also {
+                        picture(photo.name, it, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
+                        text { SPACE_ELEMENT }
+                        lineFeed { SINGLE_LINE_FEED_ELEMENT }
+                        text(photo.name, textSize = 6)
+                        lineFeed { SINGLE_LINE_FEED_ELEMENT }
+                        text { LinkTextElement.Simple(photo.getUrl(configuration.server.host, inspection, inspector), textSize = 6) }
+                    }
+                } catch (e: Exception) {
+                    logger.error("Not found photo ${e.message}")
                 }
             }
         }
@@ -437,5 +434,98 @@ class MainDocumentFactory(
         text(key, textSize = fontSize, styles = BOLD_STYLE_LIST)
         text(value, textSize = fontSize)
         lineFeed { SINGLE_LINE_FEED_ELEMENT }
+    }
+
+    private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User) {
+        createDefectsReport(inspection, inspector, NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.MAINTENANCE)
+    }
+
+    private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User) {
+        createDefectsReport(inspection, inspector, STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.STRUCTURAL)
+    }
+
+    private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType) {
+        paragraph {
+            text { title }
+            lineFeed { SINGLE_LINE_FEED_ELEMENT }
+        }
+
+        orientation = Page.Orientation.LANDSCAPE
+
+        table {
+            width { TABLE_WIDTH_LANDSCAPE }
+            DefectsReportFields.buildHeaderRows(this)
+            DefectsReportFields.buildRows( this, inspection, inspector, type, configuration.server.host,
+                    observationRepository, observationDefectRepository, componentRepository,
+                    subcomponentRepository, defectRepository, conditionRepository)
+        }
+    }
+
+    private fun Inspection.getStationing(structure: Structure?): String {
+            val beginStationing = structure?.beginStationing
+            val endStationing = structure?.endStationing
+
+            return if (beginStationing != null && endStationing != null) {
+                "$beginStationing to $endStationing"
+            } else beginStationing ?: endStationing ?: ""
+    }
+
+    private fun Inspection.getWeatherText(): String? {
+        return if (temperature != null) "T $temperature℉ Hum $humidity% Wind $wind m/h" else null
+    }
+
+    private fun Double?.formatSgrRating() = this?.let { DecimalFormat("0.##").format(it) }
+
+    private fun Inspection.getCriticalFindingCount(criticalFinding: CriticalFinding): Int {
+        return observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid).sumBy { observation: Observation ->
+            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).sumBy { defect: ObservationDefect ->
+                if (defect.criticalFindings != null && defect.criticalFindings!!.contains(criticalFinding)) 1 else 0
+            }
+        }
+    }
+
+    private fun Photo.getUrl(server: String, inspection: Inspection, inspector: User): String? {
+        val inspectorId = inspector?.id ?: return null
+        var observationDefect: ObservationDefect? = null
+
+        val observation = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).firstOrNull {
+            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(it.uuid).indexOfFirst { defect ->
+                val photos = photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.uuid)
+                photos.forEach { photo ->
+                    if (photo.uuid == uuid) {
+                        observationDefect = defect
+                    }
+                }
+                observationDefect != null
+            } >= 0
+        }
+
+        return "$server/datarecon/$inspectorId/${inspection.uuid}/${observation?.id}/${observationDefect?.id}/$name"
+    }
+
+    private fun Observation.fillObjects() {
+        if (structuralComponent == null) {
+            structuralComponent = structuralComponentId?.let {
+                componentRepository.findFirstById(structuralComponentId!!)
+            }
+        }
+        if (subcomponent == null) {
+            subcomponent = subComponentId?.let {
+                subcomponentRepository.findFirstById(subComponentId!!)
+            }
+        }
+    }
+
+    private fun ObservationDefect.fillObjects() {
+        if (defect == null) {
+            defect = defectId?.let {
+                defectRepository.findFirstById(defectId!!)
+            }
+        }
+        if (condition == null) {
+            condition = conditionId?.let {
+                conditionRepository.findFirstById(conditionId!!)
+            }
+        }
     }
 }

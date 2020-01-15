@@ -5,21 +5,21 @@ import com.uav_recon.app.api.services.report.document.models.elements.Element
 interface Table : BodyElement {
 
     companion object {
-
         inline fun create(lambda: Builder.() -> Unit) = Builder().apply(lambda).build()
-
     }
 
     val width: Int?
     val height: Int?
     val withBorders: Boolean
     override val list: List<Row>
+    val merges: List<Merge>
 
     data class Simple(
-        override val width: Int?,
-        override val height: Int?,
-        override val withBorders: Boolean,
-        override val list: List<Row>
+            override val width: Int?,
+            override val height: Int?,
+            override val withBorders: Boolean,
+            override val list: List<Row>,
+            override val merges: List<Merge>
     ) : Table
 
     class Builder {
@@ -28,6 +28,7 @@ interface Table : BodyElement {
         var height: Int? = null
         var withBorders: Boolean = true
         val rows = mutableListOf<Row>()
+        val merges = mutableListOf<Merge>()
 
         inline fun width(init: () -> Int) {
             width = init()
@@ -49,17 +50,27 @@ interface Table : BodyElement {
             rows.addAll(init())
         }
 
-        fun build(): Table = Simple(width, height, withBorders, rows)
+        fun merge(
+                direction: Merge.Direction,
+                mainAxisIndex: Int,
+                startAxisIndex: Int,
+                endAxisIndex: Int
+        ) {
+            merges.add(Merge.Simple(direction, mainAxisIndex, startAxisIndex, endAxisIndex))
+        }
+
+        inline fun merges(init: () -> List<Merge>) {
+            merges.addAll(init())
+        }
+
+        fun build(): Table = Simple(width, height, withBorders, rows, merges)
 
     }
 
     interface Row : Element {
 
-
         companion object {
-
             inline fun create(lambda: Builder.() -> Unit) = Builder().apply(lambda).build()
-
         }
 
         val cells: List<Cell>
@@ -89,21 +100,21 @@ interface Table : BodyElement {
         interface Cell {
 
             companion object {
-
                 fun create(lambda: Builder.() -> Unit) = Builder().apply(lambda).build()
-
             }
 
             val paragraph: Paragraph?
             val height: Int?
             val width: Int?
             val color: String?
+            val verticalAlignment: Alignment
 
             data class Simple(
                     override val paragraph: Paragraph?,
                     override val height: Int? = null,
                     override val width: Int? = null,
-                    override val color: String? = null
+                    override val color: String? = null,
+                    override val verticalAlignment: Alignment
             ) : Cell
 
             class Builder {
@@ -112,6 +123,7 @@ interface Table : BodyElement {
                 var height: Int? = null
                 var width: Int? = null
                 var color: String? = null
+                var verticalAlignment: Alignment = Alignment.CENTER
 
                 inline fun paragraph(init: Paragraph.Builder.() -> Unit) {
                     paragraph = Paragraph.create(init)
@@ -120,7 +132,7 @@ interface Table : BodyElement {
                 inline fun paragraphLeft(init: Paragraph.Builder.() -> Unit) {
                     paragraph = Paragraph.create {
                         init()
-                        alignment { Paragraph.Alignment.LEFT }
+                        alignment { Alignment.START }
                     }
                 }
 
@@ -136,12 +148,33 @@ interface Table : BodyElement {
                     color = init()
                 }
 
-                fun build(): Cell = Simple(paragraph, height, width, color)
+                inline fun verticalAlignment(init: () -> Alignment) {
+                    verticalAlignment = init()
+                }
+
+                fun build(): Cell = Simple(paragraph, height, width, color, verticalAlignment)
 
             }
-
         }
+    }
 
+    interface Merge {
+
+        val direction: Direction
+        val mainAxisIndex: Int
+        val startAxisIndex: Int
+        val endAxisIndex: Int
+
+        data class Simple(
+                override val direction: Direction,
+                override val mainAxisIndex: Int,
+                override val startAxisIndex: Int,
+                override val endAxisIndex: Int
+        ) : Merge
+
+        enum class Direction {
+            HORIZONTAL, VERTICAL
+        }
     }
 
 }

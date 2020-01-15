@@ -31,7 +31,5 @@ class Observation(
         @Transient
         var structuralComponent: Component? = null,
         @Transient
-        var code: String? = null,
-        @Transient
         var subcomponent: Subcomponent? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)

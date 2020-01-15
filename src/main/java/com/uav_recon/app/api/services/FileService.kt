@@ -16,5 +16,6 @@ interface FileService {
     }
 
     fun delete(link: String)
-    fun get(link: String, drawables: String?, withRect: Boolean = false): InputStream
+    fun get(link: String, drawables: String? = null, withRect: Boolean = false): InputStream
+    fun getPath(link: String, drawables: String? = null, withRect: Boolean = false): String
 }

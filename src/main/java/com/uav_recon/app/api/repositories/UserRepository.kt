@@ -5,5 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.*
 
 interface UserRepository : JpaRepository<User, Long> {
+    fun findFirstById(userId: Long): User?
     fun findFirstByEmailIgnoreCase(email: String): Optional<User>
 }
