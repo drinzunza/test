@@ -179,7 +179,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                                             DEFECT_ID -> buildText(defect.id)
                                             SUB_COMPONENT -> buildText(getComponentName(defectIndex == 0, observation))
                                             LOCATION_ID -> buildText(defect.span ?: TEXT_NOT_APPLICABLE)
-                                            DATE -> buildText(inspection.endDate?.let { SimpleDateFormat("MM/dd/yy", Locale.US).format(it) }
+                                            DATE -> buildText(inspection.endDate?.let { SimpleDateFormat("MM/dd/yy", Locale.US).format(Date(it.toEpochSecond())) }
                                                 ?: EMPTY_CELL_VALUE)
                                             STATION -> buildText(defect.stationMarker ?: EMPTY_CELL_VALUE)
                                             DESCRIPTION -> when (type) {
