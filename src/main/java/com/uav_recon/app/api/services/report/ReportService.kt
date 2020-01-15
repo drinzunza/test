@@ -7,7 +7,9 @@ import com.uav_recon.app.api.repositories.ReportRepository
 import com.uav_recon.app.api.services.FileService
 import com.uav_recon.app.api.services.report.document.DocumentFactory
 import com.uav_recon.app.api.services.Error
+import com.uav_recon.app.api.services.ObservationDefectService
 import org.springframework.stereotype.Service
+import java.text.SimpleDateFormat
 import java.util.*
 
 @Service
@@ -20,7 +22,7 @@ class ReportService(
 ) {
 
     fun Report.toDto() = ReportDto(
-            id = uuid,
+            id = id,
             link = link,
             date = createdAt!!
     )
@@ -40,9 +42,11 @@ class ReportService(
         inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
                 ?: throw Error(101, "Invalid inspection UUID")
 
+        val id = generateDisplayId(userId)
         val uuid = UUID.randomUUID().toString()
-        val link = fileService.save("$userId/$inspectionId/$uuid.docx", ByteArray(0), "docx", null)
+        val link = fileService.save("$userId/$inspectionId/$id.docx", ByteArray(0), "docx", null)
         val report = Report(
+                id = id,
                 uuid = uuid,
                 link = link,
                 inspectionId = inspectionId,
@@ -55,5 +59,20 @@ class ReportService(
 
         val savedReport = reportRepository.save(report)
         return savedReport.toDto()
+    }
+
+    @Throws(Error::class)
+    fun generateDisplayId(inspectorId: Int): String {
+        val dateIdKey = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
+        val displayIdRegexp = "%-$inspectorId-$dateIdKey"
+        val reports = reportRepository.findAllByIdLike(displayIdRegexp)
+        for (i in 1..5000) {
+            val autoNum = String.format("%03d", i)
+            val displayId = displayIdRegexp.replace("%-", "$autoNum-")
+            if (reports.none { it.id == displayId }) {
+                return displayId
+            }
+        }
+        throw Error(246, "Cannot create unique report id")
     }
 }

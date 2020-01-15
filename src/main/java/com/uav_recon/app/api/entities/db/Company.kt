@@ -4,11 +4,10 @@ import java.io.Serializable
 import javax.persistence.*
 
 @Entity
-@Table(name = "company")
-class Company : Serializable {
+@Table(name = "companies")
+class Company(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Int = 0
-    @Column(name = "name")
+    var id: Int = 0,
     var name: String? = null
-}
+) : Serializable

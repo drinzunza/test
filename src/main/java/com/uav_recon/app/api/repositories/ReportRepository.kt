@@ -5,4 +5,5 @@ import org.springframework.data.repository.CrudRepository
 
 interface ReportRepository : CrudRepository<Report, String> {
     fun findAllByInspectionId(inspectionId: String): List<Report>
+    fun findAllByIdLike(idRegexp: String): List<Report>
 }

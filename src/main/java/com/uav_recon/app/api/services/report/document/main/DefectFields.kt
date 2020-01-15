@@ -1,9 +1,6 @@
 package com.uav_recon.app.api.services.report.document.main
 
-import com.uav_recon.app.api.entities.db.ConditionType
-import com.uav_recon.app.api.entities.db.Inspection
-import com.uav_recon.app.api.entities.db.Observation
-import com.uav_recon.app.api.entities.db.ObservationDefect
+import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory.Companion.DATE_FORMAT
@@ -33,7 +30,8 @@ internal enum class DefectFields(val title: String) {
     CRITICAL_FINDINGS("Critical Findings: "),
     PHOTO_QTY("Photo QTY's: ");
 
-    fun getValue(inspection: Inspection, observation: Observation, defect: ObservationDefect,
+    fun getValue(inspection: Inspection, structure: Structure?,
+                 observation: Observation, defect: ObservationDefect,
                  observationDefectRepository: ObservationDefectRepository,
                  photoRepository: PhotoRepository
     ): String? {
@@ -57,7 +55,7 @@ internal enum class DefectFields(val title: String) {
             DEFECT -> defect.id
             DEFECT_NUMBER -> defect.defect?.number?.toString()
             DEFECT_NAME -> defect.defect?.name
-            DEFECT_CONDITION -> defect.condition.let {
+            DEFECT_CONDITION -> (if (defect.type == StructuralType.STRUCTURAL) defect else null)?.condition.let {
                 when (it?.type) {
                     ConditionType.GOOD -> "1 - ${it.type}"
                     ConditionType.FAIR -> "2 - ${it.type}"
@@ -67,7 +65,7 @@ internal enum class DefectFields(val title: String) {
                 }
             }
             INSPECTION_DATE -> inspection.startDate?.formatDate(DATE_FORMAT)
-            STATIONING -> inspection.structure?.endStationing
+            STATIONING -> structure?.endStationing
             CRITICAL_FINDINGS -> if (!defect.criticalFindings.isNullOrEmpty())
                 defect.criticalFindings?.joinToString(", ") { it.normalName } else ""
             PHOTO_QTY -> photoRepository.countByObservationDefectIdAndDeletedIsFalse(defect.uuid).toString()

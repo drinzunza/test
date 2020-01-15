@@ -8,6 +8,7 @@ import javax.persistence.Table
 @Table(name = "reports")
 class Report(
         uuid: String,
+        val id: String,
         createdBy: Int,
         updatedBy: Int,
         val link: String,

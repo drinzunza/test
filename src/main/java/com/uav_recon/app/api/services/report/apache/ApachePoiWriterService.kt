@@ -253,7 +253,7 @@ class ApachePoiWriterService(private val resources: Resources) : DocumentWriter 
     }
 
     private fun XWPFParagraph.linkRun(link: String?, block: XWPFHyperlinkRun.() -> Unit) {
-        val rId = part.packagePart.addExternalRelationship(link, XWPFRelation.HYPERLINK.relation).id
+        val rId = part.packagePart.addExternalRelationship(link ?: "", XWPFRelation.HYPERLINK.relation).id
         val cthyperLink = ctp.addNewHyperlink()
         cthyperLink.id = rId
         cthyperLink.addNewR()

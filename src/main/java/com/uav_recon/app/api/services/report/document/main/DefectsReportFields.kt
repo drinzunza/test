@@ -85,11 +85,12 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
             }
 
         private fun createDefectPhotoGalleryUrl(
-                server: String, defect: ObservationDefect, inspection: Inspection,
+                server: String, defect: ObservationDefect,
+                inspection: Inspection, inspector: User,
                 observationRepository: ObservationRepository,
                 observationDefectRepository: ObservationDefectRepository
         ): String? {
-            val inspectorId = inspection.inspector?.id ?: return null
+            val inspectorId = inspector.id ?: return null
             val inspectionId = inspection.uuid
 
             val observationId = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).firstOrNull {
@@ -127,12 +128,13 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
             else -> EMPTY_CELL_VALUE
         }
 
-        fun buildRows(builder: Table.Builder, inspection: Inspection, type: StructuralType,
-                      server: String,
+        fun buildRows(builder: Table.Builder,
+                      inspection: Inspection, inspector: User,
+                      type: StructuralType, server: String,
                       observationRepository: ObservationRepository,
                       observationDefectRepository: ObservationDefectRepository) {
             builder.apply {
-                fillRow(inspection, type, server, observationRepository, observationDefectRepository)
+                fillRow(inspection, inspector, type, server, observationRepository, observationDefectRepository)
             }
         }
 
@@ -141,8 +143,8 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
         }
 
         private fun Table.Builder.fillRow(
-                inspection: Inspection, type: StructuralType,
-                server: String,
+                inspection: Inspection, inspector: User,
+                type: StructuralType, server: String,
                 observationRepository: ObservationRepository,
                 observationDefectRepository: ObservationDefectRepository
         ) {
@@ -190,7 +192,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                                             }
                                             IMAGE -> {
                                                 iconLink(
-                                                    createDefectPhotoGalleryUrl(server, defect, inspection, observationRepository, observationDefectRepository) ?: "",
+                                                    createDefectPhotoGalleryUrl(server, defect, inspection, inspector, observationRepository, observationDefectRepository) ?: "",
                                                     drawableRes = "icon_images_report.png",
                                                     size = IMAGES_LING_SIZE
                                                 )
