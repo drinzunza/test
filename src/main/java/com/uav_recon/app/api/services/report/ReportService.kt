@@ -8,6 +8,7 @@ import com.uav_recon.app.api.services.FileService
 import com.uav_recon.app.api.services.report.document.DocumentFactory
 import com.uav_recon.app.api.services.Error
 import com.uav_recon.app.api.services.ObservationDefectService
+import org.hibernate.annotations.Synchronize
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.util.*
@@ -38,6 +39,7 @@ class ReportService(
         return reports.last().toDto()
     }
 
+    @Synchronized
     fun generate(userId: Int, inspectionId: String): ReportDto {
         inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
                 ?: throw Error(101, "Invalid inspection UUID")
