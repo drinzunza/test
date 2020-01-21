@@ -1,0 +1,1 @@
+alter table observation_defects rename column observationNameId to observation_name_id;
