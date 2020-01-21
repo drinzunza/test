@@ -163,6 +163,7 @@ class DictionaryService(
             name = name,
             number = number,
             conditionIds = conditionRepository.findAllByDefectId(id).toConditionIds(),
+            observationNameIds = observationNameRepository.findAll().toList().toObservationNameIds(),
             deleted = deleted
     )
 
@@ -208,6 +209,12 @@ class DictionaryService(
             iteratedSpanPatterns = iteratedSpanPatterns?.split(','),
             deleted = deleted
     )
+
+    private fun List<ObservationName>.toObservationNameIds(): List<String> {
+        val ids = mutableListOf<String>()
+        forEach { ids.add(it.id) }
+        return ids
+    }
 
     private fun List<Condition>.toConditionIds(): List<String> {
         val ids = mutableListOf<String>()
