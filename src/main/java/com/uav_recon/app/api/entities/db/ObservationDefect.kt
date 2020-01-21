@@ -58,6 +58,8 @@ class ObservationDefect(
         var temperature: Double? = null,
         var humidity: Double? = null,
         var wind: Double? = null,
+        @Column(name = "observation_name_id")
+        val observationNameId: String? = null,
         @Transient
         var defect: Defect? = null,
         @Transient

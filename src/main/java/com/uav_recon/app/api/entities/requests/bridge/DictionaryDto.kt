@@ -11,5 +11,6 @@ data class DictionaryDto(
         val subComponents: List<SubcomponentDto>,
         val structuralComponents: List<ComponentDto>,
         val structures: List<StructureDto>,
-        val locationIds: List<LocationIdDto>
+        val locationIds: List<LocationIdDto>,
+        val observationNames: List<ObservationName>
 ) : Serializable
