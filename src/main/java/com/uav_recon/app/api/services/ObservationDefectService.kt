@@ -47,7 +47,8 @@ class ObservationDefectService(
         observationType = observationType,
         size = size,
         type = type,
-        weather = getWeather(this)
+        weather = getWeather(this),
+        observationNameId = observationNameId
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
@@ -66,7 +67,8 @@ class ObservationDefectService(
         stationMarker = stationMarker,
         observationType = observationType,
         size = size,
-        type = type
+        type = type,
+        observationNameId = observationNameId
     )
 
     @Synchronized
