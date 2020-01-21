@@ -9,5 +9,6 @@ data class DefectDto(
         var name: String,
         var number: Int? = null,
         var conditionIds: List<String>,
+        var observationNameIds: List<String>,
         var deleted: Boolean? = null
 ) : Serializable
