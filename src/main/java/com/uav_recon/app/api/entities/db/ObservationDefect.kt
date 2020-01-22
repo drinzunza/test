@@ -39,8 +39,6 @@ class ObservationDefect(
         var materialId: String? = null,
         @Column(name = "critical_findings", columnDefinition = "critical_finding[]")
         var criticalFindings: Array<CriticalFinding>?,
-        @Column(name = "span_number")
-        var spanNumber: Int? = 0,
         @Column(name = "span")
         var span: String? = null,
         @Column(name = "station_marker")
