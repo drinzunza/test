@@ -10,4 +10,5 @@ object ControllerConfiguration {
     const val X_TOKEN = "X-Token"
     const val ETAG = "ETag"
     const val BUILD_TYPE = "BuildType"
+    const val VERSION_CODE = "VersionCode"
 }
