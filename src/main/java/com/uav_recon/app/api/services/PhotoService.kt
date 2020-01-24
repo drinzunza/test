@@ -11,6 +11,7 @@ import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.configurations.UavConfiguration
 import org.slf4j.LoggerFactory
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
@@ -174,9 +175,19 @@ class PhotoService(
                     observationDefectRepository.save(observationDefect)
                 }
             } else {
-                logger.info("Photo defect weather already set or null ($observationDefect, ${observationDefect?.temperature})")
+                logger.info("Photo defect weather already set or null (id=${observationDefect?.id}, temp=${observationDefect?.temperature})")
             }
         }
+    }
+
+    fun getPhotosDto(inspectionId: String, observationId: String, observationDefectDisplayId: String): List<PhotoDto> {
+        val defect = observationDefectRepository
+                .findFirstByObservationIdAndIdAndDeletedIsFalse(observationId, observationDefectDisplayId)
+        if (defect != null) {
+            val photos = photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.uuid)
+            return photos.map { p -> p.toDto() }
+        }
+        return listOf()
     }
 
     private fun getFileFormat(contentType: String?) =

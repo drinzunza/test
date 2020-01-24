@@ -39,8 +39,6 @@ class ObservationDefect(
         var materialId: String? = null,
         @Column(name = "critical_findings", columnDefinition = "critical_finding[]")
         var criticalFindings: Array<CriticalFinding>?,
-        @Column(name = "span_number")
-        var spanNumber: Int? = 0,
         @Column(name = "span")
         var span: String? = null,
         @Column(name = "station_marker")
@@ -58,8 +56,8 @@ class ObservationDefect(
         var temperature: Double? = null,
         var humidity: Double? = null,
         var wind: Double? = null,
-        @Transient
-        var material: Material? = null,
+        @Column(name = "observation_name_id")
+        val observationNameId: String? = null,
         @Transient
         var defect: Defect? = null,
         @Transient

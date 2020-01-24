@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.transaction.Transactional
 
 @Service
 class ObservationDefectService(
@@ -42,13 +41,13 @@ class ObservationDefectService(
         description = description,
         materialId = materialId,
         photos = photoService.findAllByObservationDefectIdAndNotDeleted(uuid),
-        spanNumber = spanNumber,
         span = span,
         stationMarker = stationMarker,
         observationType = observationType,
         size = size,
         type = type,
-        weather = getWeather(this)
+        weather = getWeather(this),
+        observationNameId = observationNameId
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
@@ -62,12 +61,12 @@ class ObservationDefectService(
         conditionId = conditionId,
         criticalFindings = criticalFindings?.toTypedArray(),
         observationId = observationId,
-        spanNumber = spanNumber,
         span = span,
         stationMarker = stationMarker,
         observationType = observationType,
         size = size,
-        type = type
+        type = type,
+        observationNameId = observationNameId
     )
 
     @Synchronized

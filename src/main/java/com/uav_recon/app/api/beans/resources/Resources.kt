@@ -17,4 +17,8 @@ class Resources(private val objectMapper: ObjectMapper) {
     val mockImagePath: String by lazy {
         ResourceUtils.getURL("$root/map.png").path
     }
+
+    fun getData(name: String): ByteArray? {
+        return ResourceUtils.getURL("$root/$name").readBytes()
+    }
 }

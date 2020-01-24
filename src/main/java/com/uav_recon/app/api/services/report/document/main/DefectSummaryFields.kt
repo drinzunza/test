@@ -1,89 +1,162 @@
 package com.uav_recon.app.api.services.report.document.main
 
+import com.uav_recon.app.api.entities.db.ConditionType
 import com.uav_recon.app.api.entities.db.Observation
-import com.uav_recon.app.api.entities.db.ObservationDefect
-import com.uav_recon.app.api.repositories.ObservationDefectRepository
+import com.uav_recon.app.api.services.ObservationService
+import com.uav_recon.app.api.services.report.ReportConstants
 import com.uav_recon.app.api.services.report.document.models.body.Table
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement
-import java.text.DecimalFormat
+import kotlin.math.roundToInt
 
-internal enum class DefectSummaryFields(val textElement: TextElement.Simple, val cellColor: String? = null, val cellWidth: Int? = null) {
+internal enum class DefectSummaryFields(
+        val textElement: TextElement.Simple,
+        val cellColor: String? = null,
+        private val widthPercent: Float
+) {
 
-    SUB_COMPONENT(TextElement.Simple("Sub-Component", styles = MainDocumentFactory.BOLD_STYLE_LIST)),
-    DEFECT(TextElement.Simple("Defect ID", styles = MainDocumentFactory.BOLD_STYLE_LIST), cellWidth = 2000),
-    DEFECT_NUMBER(TextElement.Simple("Defect number", styles = MainDocumentFactory.BOLD_STYLE_LIST)),
-    QTY(TextElement.Simple("QTY", styles = MainDocumentFactory.BOLD_STYLE_LIST)),
-    UNIT(TextElement.Simple("Unit", styles = MainDocumentFactory.BOLD_STYLE_LIST)),
-    CS1(TextElement.Simple("CS-1", styles = MainDocumentFactory.BOLD_STYLE_LIST), cellColor = "#00b04f"),
-    CS2(TextElement.Simple("CS-2", styles = MainDocumentFactory.BOLD_STYLE_LIST), cellColor = "#ffff00"),
-    CS3(TextElement.Simple("CS-3", styles = MainDocumentFactory.BOLD_STYLE_LIST), cellColor = "#ffc000"),
-    CS4(TextElement.Simple("CS-4", styles = MainDocumentFactory.BOLD_STYLE_LIST), cellColor = "#ff0400"),
-    CS5(TextElement.Simple("CS-5", styles = MainDocumentFactory.BOLD_STYLE_LIST), cellColor = "#bfbfbf");
+    SUB_COMPONENT(
+        TextElement.Simple("Sub-Component", styles = MainDocumentFactory.BOLD_STYLE_LIST),
+        cellColor = ReportConstants.COLOR_GRAY_BLUE,
+        widthPercent = 0.25f
+    ),
+    QTY(
+        TextElement.Simple("Total Quantity", styles = MainDocumentFactory.BOLD_STYLE_LIST),
+        cellColor = ReportConstants.COLOR_GRAY_BLUE,
+        widthPercent = 0.25f
+    ),
+    UNIT(
+        TextElement.Simple("Unit", styles = MainDocumentFactory.BOLD_STYLE_LIST),
+        cellColor = ReportConstants.COLOR_GRAY_BLUE,
+        widthPercent = 0.0715f
+    ),
+    CS1(
+        TextElement.Simple("CS-1", styles = MainDocumentFactory.BOLD_STYLE_LIST),
+        cellColor = ReportConstants.COLOR_DARK_GREEN,
+        widthPercent = 0.0715f
+    ),
+    CS2(
+        TextElement.Simple("CS-2", styles = MainDocumentFactory.BOLD_STYLE_LIST),
+        cellColor = ReportConstants.COLOR_YELLOW,
+        widthPercent = 0.0715f
+    ),
+    CS3(
+        TextElement.Simple("CS-3", styles = MainDocumentFactory.BOLD_STYLE_LIST),
+        cellColor = ReportConstants.COLOR_ORANGE,
+        widthPercent = 0.0715f
+    ),
+    CS4(
+        TextElement.Simple("CS-4", styles = MainDocumentFactory.BOLD_STYLE_LIST),
+        cellColor = ReportConstants.COLOR_RED,
+        widthPercent = 0.0715f
+    ),
+    HEALTH_INDEX(
+        TextElement.Simple("HI", styles = MainDocumentFactory.BOLD_STYLE_LIST),
+        cellColor = ReportConstants.COLOR_GRAY,
+        widthPercent = 0.0715f
+    );
 
-    fun getValue(observation: Observation, defect: ObservationDefect): String {
+    fun getValue(observation: ObservationData): String {
         return when (this) {
-            SUB_COMPONENT -> observation.subcomponent?.name
-            DEFECT -> defect.id.toString()
-            DEFECT_NUMBER -> defect.defect?.number?.toString()
-            QTY -> "1"
-            UNIT -> defect.material?.measureUnit
-            else -> if (defect.condition?.type == toDefectConditionType()) defect.size else null
-        } ?: ""
+            SUB_COMPONENT -> observation.subComponentName
+            QTY -> observation.totalQuantity.toString()
+            UNIT -> observation.measureUnits
+            CS1 -> observation.cs1.toString()
+            CS2 -> observation.cs2.toString()
+            CS3 -> observation.cs3.toString()
+            CS4 -> observation.cs4.toString()
+            HEALTH_INDEX -> "%.3f".format(observation.healthIndex)
+        } ?: EMPTY_CELL_VALUE
     }
 
-    fun getTotalValue(observation: Observation, observationDefectRepository: ObservationDefectRepository): String {
-        val defects = observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.id)
-        return when(this) {
-            SUB_COMPONENT -> "Total "
-            DEFECT, DEFECT_NUMBER, UNIT -> ""
-            QTY -> defects.size.toString()
-            else -> {
-                val type = toDefectConditionType() ?: return ""
-                return DOUBLE_FORMAT.format(defects.filter {
-                    it.condition?.type == type && it.size != null
-                }.sumByDouble {
-                    it.size?.toDoubleOrNull() ?: 0.0
-                })
-            }
-        }
-    }
-
-    private fun toDefectConditionType(): String? {
-        return when(this) {
-            CS1 -> "GOOD"
-            CS2 -> "FAIR"
-            CS3 -> "POOR"
-            CS4 -> "SEVERE"
-            CS5 -> "OTHER"
-            else -> null
-        }
-    }
+    val cellWidth: Int
+        get() = (TABLE_WIDTH_PORTRAIT * widthPercent).roundToInt()
 
     companion object {
 
-        private val DOUBLE_FORMAT = DecimalFormat("###.#########")
+        private fun createCell(width: Int, text: TextElement, cellColor: String? = null) =
+            Table.Row.Cell.create {
+                width {
+                    width
+                }
+                cellColor?.let { color ->
+                    color { color }
+                }
+                paragraph {
+                    element { text }
+                }
+            }
 
-        val CELL_LIST: List<Table.Row.Cell> = convertToRowCells()
-
-        private fun convertToRowCells(): List<Table.Row.Cell> {
-            val list = mutableListOf<Table.Row.Cell>()
-            values().forEach {
-                val cell = Table.Row.Cell.create {
-                    it.cellWidth?.let { width ->
-                        width { width }
-                    }
-                    it.cellColor?.let { color ->
-                        color { color }
-                    }
-                    paragraph {
-                        element { it.textElement }
+        fun buildHeaderRows(tableBuilder: Table.Builder, componentName: String, healthIndex: Double) {
+            tableBuilder.apply {
+                val headerCells = values().map { createCell(it.cellWidth, it.textElement, it.cellColor) }
+                row {
+                    cells {
+                        return@cells headerCells.mapIndexed { index, cell ->
+                            if (index == ReportConstants.MERGE_RANGE.first) {
+                                createCell(
+                                    cell.width ?: 0,
+                                    TextElement.Simple(
+                                        "$componentName (HI = %.3f)".format(healthIndex),
+                                        styles = MainDocumentFactory.BOLD_STYLE_LIST
+                                    ),
+                                    cellColor = ReportConstants.COLOR_GRAY
+                                )
+                            } else {
+                                cell
+                            }
+                        }
                     }
                 }
-                list.add(cell)
+                row {
+                    cells { headerCells }
+                }
+                merge(
+                    direction = Table.Merge.Direction.HORIZONTAL,
+                    mainAxisIndex = 0,
+                    startAxisIndex = ReportConstants.MERGE_RANGE.first,
+                    endAxisIndex = ReportConstants.MERGE_RANGE.last
+                )
             }
-            return list
+        }
+
+        fun buildCells(rowBuilder: Table.Row.Builder, data: ObservationData) {
+            rowBuilder.apply {
+                values().forEach { field ->
+                    cell {
+                        width { field.cellWidth }
+                        paragraph {
+                            text(field.getValue(data), textSize = SMALL_TABLE_TEXT_SIZE)
+                        }
+                    }
+                }
+            }
         }
 
     }
 
+    data class ObservationData(
+        val subComponentName: String?,
+        val totalQuantity: Int,
+        val measureUnits: String?,
+        val cs1: Int,
+        val cs2: Int,
+        val cs3: Int,
+        val cs4: Int,
+        val healthIndex: Double
+    ) {
+
+        constructor(
+            observation: Observation,
+            observationService: ObservationService
+        ) : this(
+                observation.subcomponent?.name,
+                observationService.getTotalQuantity(observation),
+                observation.subcomponent?.measureUnit,
+                observationService.getCsValue(observation, ConditionType.GOOD),
+                observationService.getCsValue(observation, ConditionType.FAIR),
+                observationService.getCsValue(observation, ConditionType.POOR),
+                observationService.getCsValue(observation, ConditionType.SEVERE),
+                observationService.getHealthIndex(observation)
+        )
+    }
 }

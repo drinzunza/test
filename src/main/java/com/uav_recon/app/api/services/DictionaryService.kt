@@ -18,6 +18,7 @@ class DictionaryService(
         private val structureRepository: StructureRepository,
         private val subcomponentDefectRepository: SubcomponentDefectRepository,
         private val locationIdRepository: LocationIdRepository,
+        private val observationNameRepository: ObservationNameRepository,
         private val etagRepository: EtagRepository
 ) {
     private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
@@ -32,6 +33,7 @@ class DictionaryService(
         val componentIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
         val structureIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
         val locationIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
+        val observationNameIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
 
         etags.forEach {
             val change = try {
@@ -47,6 +49,7 @@ class DictionaryService(
                 componentIds?.addAll(change.components)
                 structureIds?.addAll(change.structures)
                 locationIds?.addAll(change.locationIds)
+                observationNameIds?.addAll(change.observationNames)
             }
         }
 
@@ -56,11 +59,19 @@ class DictionaryService(
                 getSubcomponentsByIds(buildType, subcomponentIds),
                 getComponentsByIds(buildType, componentIds),
                 getStructuresByIds(buildType, structureIds),
-                getLocationByIds(buildType, locationIds))
+                getLocationByIds(buildType, locationIds),
+                getObservationNameByIds(buildType, observationNameIds))
     }
 
     fun getLastEtagHash(): String {
         return etagRepository.findTopByOrderByIdDesc()!!.hash
+    }
+
+    fun getObservationNameByIds(buildType: BuildType, ids: List<String>?): List<ObservationName> {
+        return if (ids != null)
+            observationNameRepository.findAllByIdIn(ids)
+        else
+            observationNameRepository.findAll().toList()
     }
 
     fun getLocationByIds(buildType: BuildType, ids: List<String>?): List<LocationIdDto> {
@@ -165,7 +176,8 @@ class DictionaryService(
             componentId = componentId,
             groupName = groupName,
             deleted = deleted,
-            defectIds = subcomponentDefectRepository.findAllBySubcomponentId(id).toDefectIds()
+            defectIds = subcomponentDefectRepository.findAllBySubcomponentId(id).toDefectIds(),
+            observationNameIds = observationNameRepository.findAll().toList().toObservationNameIds()
     )
 
     private fun Structure.toDto() = StructureDto(
@@ -197,6 +209,12 @@ class DictionaryService(
             iteratedSpanPatterns = iteratedSpanPatterns?.split(','),
             deleted = deleted
     )
+
+    private fun List<ObservationName>.toObservationNameIds(): List<String> {
+        val ids = mutableListOf<String>()
+        forEach { ids.add(it.id) }
+        return ids
+    }
 
     private fun List<Condition>.toConditionIds(): List<String> {
         val ids = mutableListOf<String>()

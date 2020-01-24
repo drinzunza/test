@@ -8,4 +8,5 @@ interface SubcomponentRepository : CrudRepository<Subcomponent, String> {
     fun findAllByIdIn(ids: List<String>): List<Subcomponent>
     fun findAllByIdInAndIdContains(ids: List<String>, buildType: String): List<Subcomponent>
     fun findAllByIdContains(buildType: String): List<Subcomponent>
+    fun findFirstById(id: String): Subcomponent?
 }

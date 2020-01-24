@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.entities.db
 
+import org.hibernate.annotations.Type
 import java.io.Serializable
 import javax.persistence.*
 
@@ -10,7 +11,9 @@ class Condition(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: String,
     var description: String? = null,
-    var type: String,
+    @Enumerated(EnumType.STRING)
+    @Type(type = "pgsql_enum")
+    var type: ConditionType,
     @Column(name = "defect_id")
     var defectId: String,
     @Column(name = "is_deleted")

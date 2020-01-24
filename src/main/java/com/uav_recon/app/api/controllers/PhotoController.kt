@@ -7,6 +7,7 @@ import com.uav_recon.app.api.entities.requests.bridge.UpdatePhotoDto
 import com.uav_recon.app.api.services.PhotoService
 import com.uav_recon.app.configurations.ControllerConfiguration
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
+import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,29 +15,19 @@ import org.springframework.core.convert.converter.Converter
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
 
 
 @RestController
-@RequestMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect" +
-                        "/{observationDefectId}/photo")
 class PhotoController(private val photoService: PhotoService) : BaseController() {
 
     private val logger = LoggerFactory.getLogger(PhotoController::class.java)
 
-    @PostMapping
+    @PostMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect/{observationDefectId}/photo")
     fun uploadPhoto(
-            @RequestHeader(ControllerConfiguration.X_TOKEN) token: String,
+            @RequestHeader(X_TOKEN) token: String,
             @PathVariable inspectionId: String,
             @PathVariable observationId: String,
             @PathVariable observationDefectId: String,
@@ -54,8 +45,8 @@ class PhotoController(private val photoService: PhotoService) : BaseController()
                                                    getAuthenticatedUserId()))
     }
 
-    @PutMapping("/{uuid}")
-    fun update(@RequestHeader(ControllerConfiguration.X_TOKEN) token: String,
+    @PutMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect/{observationDefectId}/photo/{uuid}")
+    fun update(@RequestHeader(X_TOKEN) token: String,
                @PathVariable inspectionId: String,
                @PathVariable observationId: String,
                @PathVariable observationDefectId: String,
@@ -70,14 +61,23 @@ class PhotoController(private val photoService: PhotoService) : BaseController()
         return ResponseEntity.ok(success)
     }
 
-    @DeleteMapping("/{uuid}")
-    fun delete(@RequestHeader(ControllerConfiguration.X_TOKEN) token: String,
+    @DeleteMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect/{observationDefectId}/photo/{uuid}")
+    fun delete(@RequestHeader(X_TOKEN) token: String,
                @PathVariable inspectionId: String,
                @PathVariable observationId: String,
                @PathVariable observationDefectId: String,
                @PathVariable uuid: String): ResponseEntity<*> {
         photoService.delete(inspectionId, observationId, observationDefectId, uuid)
         return ResponseEntity.ok(success)
+    }
+
+    @GetMapping("$VERSION/photos/{inspectionId}/{observationId}/{observationDefectDisplayId}")
+    fun getPhotos(@RequestHeader(X_TOKEN) token: String,
+                  @PathVariable inspectionId: String,
+                  @PathVariable observationId: String,
+                  @PathVariable observationDefectDisplayId: String
+    ): ResponseEntity<List<PhotoDto>> {
+        return ResponseEntity.ok(photoService.getPhotosDto(inspectionId, observationId, observationDefectDisplayId))
     }
 
     @Component
