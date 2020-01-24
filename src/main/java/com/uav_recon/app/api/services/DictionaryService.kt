@@ -163,7 +163,6 @@ class DictionaryService(
             name = name,
             number = number,
             conditionIds = conditionRepository.findAllByDefectId(id).toConditionIds(),
-            observationNameIds = observationNameRepository.findAll().toList().toObservationNameIds(),
             deleted = deleted
     )
 
@@ -177,7 +176,8 @@ class DictionaryService(
             componentId = componentId,
             groupName = groupName,
             deleted = deleted,
-            defectIds = subcomponentDefectRepository.findAllBySubcomponentId(id).toDefectIds()
+            defectIds = subcomponentDefectRepository.findAllBySubcomponentId(id).toDefectIds(),
+            observationNameIds = observationNameRepository.findAll().toList().toObservationNameIds()
     )
 
     private fun Structure.toDto() = StructureDto(
