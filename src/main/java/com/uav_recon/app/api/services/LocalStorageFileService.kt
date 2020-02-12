@@ -96,7 +96,8 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
         try {
             if (rect != null) {
-                val image: BufferedImage = ImageIO.read(bytes.inputStream())
+                val inputStream = bytes.inputStream()
+                val image = ImageIO.read(inputStream)
                 val g = image.graphics as Graphics2D
                 g.stroke = BasicStroke(8.0f)
                 g.color = Color.GREEN
@@ -106,6 +107,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
                         (image.width * abs(rect.endX - rect.startX)).toInt(),
                         (image.height * abs(rect.endY - rect.startY)).toInt())
                 ImageIO.write(image, needFormat, file)
+                inputStream.close()
             }
             logger.info("Saved image with rect ${file.absolutePath}")
         } catch (e: Exception) {
