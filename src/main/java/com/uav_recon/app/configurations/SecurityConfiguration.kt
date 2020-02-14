@@ -106,11 +106,6 @@ open class SecurityConfiguration {
                     .and()
                     .formLogin().and().httpBasic()
         }
-
-        override fun configure(web: WebSecurity) {
-            web.ignoring().antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**", "/configuration/**",
-                    "/swagger-ui.html", "/webjars/**")
-        }
     }
 }
 
