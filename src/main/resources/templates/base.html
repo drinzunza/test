@@ -12,7 +12,7 @@
 <h2 th:text="${header}"></h2>
 <ol>
     <li th:each="item: ${items}" th:with="url=${#httpServletRequest.requestURI} + '/' + ${item.id}">
-        <a th:href="${#strings.replace(url,'//','/')}" th:text="${item.id}"></a>
+        <a th:href="${#strings.replace(url, '//' + item.id, '/' + item.id)}" th:text="${item.id}"></a>
         <div th:if="${isPhotoList}"><br><img th:src="${url}" th:alt="${item.id}"></div>
     </li>
 </ol>
