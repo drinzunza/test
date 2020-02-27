@@ -62,12 +62,11 @@ class PublicLinksController(
                     val photos = defects[0].photos?.filter { p -> p.name == photoName }
                     if (photos != null && photos.size == 1) {
                         response.contentType = MediaType.IMAGE_JPEG_VALUE
-                        IOUtils.copy(fileService.get(photos[0].link!!, photos[0].drawables, true), response.outputStream)
+                        IOUtils.copy(fileService.get(photos[0].link!!, photos[0].drawables, FileService.FileType.WITH_RECT), response.outputStream)
                     }
                 }
             }
         }
-
     }
 
     private fun getView(model: Model): String {

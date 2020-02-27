@@ -415,7 +415,7 @@ class MainDocumentFactory(
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.uuid).getOrNull(index)?.let { photo ->
                 try {
-                    fileService.get(photo.link, photo.drawables, true)?.also {
+                    fileService.get(photo.link, photo.drawables, FileService.FileType.WITH_RECT_SMALL).also {
                         picture(photo.name, it, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
                         text { SPACE_ELEMENT }
                         lineFeed { SINGLE_LINE_FEED_ELEMENT }
