@@ -16,7 +16,7 @@ class LogRequestInterceptor : HandlerInterceptorAdapter() {
 
     override fun preHandle(request: HttpServletRequest?, response: HttpServletResponse?, handler: Any?): Boolean {
         val startTime = Instant.now().toEpochMilli()
-        logger.info("URL::${request?.requestURL.toString()}:: IP=${request?.remoteAddr}")
+        logger.info("${request?.method}::${request?.requestURL.toString()}:: IP=${request?.remoteAddr}")
         request?.setAttribute("startTime", startTime)
         return true
     }
@@ -24,6 +24,6 @@ class LogRequestInterceptor : HandlerInterceptorAdapter() {
     override fun afterCompletion(request: HttpServletRequest?, response: HttpServletResponse?, handler: Any?, ex: Exception?) {
         val startTime = (request?.getAttribute("startTime") ?: 0) as Long
         val time = Instant.now().toEpochMilli() - startTime
-        logger.info("URL::${request?.requestURL.toString()}:: Time=$time ms")
+        logger.info("${request?.method}::${request?.requestURL.toString()}:: Time=$time ms")
     }
 }

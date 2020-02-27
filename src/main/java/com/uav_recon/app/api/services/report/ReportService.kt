@@ -39,7 +39,6 @@ class ReportService(
         return reports.last().toDto()
     }
 
-    @Synchronized
     fun generate(userId: Int, inspectionId: String): ReportDto {
         inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
                 ?: throw Error(101, "Invalid inspection UUID")
