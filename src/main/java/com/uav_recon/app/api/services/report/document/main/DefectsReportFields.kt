@@ -243,7 +243,11 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
             }
         }
 
-        private fun ObservationDefect.fillObjects(defectRepository: DefectRepository, conditionRepository: ConditionRepository) {
+        private fun ObservationDefect.fillObjects(
+                defectRepository: DefectRepository,
+                conditionRepository: ConditionRepository,
+                observationNameRepository: ObservationNameRepository
+        ) {
             if (defect == null) {
                 defect = defectId?.let {
                     defectRepository.findFirstById(defectId!!)
@@ -252,6 +256,11 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
             if (condition == null) {
                 condition = conditionId?.let {
                     conditionRepository.findFirstById(conditionId!!)
+                }
+            }
+            if (observationName == null) {
+                observationName = observationNameId?.let {
+                    observationNameRepository.findFirstById(observationNameId!!)
                 }
             }
         }

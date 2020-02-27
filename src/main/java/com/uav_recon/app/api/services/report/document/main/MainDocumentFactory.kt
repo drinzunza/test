@@ -62,6 +62,7 @@ class MainDocumentFactory(
         private val subcomponentRepository: SubcomponentRepository,
         private val defectRepository: DefectRepository,
         private val conditionRepository: ConditionRepository,
+        private val observationNameRepository: ObservationNameRepository,
         private val resources: Resources,
         private val configuration: UavConfiguration,
         private val fileService: FileService
@@ -524,6 +525,11 @@ class MainDocumentFactory(
         if (condition == null) {
             condition = conditionId?.let {
                 conditionRepository.findFirstById(conditionId!!)
+            }
+        }
+        if (observationName == null) {
+            observationName = observationNameId?.let {
+                observationNameRepository.findFirstById(observationNameId!!)
             }
         }
     }

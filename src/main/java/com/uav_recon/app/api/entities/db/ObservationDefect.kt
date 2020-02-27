@@ -61,5 +61,7 @@ class ObservationDefect(
         @Transient
         var defect: Defect? = null,
         @Transient
-        var condition: Condition? = null
+        var condition: Condition? = null,
+        @Transient
+        var observationName: ObservationName? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)

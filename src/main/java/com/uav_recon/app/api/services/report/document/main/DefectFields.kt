@@ -25,7 +25,7 @@ internal enum class DefectFields(val title: String) {
     OBSERVATION_NAME("Observation Name: "),
     DEFECT_CONDITION("Defect Condition State: "),
     INSPECTION_DATE("Inspection date: "),
-    STATIONING("Stationing: "),
+    STATION_MARKER("Station Marker: "),
     CRITICAL_FINDINGS("Critical Findings: "),
     PHOTO_QTY("Photo QTY's: "),
     LOCATION_ID("Location ID: ");
@@ -42,11 +42,13 @@ internal enum class DefectFields(val title: String) {
             ROOM_NO -> observation.roomNumber
             DEFECT_ID, OBSERVATION_ID -> defect.id
             DEFECT_NAME, OBSERVATION_NAME -> defect.defect?.name
+            //OBSERVATION_NAME -> (if (defect.type == StructuralType.MAINTENANCE) defect else null)?.observationName?.name
+            //DEFECT_NAME -> (if (defect.type == StructuralType.STRUCTURAL) defect else null)?.defect?.name
             DEFECT_CONDITION -> (if (defect.type == StructuralType.STRUCTURAL) defect else null)?.condition?.let {
                 "${it.type.ordinal + 1} - ${it.type.normalName}"
             }
             INSPECTION_DATE -> inspection.startDate?.formatDate(DATE_FORMAT)
-            STATIONING -> defect.stationMarker
+            //STATIONING -> defect.stationMarker
             CRITICAL_FINDINGS -> if (defect.criticalFindings.isNullOrEmpty()) NONE else defect.criticalFindings?.size.toString()
             PHOTO_QTY -> photoRepository.countByObservationDefectIdAndDeletedIsFalse(defect.uuid).toString()
 
