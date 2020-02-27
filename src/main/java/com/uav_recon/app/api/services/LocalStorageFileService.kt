@@ -19,7 +19,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
     override fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String {
         val absolutePath = getAbsolutePath(path, format, FileService.FileType.NORMAL)
         val absolutePathWithRect = getAbsolutePath(path, format, FileService.FileType.WITH_RECT)
-        val absolutePathWithRectSmall = getAbsolutePath(path, format, FileService.FileType.WITH_RECT_THUMB)
+        val absolutePathWithRectThumb = getAbsolutePath(path, format, FileService.FileType.WITH_RECT_THUMB)
 
         val parentFile = absolutePath.toFile().parentFile
         if (!parentFile.exists()) {
@@ -31,7 +31,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
             Files.write(absolutePath, bytes, StandardOpenOption.CREATE_NEW)
         }
         drawables?.let {
-            generateRectImages(bytes, getRect(drawables), absolutePathWithRect.toFile(), absolutePathWithRectSmall.toFile(), format)
+            generateRectImages(bytes, getRect(drawables), absolutePathWithRect.toFile(), absolutePathWithRectThumb.toFile(), format)
         }
         return "$linkPrefix$path"
     }
@@ -86,11 +86,11 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
             null
     }
 
-    fun generateRectImages(bytes: ByteArray, rect: Rect?, file: File, smallFile: File, format: String) {
+    fun generateRectImages(bytes: ByteArray, rect: Rect?, file: File, thumbFile: File, format: String) {
         try {
-            bytes.saveWithRect(rect, file, smallFile, format)
+            bytes.saveWithRect(rect, file, thumbFile, format)
             logger.info("Saved image with rect ${file.absolutePath}")
-            logger.info("Saved small image with rect ${smallFile.absolutePath}")
+            logger.info("Saved thumb image with rect ${thumbFile.absolutePath}")
         } catch (e: Exception) {
             logger.error("Invalid image data", e)
             throw Error(104, "Invalid image data")
@@ -101,16 +101,16 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         val path = link.replace(linkPrefix, "")
         val clearPath = File(configuration.files.root, path)
         val rectPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT))
-        val rectSmallPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT))
+        val rectThumbPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB))
         drawables?.let {
-            if (!rectPath.exists() || !rectSmallPath.exists()) {
-                generateRectImages(clearPath.readBytes(), getRect(drawables), rectPath, rectSmallPath, "jpg")
+            if (!rectPath.exists() || !rectThumbPath.exists()) {
+                generateRectImages(clearPath.readBytes(), getRect(drawables), rectPath, rectThumbPath, "jpg")
             }
         }
         return when (type) {
             FileService.FileType.NORMAL -> clearPath
             FileService.FileType.WITH_RECT -> rectPath
-            FileService.FileType.WITH_RECT_THUMB -> rectSmallPath
+            FileService.FileType.WITH_RECT_THUMB -> rectThumbPath
         }
     }
 }
