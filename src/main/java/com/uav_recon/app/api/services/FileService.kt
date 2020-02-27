@@ -4,7 +4,7 @@ import java.io.InputStream
 
 interface FileService {
     enum class FileType {
-        NORMAL, WITH_RECT, WITH_RECT_SMALL
+        NORMAL, WITH_RECT, WITH_RECT_THUMB
     }
 
     fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String

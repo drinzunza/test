@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
-import java.time.OffsetDateTime
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -415,7 +414,7 @@ class MainDocumentFactory(
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.uuid).getOrNull(index)?.let { photo ->
                 try {
-                    fileService.get(photo.link, photo.drawables, FileService.FileType.WITH_RECT_SMALL).also {
+                    fileService.get(photo.link, photo.drawables, FileService.FileType.WITH_RECT_THUMB).also {
                         picture(photo.name, it, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
                         text { SPACE_ELEMENT }
                         lineFeed { SINGLE_LINE_FEED_ELEMENT }

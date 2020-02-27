@@ -19,7 +19,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
     override fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String {
         val absolutePath = getAbsolutePath(path, format, FileService.FileType.NORMAL)
         val absolutePathWithRect = getAbsolutePath(path, format, FileService.FileType.WITH_RECT)
-        val absolutePathWithRectSmall = getAbsolutePath(path, format, FileService.FileType.WITH_RECT_SMALL)
+        val absolutePathWithRectSmall = getAbsolutePath(path, format, FileService.FileType.WITH_RECT_THUMB)
 
         val parentFile = absolutePath.toFile().parentFile
         if (!parentFile.exists()) {
@@ -48,14 +48,14 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         val path = link.replace(linkPrefix, "")
         Files.delete(Paths.get(configuration.files.root, path))
         Files.delete(Paths.get(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT)))
-        Files.delete(Paths.get(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_SMALL)))
+        Files.delete(Paths.get(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB)))
     }
 
     fun getAbsolutePath(path: String, format: String, type: FileService.FileType): Path {
         val newPath = when (type) {
             FileService.FileType.NORMAL -> path
             FileService.FileType.WITH_RECT -> getImagePath(path, format, FileService.FileType.WITH_RECT)
-            FileService.FileType.WITH_RECT_SMALL -> getImagePath(path, format, FileService.FileType.WITH_RECT_SMALL)
+            FileService.FileType.WITH_RECT_THUMB -> getImagePath(path, format, FileService.FileType.WITH_RECT_THUMB)
         }
         return Paths.get(configuration.files.root.replace("///", ""), newPath)
     }
@@ -64,7 +64,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         val suffix = when (type) {
             FileService.FileType.NORMAL -> ""
             FileService.FileType.WITH_RECT -> "_rect"
-            FileService.FileType.WITH_RECT_SMALL -> "_rect_small"
+            FileService.FileType.WITH_RECT_THUMB -> "_rect_thumb"
         }
         return if (format != null) {
             link.replace(".$format", "$suffix.$format")
@@ -110,7 +110,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         return when (type) {
             FileService.FileType.NORMAL -> clearPath
             FileService.FileType.WITH_RECT -> rectPath
-            FileService.FileType.WITH_RECT_SMALL -> rectSmallPath
+            FileService.FileType.WITH_RECT_THUMB -> rectSmallPath
         }
     }
 }

@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
 
-
 @RestController
 class PhotoController(private val photoService: PhotoService) : BaseController() {
 
@@ -37,7 +36,7 @@ class PhotoController(private val photoService: PhotoService) : BaseController()
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX") createdAt: OffsetDateTime?,
             @RequestParam drawables: String?,
             @RequestParam data: MultipartFile): ResponseEntity<PhotoDto> {
-        return ResponseEntity.ok(photoService.save(PhotoDto(uuid, null, name, createdAt, location, drawables),
+        return ResponseEntity.ok(photoService.save(PhotoDto(uuid, null, null, name, createdAt, location, drawables),
                                                    data,
                                                    inspectionId,
                                                    observationId,
