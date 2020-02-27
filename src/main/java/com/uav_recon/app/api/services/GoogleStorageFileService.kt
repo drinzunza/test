@@ -7,7 +7,7 @@ import com.uav_recon.app.configurations.UavConfiguration
 import java.io.InputStream
 
 class GoogleStorageFileService(private val configuration: UavConfiguration) : FileService {
-    private val storage = StorageOptions.getDefaultInstance().getService();
+    private val storage = StorageOptions.getDefaultInstance().service
     private val linkPrefix = "https://storage.cloud.google.com/"
 
     override fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String {
@@ -19,13 +19,13 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
         storage.delete(BlobId.of(configuration.files.gsBucket, link.replace(linkPrefix, "")))
     }
 
-    override fun get(link: String, drawables: String?, withRect: Boolean): InputStream {
+    override fun get(link: String, drawables: String?, type: FileService.FileType): InputStream {
         return storage.get(BlobId.of(configuration.files.gsBucket, link.replace(linkPrefix, "")))
                 .getContent()
                 .inputStream()
     }
 
-    override fun getPath(link: String, drawables: String?, withRect: Boolean): String {
+    override fun getPath(link: String, drawables: String?, type: FileService.FileType): String {
         // TODO fix
         return ""
         //return storage.get(BlobId.of(configuration.files.gsBucket, link.replace(linkPrefix, "")))

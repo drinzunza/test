@@ -3,6 +3,10 @@ package com.uav_recon.app.api.services
 import java.io.InputStream
 
 interface FileService {
+    enum class FileType {
+        NORMAL, WITH_RECT, WITH_RECT_THUMB
+    }
+
     fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String
     fun save(userId: Int,
              inspectionUuid: String,
@@ -16,6 +20,6 @@ interface FileService {
     }
 
     fun delete(link: String)
-    fun get(link: String, drawables: String? = null, withRect: Boolean = false): InputStream
-    fun getPath(link: String, drawables: String? = null, withRect: Boolean = false): String
+    fun get(link: String, drawables: String? = null, type: FileType = FileType.NORMAL): InputStream
+    fun getPath(link: String, drawables: String? = null, type: FileType = FileType.NORMAL): String
 }
