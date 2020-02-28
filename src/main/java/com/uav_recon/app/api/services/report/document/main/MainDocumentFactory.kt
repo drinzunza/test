@@ -510,7 +510,8 @@ class MainDocumentFactory(
     }
 
     private fun Inspection.fillObjects(): Inspection {
-        observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid).forEach { observation ->
+        observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid)
+        observations?.forEach { observation ->
             observation.fillObjects()
             observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).forEach { defect ->
                 defect.fillObjects()
@@ -519,7 +520,7 @@ class MainDocumentFactory(
         return this
     }
 
-    private fun Observation.fillObjects() {
+    private fun Observation.fillObjects(): Observation {
         if (component == null) {
             component = structuralComponentId?.let {
                 componentRepository.findFirstById(structuralComponentId!!)
@@ -533,9 +534,10 @@ class MainDocumentFactory(
         if (defects == null) {
             defects = observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(uuid)
         }
+        return this
     }
 
-    private fun ObservationDefect.fillObjects() {
+    private fun ObservationDefect.fillObjects(): ObservationDefect {
         if (defect == null) {
             defect = defectId?.let {
                 defectRepository.findFirstById(defectId!!)
@@ -551,6 +553,7 @@ class MainDocumentFactory(
                 observationNameRepository.findFirstById(observationNameId!!)
             }
         }
+        return this
     }
 
     private fun Report.getInspection(): Inspection {
