@@ -1,13 +1,12 @@
 package com.uav_recon.app.api.services.report.document.main
 
 import com.uav_recon.app.api.entities.db.*
-import com.uav_recon.app.api.repositories.*
 import com.uav_recon.app.api.services.report.ReportConstants
 import com.uav_recon.app.api.services.report.document.models.body.Alignment
+import com.uav_recon.app.api.services.report.document.models.body.Paragraph
 import com.uav_recon.app.api.services.report.document.models.body.Table
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement
-import com.uav_recon.app.api.utils.toDate
-import com.uav_recon.app.api.utils.toStructural
+import com.uav_recon.app.api.utils.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.roundToInt
@@ -139,23 +138,11 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
             }
         }
 
-        private fun createDefectPhotoGalleryUrl(
-                server: String, defect: ObservationDefect,
-                inspection: Inspection, inspector: User,
-                observationRepository: ObservationRepository,
-                observationDefectRepository: ObservationDefectRepository
-        ): String? {
+        private fun createDefectPhotoGalleryUrl(server: String, defect: ObservationDefect, inspection: Inspection, inspector: User): String? {
             val inspectorId = inspector.id ?: return null
             val inspectionId = inspection.uuid
-
-            val observationId = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).firstOrNull {
-                val defects = observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(it.uuid)
-                var containsById = false
-                defects.forEach { d ->
-                    if (d.id == defect.id)
-                        containsById = true
-                }
-                containsById
+            val observationId = inspection.observations?.firstOrNull {
+                it.defects?.any { d -> d.id == defect.id } ?: false
             }?.id
 
             return "$server/datarecon/$inspectorId/$inspectionId/$observationId/${defect.id}"
@@ -180,13 +167,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
 
         fun Table.Builder.buildRows(
                 inspection: Inspection, inspector: User,
-                type: StructuralType, server: String,
-                observationRepository: ObservationRepository,
-                observationDefectRepository: ObservationDefectRepository,
-                componentRepository: ComponentRepository,
-                subcomponentRepository: SubcomponentRepository,
-                defectRepository: DefectRepository,
-                conditionRepository: ConditionRepository
+                type: StructuralType, server: String
         ) {
             var coloredCell = true
             inspection.observations?.forEach { observation ->
@@ -200,150 +181,73 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                                 FIELDS_CELLS[type]?.forEach { field: DefectsReportFields ->
                                     cell {
                                         width = field.getCellWidth(this@buildRows.width)
-                                        color = if (coloredCell) R.color.gray else null
+                                        color = if (coloredCell) ReportConstants.COLOR_GRAY else null
 
-                                        addParagraph(rows.size, inspection, observation, defect, defectIndex, field, type)
+                                        addParagraph(rows.size, inspection, inspector, observation, defect, defectIndex, field, type, server)
                                     }
                                 }
                             }
                         }
             }
         }
-
-        /*fun buildRows(builder: Table.Builder,
-                      inspection: Inspection, inspector: User,
-                      type: StructuralType, server: String,
-                      observationRepository: ObservationRepository,
-                      observationDefectRepository: ObservationDefectRepository,
-                      componentRepository: ComponentRepository,
-                      subcomponentRepository: SubcomponentRepository,
-                      defectRepository: DefectRepository,
-                      conditionRepository: ConditionRepository
-        ) {
-            builder.apply {
-                fillRow(inspection, inspector, type, server,
-                        observationRepository, observationDefectRepository, componentRepository,
-                        subcomponentRepository, defectRepository, conditionRepository)
-            }
-        }*/
 
         private fun ObservationDefect.getWeatherText(): String? {
             return if (temperature != null) "T $temperature℉ Hum $humidity% Wind $wind m/h" else null
         }
 
-        private fun Table.Builder.fillRow(
-                inspection: Inspection, inspector: User,
-                type: StructuralType, server: String,
-                observationRepository: ObservationRepository,
-                observationDefectRepository: ObservationDefectRepository,
-                componentRepository: ComponentRepository,
-                subcomponentRepository: SubcomponentRepository,
-                defectRepository: DefectRepository,
-                conditionRepository: ConditionRepository
+        private fun Table.Row.Cell.Builder.addParagraph(
+                rowIndex: Int,
+                inspection: Inspection,
+                inspector: User,
+                observation: Observation,
+                defect: ObservationDefect,
+                defectIndex: Int,
+                field: DefectsReportFields,
+                type: StructuralType,
+                server: String
         ) {
-            var i = 0
-            var observationIndex = 0
-            observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).forEach { observation ->
-                observation.fillObjects(componentRepository, subcomponentRepository)
-                var haveDefectsToShow = true
-                observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid)
-                    .filter { type == it.type }
-                    .ifEmpty {
-                        haveDefectsToShow = false
-                        listOf()
+            paragraph {
+                alignment = Alignment.START
+                when (field) {
+                    INDEX -> addCellText(rowIndex.toString())
+                    DEFECT_ID, OBSERVATION_ID -> addCellText(defect.id)
+                    SUB_COMPONENT -> addCellText(if (defectIndex == 0) observation.reportComponentName else null)
+                    LOCATION_ID -> addCellText(defect.span, TEXT_NOT_APPLICABLE)
+                    DATE -> addCellText(inspection.endDate?.let { SimpleDateFormat("MM/dd/yy", Locale.US).format(it.toDate()) }
+                            ?: EMPTY_CELL_VALUE)
+                    STATION -> addCellText(defect.stationMarker)
+                    OBSERVATION_NAME -> addCellText(defect.toMaintenance()?.observationName?.name)
+                    DEFECT_DESCRIPTION -> addCellText(defect.toStructural()?.defect?.name)
+                    SIZE -> when (type) {
+                        StructuralType.MAINTENANCE -> addCellText(TEXT_NOT_APPLICABLE)
+                        StructuralType.STRUCTURAL -> addCellText(defect.toStructural()?.getSizeWithMeasureUnits(observation))
                     }
-                    .forEachIndexed { defectIndex, defect ->
-                        defect.fillObjects(defectRepository, conditionRepository)
-                        row {
-                            values().forEach {
-                                cell {
-                                    width { it.cellWidth }
-                                    if (observationIndex % 2 == 0) {
-                                        color = ReportConstants.COLOR_GRAY
-                                    }
-                                    paragraph {
-                                        alignment = Alignment.START
-                                        val buildText: (String?) -> Unit = {
-                                            text(it ?: EMPTY_CELL_VALUE, textSize = SMALL_TABLE_TEXT_SIZE)
-                                        }
-                                        val buildEmptyText: () -> Unit = {
-                                            buildText(null)
-                                        }
-                                        when (it) {
-                                            INDEX -> buildText((i + 1).toString())
-                                            DEFECT_ID -> buildText(defect.id)
-                                            SUB_COMPONENT -> buildText(getComponentName(defectIndex == 0, observation))
-                                            LOCATION_ID -> buildText(defect.span ?: TEXT_NOT_APPLICABLE)
-                                            DATE -> buildText(inspection.endDate?.let { SimpleDateFormat("MM/dd/yy", Locale.US).format(it.toDate()) }
-                                                ?: EMPTY_CELL_VALUE)
-                                            STATION -> buildText(defect.stationMarker ?: EMPTY_CELL_VALUE)
-                                            DESCRIPTION -> when (type) {
-                                                StructuralType.MAINTENANCE -> buildText(TEXT_MAINTENANCE_ITEM)
-                                                StructuralType.STRUCTURAL -> buildText(defect.defect?.name)
-                                            }
-                                            SIZE -> when (type) {
-                                                StructuralType.MAINTENANCE -> buildText(TEXT_NOT_APPLICABLE)
-                                                StructuralType.STRUCTURAL -> buildText(getSizeWithMeasureUnits(defect, observation))
-                                            }
-                                            IMAGE -> {
-                                                iconLink(
-                                                    createDefectPhotoGalleryUrl(server, defect, inspection, inspector, observationRepository, observationDefectRepository) ?: "",
-                                                    drawableRes = "icon_images_report.png",
-                                                    size = IMAGES_LING_SIZE
-                                                )
-                                                alignment = Alignment.CENTER
-                                            }
-                                            CS_RATING -> when (type) {
-                                                StructuralType.MAINTENANCE -> buildText(TEXT_NOT_APPLICABLE)
-                                                StructuralType.STRUCTURAL -> buildText(
-                                                    convertCsRating(defect.toStructural()?.condition?.type)
-                                                )
-                                            }
-                                            else -> buildEmptyText()
-                                        }
-                                    }
-                                }
-                            }
+                    IMAGE -> {
+                        alignment = Alignment.CENTER
+                        createDefectPhotoGalleryUrl(server, defect, inspection, inspector)?.let { url: String ->
+                            iconLink(url, drawableRes = "icon_images_report.png", size = IMAGES_LING_SIZE)
                         }
-                        i++
+
+                        alignment = Alignment.CENTER
                     }
-                if (haveDefectsToShow) observationIndex++
+                    CORR_ACTION -> {
+                        alignment = Alignment.CENTER
+                        addCellText(defect.observationType?.letter())
+                    }
+                    CS_RATING -> {
+                        alignment = Alignment.CENTER
+                        when (type) {
+                            StructuralType.MAINTENANCE -> addCellText(TEXT_NOT_APPLICABLE)
+                            StructuralType.STRUCTURAL -> addCellText(convertCsRating(defect.toStructural()?.condition?.type))
+                        }
+                    }
+                    else -> addCellText()
+                }
             }
         }
 
-        private fun Observation.fillObjects(componentRepository: ComponentRepository, subcomponentRepository: SubcomponentRepository) {
-            if (structuralComponent == null) {
-                structuralComponent = structuralComponentId?.let {
-                    componentRepository.findFirstById(structuralComponentId!!)
-                }
-            }
-            if (subcomponent == null) {
-                subcomponent = subComponentId?.let {
-                    subcomponentRepository.findFirstById(subComponentId!!)
-                }
-            }
-        }
-
-        private fun ObservationDefect.fillObjects(
-                defectRepository: DefectRepository,
-                conditionRepository: ConditionRepository,
-                observationNameRepository: ObservationNameRepository
-        ) {
-            if (defect == null) {
-                defect = defectId?.let {
-                    defectRepository.findFirstById(defectId!!)
-                }
-            }
-            if (condition == null) {
-                condition = conditionId?.let {
-                    conditionRepository.findFirstById(conditionId!!)
-                }
-            }
-            if (observationName == null) {
-                observationName = observationNameId?.let {
-                    observationNameRepository.findFirstById(observationNameId!!)
-                }
-            }
+        private fun Paragraph.Builder.addCellText(text: String? = null, emptyValue: String = EMPTY_CELL_VALUE) {
+            text(text ?: emptyValue, textSize = SMALL_TABLE_TEXT_SIZE)
         }
     }
 }

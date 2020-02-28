@@ -1,9 +1,6 @@
 package com.uav_recon.app.api.utils
 
-import com.uav_recon.app.api.entities.db.Observation
-import com.uav_recon.app.api.entities.db.ObservationDefect
-import com.uav_recon.app.api.entities.db.StructuralType
-import com.uav_recon.app.api.entities.db.Subcomponent
+import com.uav_recon.app.api.entities.db.*
 
 fun ObservationDefect.toStructural() = if (type == StructuralType.STRUCTURAL) this else null
 fun ObservationDefect.toMaintenance() = if (type == StructuralType.MAINTENANCE) this else null
@@ -21,4 +18,13 @@ fun ObservationDefect.getSizeWithMeasureUnits(observation: Observation): String?
 
 fun Subcomponent.isEachMeasureUnit(): Boolean {
     return measureUnit.equals("ea", true)
+}
+
+fun ObservationType.letter(): String {
+    return when (this) {
+        ObservationType.CRITICAL -> "A"
+        ObservationType.PRIORITY -> "B"
+        ObservationType.ROUTINE -> "C"
+        ObservationType.MONITOR -> "D"
+    }
 }

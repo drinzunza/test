@@ -1,10 +1,7 @@
 package com.uav_recon.app.api.services.report.document.main
 
 import com.uav_recon.app.api.entities.db.*
-import com.uav_recon.app.api.repositories.ComponentRepository
-import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
-import com.uav_recon.app.api.repositories.SubcomponentRepository
 import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory.Companion.DATE_FORMAT
 import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.utils.*
@@ -35,7 +32,7 @@ internal enum class DefectFields(val title: String) {
                  photoRepository: PhotoRepository
     ): String? {
         return when (this) {
-            COMPONENT -> observation.structuralComponent?.name
+            COMPONENT -> observation.component?.name
             SPAN -> defect.span
             SUB_COMPONENT -> observation.subcomponent?.name
             DRAWING_NUMBER -> observation.drawingNumber
