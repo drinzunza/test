@@ -192,9 +192,6 @@ class PhotoService(
     }
 
     fun getThumbnailLink(photo: Photo): String {
-        // Generate images if there is no on server
-        fileService.getPath(photo.link, photo.drawables, FileService.FileType.WITH_RECT_THUMB)
-
         val splitted = photo.link.split('.')
         val name = splitted.getOrNull(splitted.size - 2)
         return name?.let { photo.link.replace(name, "${name}_rect_thumb") } ?: photo.link
