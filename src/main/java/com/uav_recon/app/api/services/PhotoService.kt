@@ -34,7 +34,7 @@ class PhotoService(
         name = name,
         createdAt = createdAtClient,
         link = link,
-        thumbLink = getThumbnailLink(link),
+        thumbLink = getThumbnailLink(this),
         location = LocationDto(
             latitude,
             longitude,
@@ -191,10 +191,10 @@ class PhotoService(
         return listOf()
     }
 
-    fun getThumbnailLink(link: String): String {
-        val splitted = link.split('.')
+    fun getThumbnailLink(photo: Photo): String {
+        val splitted = photo.link.split('.')
         val name = splitted.getOrNull(splitted.size - 2)
-        return name?.let { link.replace(name, "${name}_rect_thumb") } ?: link
+        return name?.let { photo.link.replace(name, "${name}_rect_thumb") } ?: photo.link
     }
 
     private fun getFileFormat(contentType: String?) =
