@@ -7,6 +7,7 @@ import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.services.report.document.models.body.Table
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement
 import com.uav_recon.app.api.utils.toDate
+import com.uav_recon.app.api.utils.toStructural
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.roundToInt
@@ -15,74 +16,128 @@ private const val IMAGES_LING_SIZE = 16.0
 private const val TEXT_MAINTENANCE_ITEM = "Maintenance item"
 
 enum class DefectsReportFields(val textElement: TextElement.Simple, private val widthPercent: Float) {
-    INDEX(TextElement.Simple("Index", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE), 0.0417f),
+    INDEX(
+            TextElement.Simple("Index", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0417f
+    ),
     DEFECT_ID(
-        TextElement.Simple("Defect ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-        0.0986f
+            TextElement.Simple("Defect ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0986f
+    ),
+    OBSERVATION_ID(
+            TextElement.Simple("Observation ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0986f
     ),
     SUB_COMPONENT(
-        TextElement.Simple("Sub-Component", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-        0.1236f
+            TextElement.Simple("Sub-Component", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.1236f
     ),
     LOCATION_ID(
-        TextElement.Simple("Location ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-        0.0653f
+            TextElement.Simple("Location ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0653f
     ),
     PREV_DEF_NO(
-        TextElement.Simple("Prev. def. ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-        0.0417f
+            TextElement.Simple("Prev. def. ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0417f
     ),
-    DATE(TextElement.Simple("Inspect. Date", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE), 0.0653f),
-    STATION(TextElement.Simple("Station", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE), 0.0764f),
-    DESCRIPTION(
-        TextElement.Simple(
-            "Defect Description",
-            styles = MainDocumentFactory.BOLD_STYLE_LIST,
-            textSize = SMALL_TABLE_TEXT_SIZE
-        ), 0.1194f
+    PREV_NO(
+            TextElement.Simple("Prev. ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0417f
     ),
-    SIZE(TextElement.Simple("Size", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE), 0.0458f),
-    IMAGE(TextElement.Simple("Image", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE), 0.0375f),
-    CS_RATING(TextElement.Simple("CS", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE), 0.0361f),
-    STATUS(TextElement.Simple("Status", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE), 0.05f),
+    DATE(
+            TextElement.Simple("Inspect. Date", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0653f
+    ),
+    STATION(
+            TextElement.Simple("Station", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0764f
+    ),
+    DEFECT_DESCRIPTION(
+            TextElement.Simple("Defect Description", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.1194f
+    ),
+    OBSERVATION_NAME(
+            TextElement.Simple("Observation Name", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.1194f
+    ),
+    SIZE(
+            TextElement.Simple("Size", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0458f
+    ),
+    IMAGE(
+            TextElement.Simple("Image", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0375f
+    ),
+    CS_RATING(
+            TextElement.Simple("CS", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0361f
+    ),
+    STATUS(
+            TextElement.Simple("Status", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.05f
+    ),
     CORR_ACTION(
-        TextElement.Simple("Corr. Action", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-        0.0458f
+            TextElement.Simple("Corr. Action", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0458f
     ),
     REPAIR_SCHEDULE(
-        TextElement.Simple(
-            "Repair Schedule",
-            styles = MainDocumentFactory.BOLD_STYLE_LIST,
-            textSize = SMALL_TABLE_TEXT_SIZE
-        ), 0.1514f
+            TextElement.Simple("Repair Schedule", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.1514f
     );
 
-    val cellWidth: Int
-        get() = (TABLE_WIDTH_LANDSCAPE * widthPercent).roundToInt()
+    fun getCellWidth(rowWidth: Int?): Int? = rowWidth?.toFloat()?.times(widthPercent)?.roundToInt()
 
     companion object {
 
-        fun buildHeaderRows(tableBuilder: Table.Builder) {
-            tableBuilder.apply {
-                row {
-                    cells { values().map { createCell(it.cellWidth, it.textElement) } }
+        private val FIELDS_CELLS = mapOf(
+                StructuralType.STRUCTURAL to listOf(
+                        INDEX,
+                        DEFECT_ID,
+                        SUB_COMPONENT,
+                        LOCATION_ID,
+                        PREV_DEF_NO,
+                        DATE,
+                        STATION,
+                        DEFECT_DESCRIPTION,
+                        SIZE,
+                        IMAGE,
+                        CS_RATING,
+                        STATUS,
+                        CORR_ACTION,
+                        REPAIR_SCHEDULE
+                ),
+                StructuralType.MAINTENANCE to listOf(
+                        INDEX,
+                        OBSERVATION_ID,
+                        SUB_COMPONENT,
+                        LOCATION_ID,
+                        PREV_NO,
+                        DATE,
+                        STATION,
+                        OBSERVATION_NAME,
+                        SIZE,
+                        IMAGE,
+                        CS_RATING,
+                        STATUS,
+                        CORR_ACTION,
+                        REPAIR_SCHEDULE
+                )
+        )
+
+        fun Table.Builder.buildHeaderRow(type: StructuralType) {
+            val tableWidth = width
+            row {
+                FIELDS_CELLS[type]?.forEach { field: DefectsReportFields ->
+                    cell {
+                        width { field.getCellWidth(tableWidth) }
+                        paragraph {
+                            alignment = Alignment.START
+                            element { field.textElement }
+                        }
+                    }
                 }
             }
         }
-
-        private fun createCell(width: Int, text: TextElement, cellColor: String? = null, hAlignment: Alignment = Alignment.START) =
-            Table.Row.Cell.create {
-                width {
-                    width
-                }
-                paragraph {
-                    alignment = hAlignment
-                    element { text }
-                }
-                cellColor?.let { color ->
-                    color { color }
-                }
-            }
 
         private fun createDefectPhotoGalleryUrl(
                 server: String, defect: ObservationDefect,
@@ -106,19 +161,14 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
             return "$server/datarecon/$inspectorId/$inspectionId/$observationId/${defect.id}"
         }
 
-        private fun getComponentName(showSubComponent: Boolean, observation: Observation): String? =
-            if (showSubComponent) {
-                observation.subcomponent?.name?.let { if (it.toLowerCase() != "n/a") it else observation.structuralComponent?.name }
-            } else null
-
-        private fun getSizeWithMeasureUnits(defect: ObservationDefect, observation: Observation): String? {
-            val structuralDefect = if (defect.type == StructuralType.STRUCTURAL) defect else null
-            return structuralDefect?.size?.let { size ->
-                observation.subcomponent?.measureUnit?.let { unit ->
-                    "$size $unit"
-                } ?: size
+        private val Observation.reportComponentName: String?
+            get() {
+                val subComponentName = subcomponent?.name
+                return when {
+                    subComponentName.equals("n/a") -> component?.name
+                    else -> subComponentName
+                }
             }
-        }
 
         private fun convertCsRating(conditionType: ConditionType?): String = when (conditionType) {
             ConditionType.GOOD -> "1"
@@ -128,7 +178,39 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
             else -> EMPTY_CELL_VALUE
         }
 
-        fun buildRows(builder: Table.Builder,
+        fun Table.Builder.buildRows(
+                inspection: Inspection, inspector: User,
+                type: StructuralType, server: String,
+                observationRepository: ObservationRepository,
+                observationDefectRepository: ObservationDefectRepository,
+                componentRepository: ComponentRepository,
+                subcomponentRepository: SubcomponentRepository,
+                defectRepository: DefectRepository,
+                conditionRepository: ConditionRepository
+        ) {
+            var coloredCell = true
+            inspection.observations?.forEach { observation ->
+                observation.defects
+                        ?.filter { type == it.type }
+                        ?.also {
+                            coloredCell = !coloredCell
+                        }
+                        ?.forEachIndexed { defectIndex, defect ->
+                            row {
+                                FIELDS_CELLS[type]?.forEach { field: DefectsReportFields ->
+                                    cell {
+                                        width = field.getCellWidth(this@buildRows.width)
+                                        color = if (coloredCell) R.color.gray else null
+
+                                        addParagraph(rows.size, inspection, observation, defect, defectIndex, field, type)
+                                    }
+                                }
+                            }
+                        }
+            }
+        }
+
+        /*fun buildRows(builder: Table.Builder,
                       inspection: Inspection, inspector: User,
                       type: StructuralType, server: String,
                       observationRepository: ObservationRepository,
@@ -143,7 +225,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                         observationRepository, observationDefectRepository, componentRepository,
                         subcomponentRepository, defectRepository, conditionRepository)
             }
-        }
+        }*/
 
         private fun ObservationDefect.getWeatherText(): String? {
             return if (temperature != null) "T $temperature℉ Hum $humidity% Wind $wind m/h" else null
@@ -214,8 +296,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                                             CS_RATING -> when (type) {
                                                 StructuralType.MAINTENANCE -> buildText(TEXT_NOT_APPLICABLE)
                                                 StructuralType.STRUCTURAL -> buildText(
-                                                    convertCsRating((if (defect.type == StructuralType.STRUCTURAL) defect else null)?.condition?.type
-                                                    )
+                                                    convertCsRating(defect.toStructural()?.condition?.type)
                                                 )
                                             }
                                             else -> buildEmptyText()

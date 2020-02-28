@@ -79,7 +79,9 @@ class MainDocumentFactory(
         private const val TERM_RATING = "Term Rating"
         private const val INSPECTED_BY_FORMAT = "Inspected by: %s (User id: %s)"
 
+        private const val ACTION_REPAIR_SCHEDULE = "Action & Repair Schedule: "
         private const val DEFECT_DESCRIPTION = "Defect description: "
+        private const val OBSERVATION_DESCRIPTION = "Observation description: "
 
         private val BORDER: Document.Border = Document.Border.Simple(BORDER_SIZE, BORDER_SPACE, ReportConstants.COLOR_BLACK)
         internal val BOLD_STYLE_LIST = listOf(BOLD)
@@ -124,7 +126,7 @@ class MainDocumentFactory(
         private val STRUCTURAL_DEFECTS_REPORT_ELEMENT =
             TextElement.Simple("Field Inspection Report - Structural Defects", styles = BOLD_STYLE_LIST)
         private val NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT =
-            TextElement.Simple("Field Inspection Report - Non-structural Defects", styles = BOLD_STYLE_LIST)
+            TextElement.Simple("Field Inspection Report - Non-structural Main Observations", styles = BOLD_STYLE_LIST)
     }
 
     override fun generateDocument(report: Report): Document {
@@ -330,6 +332,7 @@ class MainDocumentFactory(
             .forEach {
                 val component = it.key ?: return@forEach
                 val list = it.value.map {
+                    val spansCount = structureSource.getSpansCount(it, inspection.spansCount) ?: 0
                     DefectSummaryFields.ObservationData(it, observationService)
                 }
                 val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
@@ -373,7 +376,13 @@ class MainDocumentFactory(
         }
 
         paragraphLeft {
-            elementsKeyValue(DEFECT_DESCRIPTION, defect.description, SMALL_TEXT_SIZE)
+            elementsKeyValue(ACTION_REPAIR_SCHEDULE, null, SMALL_TEXT_SIZE)
+            val title = when (defect.type) {
+                StructuralType.STRUCTURAL -> DEFECT_DESCRIPTION
+                StructuralType.MAINTENANCE -> OBSERVATION_DESCRIPTION
+                else -> DEFECT_DESCRIPTION
+            }
+            elementsKeyValue(title, defect.description, SMALL_TEXT_SIZE)
         }
 
         paragraph {
@@ -445,12 +454,12 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType) {
+        orientation = Page.Orientation.LANDSCAPE
+
         paragraph {
             text { title }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
         }
-
-        orientation = Page.Orientation.LANDSCAPE
 
         table {
             width { TABLE_WIDTH_LANDSCAPE }
