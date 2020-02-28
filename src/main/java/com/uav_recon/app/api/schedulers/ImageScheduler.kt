@@ -19,6 +19,7 @@ class ImageScheduler(
         val timestamp = Date().time
         logger.info("scheduler started: runGenerateThumbnails")
         photoRepository.findAll().forEach { photo ->
+            logger.info("start image ${photo.link}")
             fileService.getPath(photo.link, photo.drawables, FileService.FileType.WITH_RECT_THUMB)
         }
         logger.info("scheduler stopped: runGenerateThumbnails ({} ms)", Date().time - timestamp)
