@@ -2,6 +2,7 @@ package com.uav_recon.app.api.utils
 
 import com.uav_recon.app.api.entities.db.Rect
 import com.uav_recon.app.api.services.Error
+import net.coobird.thumbnailator.Thumbnails
 import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.File
@@ -12,7 +13,33 @@ import kotlin.math.roundToInt
 
 @Synchronized
 @Throws(Error::class)
-fun ByteArray.saveWithRect(rect: Rect?, file: File, smallFile: File, format: String, size: Int = 500) {
+fun ByteArray.saveWithRect(rect: Rect?, file: File, thumbFile: File, format: String, size: Int = 500) {
+    val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
+    val inputStream = inputStream()
+    val image = Thumbnails.of(inputStream).scale(1.0).asBufferedImage()
+    rect?.let {
+        val g = image.graphics as Graphics2D
+        g.stroke = BasicStroke(8.0f)
+        g.color = Color.GREEN
+        g.drawRect(
+                (image.width * rect.startX).toInt(),
+                (image.height * rect.startY).toInt(),
+                (image.width * abs(rect.endX - rect.startX)).toInt(),
+                (image.height * abs(rect.endY - rect.startY)).toInt())
+        g.dispose()
+    }
+    Thumbnails.of(image)
+            .scale(1.0)
+            .toFile(file)
+    Thumbnails.of(image)
+            .scale(size.toDouble() / image.width)
+            .toFile(thumbFile)
+    inputStream.close()
+}
+
+@Synchronized
+@Throws(Error::class)
+fun ByteArray.saveWithRectFast(rect: Rect?, file: File, smallFile: File, format: String, size: Int = 500) {
     val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
     val inputStream = inputStream()
     val image = ImageIO.read(inputStream)
