@@ -76,14 +76,18 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
     }
 
     fun getRect(drawables: String?): Rect? {
-        val coords = drawables
-                ?.replace("Rect(", "")
-                ?.replace(")", "")
-                ?.split(',')
-        return if (coords != null && coords.size == 4)
-            Rect(coords[0].toDouble(), coords[1].toDouble(), coords[2].toDouble(), coords[3].toDouble())
-        else
-            null
+        try {
+            val coords = drawables
+                    ?.replace("Rect(", "")
+                    ?.replace(")", "")
+                    ?.split(',')
+            if (coords != null && coords.size == 4) {
+                return Rect(coords[0].toDouble(), coords[1].toDouble(), coords[2].toDouble(), coords[3].toDouble())
+            }
+        } catch (e: Exception) {
+            logger.error("Invalid image rect data", e)
+        }
+        return null
     }
 
     fun generateRectImages(bytes: ByteArray, rect: Rect?, file: File, thumbFile: File, format: String) {
@@ -102,11 +106,9 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         val clearPath = File(configuration.files.root, path)
         val rectPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT))
         val rectThumbPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB))
-        drawables?.let {
-            if (!rectPath.exists()) logger.info("Not found ${rectPath.absolutePath}")
-            if (!rectThumbPath.exists()) logger.info("Not found ${rectThumbPath.absolutePath}")
+        getRect(drawables)?.let {
             if (clearPath.exists() && (!rectPath.exists() || !rectThumbPath.exists())) {
-                generateRectImages(clearPath.readBytes(), getRect(drawables), rectPath, rectThumbPath, "jpg")
+                generateRectImages(clearPath.readBytes(), it, rectPath, rectThumbPath, "jpg")
             }
         }
         return when (type) {
