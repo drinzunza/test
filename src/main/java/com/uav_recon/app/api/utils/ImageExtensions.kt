@@ -14,10 +14,9 @@ import kotlin.math.roundToInt
 @Throws(Error::class)
 fun ByteArray.saveWithRect(rect: Rect?, file: File, smallFile: File, format: String, size: Int = 500) {
     val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
-    if (rect != null) {
-        val inputStream = inputStream()
-        val image = ImageIO.read(inputStream)
-
+    val inputStream = inputStream()
+    val image = ImageIO.read(inputStream)
+    rect?.let {
         val g = image.graphics as Graphics2D
         g.stroke = BasicStroke(8.0f)
         g.color = Color.GREEN
@@ -27,11 +26,11 @@ fun ByteArray.saveWithRect(rect: Rect?, file: File, smallFile: File, format: Str
                 (image.width * abs(rect.endX - rect.startX)).toInt(),
                 (image.height * abs(rect.endY - rect.startY)).toInt())
         g.dispose()
-        ImageIO.write(image, needFormat, file)
-        val resized = image.resize(size) //image.resize(resizedWidth, resizedHeight)
-        ImageIO.write(resized, needFormat, smallFile)
-        inputStream.close()
     }
+    ImageIO.write(image, needFormat, file)
+    val resized = image.resize(size)
+    ImageIO.write(resized, needFormat, smallFile)
+    inputStream.close()
 }
 
 fun BufferedImage.resize(targetSize: Int): BufferedImage {

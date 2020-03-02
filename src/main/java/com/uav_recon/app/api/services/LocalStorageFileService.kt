@@ -30,9 +30,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         } else {
             Files.write(absolutePath, bytes, StandardOpenOption.CREATE_NEW)
         }
-        drawables?.let {
-            generateRectImages(bytes, getRect(drawables), absolutePathWithRect.toFile(), absolutePathWithRectThumb.toFile(), format)
-        }
+        generateRectImages(bytes, getRect(drawables), absolutePathWithRect.toFile(), absolutePathWithRectThumb.toFile(), format)
         return "$linkPrefix$path"
     }
 
@@ -106,10 +104,8 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         val clearPath = File(configuration.files.root, path)
         val rectPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT))
         val rectThumbPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB))
-        getRect(drawables)?.let {
-            if (clearPath.exists() && (!rectPath.exists() || !rectThumbPath.exists())) {
-                generateRectImages(clearPath.readBytes(), it, rectPath, rectThumbPath, "jpg")
-            }
+        if (clearPath.exists() && (!rectPath.exists() || !rectThumbPath.exists())) {
+            generateRectImages(clearPath.readBytes(), getRect(drawables), rectPath, rectThumbPath, "jpg")
         }
         return when (type) {
             FileService.FileType.NORMAL -> clearPath
