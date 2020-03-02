@@ -103,6 +103,8 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         val rectPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT))
         val rectThumbPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB))
         drawables?.let {
+            if (!rectPath.exists()) logger.info("Not found ${rectPath.absolutePath}")
+            if (!rectThumbPath.exists()) logger.info("Not found ${rectThumbPath.absolutePath}")
             if (clearPath.exists() && (!rectPath.exists() || !rectThumbPath.exists())) {
                 generateRectImages(clearPath.readBytes(), getRect(drawables), rectPath, rectThumbPath, "jpg")
             }
