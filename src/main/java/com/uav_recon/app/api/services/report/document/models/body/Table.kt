@@ -140,7 +140,7 @@ interface Table : BodyElement {
                     height = init()
                 }
 
-                inline fun width(init: () -> Int) {
+                inline fun width(init: () -> Int?) {
                     width = init()
                 }
 
