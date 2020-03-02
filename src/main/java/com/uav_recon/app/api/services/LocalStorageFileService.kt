@@ -94,8 +94,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
             logger.info("Saved image with rect ${file.absolutePath}")
             logger.info("Saved thumb image with rect ${thumbFile.absolutePath}")
         } catch (e: Exception) {
-            logger.error("Invalid image data", e)
-            throw Error(104, "Invalid image data")
+            logger.error("Invalid image data ${file.absoluteFile}", e)
         }
     }
 
