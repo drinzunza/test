@@ -78,6 +78,8 @@ dependencies {
     compile group: 'org.apache.xmlbeans', name: 'xmlbeans', version: '2.6.0'
     compile group: 'com.github.virtuald', name: 'curvesapi', version: '1.03'
 
+    compile group: 'net.coobird', name: 'thumbnailator', version: '0.4.11'
+
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('io.zonky.test:embedded-database-spring-test:1.5.1')
     testCompile('com.icegreen:greenmail:1.5.5')
