@@ -131,7 +131,7 @@ class MainDocumentFactory(
     }
 
     override fun generateDocument(report: Report): Document {
-        val inspection = report.getInspection()
+        val inspection = report.getInspection().fillObjects()
         val structure = inspection.getStructure()
         val company = Company(1, "Alta Vista Solutions")
         val inspector = inspection.getInspector()
@@ -145,7 +145,7 @@ class MainDocumentFactory(
             page { createNonStructuralDefectsReport(inspection, inspector) }
             page { createObservationSummary(inspection) }
 
-            inspection.fillObjects().observations?.forEach { observation ->
+            inspection.observations?.forEach { observation ->
                 observation.defects?.forEach { defect ->
                     page { createDefectReportPage(inspection, inspector, structure, observation, defect) }
                 }
