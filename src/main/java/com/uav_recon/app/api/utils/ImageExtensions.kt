@@ -32,7 +32,7 @@ fun ByteArray.saveWithRect(rect: Rect?, file: File, thumbFile: File, format: Str
             .scale(1.0)
             .toFile(file)
     Thumbnails.of(image)
-            .scale(size.toDouble() / image.width)
+            .scale(size.toDouble() / (if (image.width > image.height) image.width else image.height))
             .toFile(thumbFile)
     inputStream.close()
 }
