@@ -90,6 +90,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
 
     fun generateRectImages(bytes: ByteArray, rect: Rect?, file: File, thumbFile: File, format: String) {
         try {
+            if (format == "docx") return
             bytes.saveWithRect(rect, file, thumbFile, format)
             logger.info("Saved image with rect ${file.absolutePath}")
             logger.info("Saved thumb image with rect ${thumbFile.absolutePath}")
@@ -101,9 +102,6 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
     fun getFile(link: String, drawables: String?, type: FileService.FileType): File {
         val path = link.replace(linkPrefix, "")
         val clearPath = File(configuration.files.root, path)
-        if (link.endsWith(".docx", true)) {
-            return clearPath
-        }
         val rectPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT))
         val rectThumbPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB))
         if (clearPath.exists() && (!rectPath.exists() || !rectThumbPath.exists())) {
