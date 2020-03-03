@@ -1,35 +1,26 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.Rect
+import com.uav_recon.app.api.utils.saveWithRect
 import com.uav_recon.app.configurations.UavConfiguration
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Graphics2D
-import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
-import java.nio.file.StandardOpenOption
-import java.util.stream.Stream
-import javax.imageio.ImageIO
-import kotlin.math.abs
+import java.nio.file.*
 
 class LocalStorageFileService(private val configuration: UavConfiguration) : FileService {
+    private val logger = LoggerFactory.getLogger(LocalStorageFileService::class.java)
     private val serverId = if (!StringUtils.isBlank(configuration.server.id)) "/${configuration.server.id}" else ""
     private val linkPrefix = "${configuration.server.host}$serverId/files/"
 
-    private val logger = LoggerFactory.getLogger(LocalStorageFileService::class.java)
-
     override fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String {
-        val absolutePath = Paths.get(configuration.files.root.replace("///", ""), path)
-        val absolutePathWithRect = Paths.get(configuration.files.root.replace("///", ""),
-                path.replace(".$format", "_rect.$format"))
+        val absolutePath = getAbsolutePath(path, format, FileService.FileType.NORMAL)
+        val absolutePathWithRect = getAbsolutePath(path, format, FileService.FileType.WITH_RECT)
+        val absolutePathWithRectThumb = getAbsolutePath(path, format, FileService.FileType.WITH_RECT_THUMB)
+
         val parentFile = absolutePath.toFile().parentFile
         if (!parentFile.exists()) {
             Files.createDirectories(parentFile.toPath())
@@ -39,80 +30,87 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         } else {
             Files.write(absolutePath, bytes, StandardOpenOption.CREATE_NEW)
         }
-        if (drawables != null) {
-            saveWithRect(bytes, getRect(drawables), absolutePathWithRect.toFile(), format)
-        }
+        generateRectImages(bytes, getRect(drawables), absolutePathWithRect.toFile(), absolutePathWithRectThumb.toFile(), format)
         return "$linkPrefix$path"
     }
 
-    override fun get(link: String, drawables: String?, withRect: Boolean): InputStream {
-        return FileInputStream(getFile(link, drawables, withRect))
+    override fun get(link: String, drawables: String?, type: FileService.FileType): InputStream {
+        return FileInputStream(getFile(link, drawables, type))
     }
 
-    override fun getPath(link: String, drawables: String?, withRect: Boolean): String {
-        return getFile(link, drawables, withRect).absolutePath
-    }
-
-    fun getFile(link: String, drawables: String?, withRect: Boolean): File {
-        val path = link.replace(linkPrefix, "")
-        val clearPath = File(configuration.files.root, path)
-        val rectPath = File(configuration.files.root, getRectLink(path))
-        if (withRect && drawables != null) {
-            if (!rectPath.exists()) {
-                val bytes = clearPath.readBytes()
-                saveWithRect(bytes, getRect(drawables), rectPath, "jpg")
-            }
-        }
-        return if (withRect) rectPath else clearPath
+    override fun getPath(link: String, drawables: String?, type: FileService.FileType): String {
+        return getFile(link, drawables, type).absolutePath
     }
 
     override fun delete(link: String) {
         val path = link.replace(linkPrefix, "")
         Files.delete(Paths.get(configuration.files.root, path))
-        Files.delete(Paths.get(configuration.files.root, getRectLink(path)))
+        Files.delete(Paths.get(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT)))
+        Files.delete(Paths.get(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB)))
     }
 
-    private fun getRectLink(link: String): String {
-        return link
-                .replace(".jpeg", "_rect.jpeg")
-                .replace(".jpg", "_rect.jpg")
-                .replace(".png", "_rect.png")
+    fun getAbsolutePath(path: String, format: String, type: FileService.FileType): Path {
+        val newPath = when (type) {
+            FileService.FileType.NORMAL -> path
+            FileService.FileType.WITH_RECT -> getImagePath(path, format, FileService.FileType.WITH_RECT)
+            FileService.FileType.WITH_RECT_THUMB -> getImagePath(path, format, FileService.FileType.WITH_RECT_THUMB)
+        }
+        return Paths.get(configuration.files.root.replace("///", ""), newPath)
     }
 
-    private fun getRect(drawables: String?): Rect? {
-        val coords = drawables
-                ?.replace("Rect(", "")
-                ?.replace(")", "")
-                ?.split(',')
-        return if (coords != null && coords.size == 4)
-            Rect(coords[0].toDouble(), coords[1].toDouble(), coords[2].toDouble(), coords[3].toDouble())
-        else
-            null
+    fun getImagePath(link: String, format: String?, type: FileService.FileType): String {
+        val suffix = when (type) {
+            FileService.FileType.NORMAL -> ""
+            FileService.FileType.WITH_RECT -> "_rect"
+            FileService.FileType.WITH_RECT_THUMB -> "_rect_thumb"
+        }
+        return if (format != null) {
+            link.replace(".$format", "$suffix.$format")
+        } else {
+            link.replace(".jpeg", "$suffix.jpeg")
+                    .replace(".jpg", "$suffix.jpg")
+                    .replace(".png", "$suffix.png")
+        }
     }
 
-    @Synchronized
-    @Throws(Error::class)
-    private fun saveWithRect(bytes: ByteArray, rect: Rect?, file: File, format: String) {
-        val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
+    fun getRect(drawables: String?): Rect? {
         try {
-            if (rect != null) {
-                val inputStream = bytes.inputStream()
-                val image = ImageIO.read(inputStream)
-                val g = image.graphics as Graphics2D
-                g.stroke = BasicStroke(8.0f)
-                g.color = Color.GREEN
-                g.drawRect(
-                        (image.width * rect.startX).toInt(),
-                        (image.height * rect.startY).toInt(),
-                        (image.width * abs(rect.endX - rect.startX)).toInt(),
-                        (image.height * abs(rect.endY - rect.startY)).toInt())
-                ImageIO.write(image, needFormat, file)
-                inputStream.close()
+            val coords = drawables
+                    ?.replace("Rect(", "")
+                    ?.replace(")", "")
+                    ?.split(',')
+            if (coords != null && coords.size == 4) {
+                return Rect(coords[0].toDouble(), coords[1].toDouble(), coords[2].toDouble(), coords[3].toDouble())
             }
-            logger.info("Saved image with rect ${file.absolutePath}")
         } catch (e: Exception) {
-            logger.error("Invalid image data", e)
-            throw Error(104, "Invalid image data")
+            logger.error("Invalid image rect data", e)
+        }
+        return null
+    }
+
+    fun generateRectImages(bytes: ByteArray, rect: Rect?, file: File, thumbFile: File, format: String) {
+        try {
+            bytes.saveWithRect(rect, file, thumbFile, format)
+            logger.info("Saved image with rect ${file.absolutePath}")
+            logger.info("Saved thumb image with rect ${thumbFile.absolutePath}")
+        } catch (e: Exception) {
+            logger.error("Invalid image data ${file.absoluteFile}", e)
+        }
+    }
+
+    fun getFile(link: String, drawables: String?, type: FileService.FileType): File {
+        val path = link.replace(linkPrefix, "")
+        val clearPath = File(configuration.files.root, path)
+        val rectPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT))
+        val rectThumbPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB))
+        if (clearPath.exists() && (!rectPath.exists() || !rectThumbPath.exists())) {
+            val format = if (path.endsWith(".png", true)) "png" else "jpg"
+            generateRectImages(clearPath.readBytes(), getRect(drawables), rectPath, rectThumbPath, format)
+        }
+        return when (type) {
+            FileService.FileType.NORMAL -> clearPath
+            FileService.FileType.WITH_RECT -> rectPath
+            FileService.FileType.WITH_RECT_THUMB -> rectThumbPath
         }
     }
 }

@@ -9,6 +9,7 @@ import java.time.OffsetDateTime
 data class PhotoDto(
         val uuid: String,
         var link: String?,
+        var thumbLink: String?,
         var name: String?,
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
         var createdAt: OffsetDateTime?,

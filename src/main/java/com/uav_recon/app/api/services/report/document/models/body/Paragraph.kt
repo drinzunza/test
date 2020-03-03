@@ -37,6 +37,10 @@ interface Paragraph : BodyElement {
             list.add(init())
         }
 
+        fun text(textElement: TextElement) {
+            list.add(textElement)
+        }
+
         fun text(text: String?, textSize: Int? = null, textColor: String? = null, styles: List<TextElement.Typeface> = emptyList()) {
             list.add(TextElement.Simple(text, textSize, textColor, styles))
         }

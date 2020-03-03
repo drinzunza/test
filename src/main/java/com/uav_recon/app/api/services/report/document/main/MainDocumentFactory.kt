@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
-import java.time.OffsetDateTime
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -63,6 +62,8 @@ class MainDocumentFactory(
         private val subcomponentRepository: SubcomponentRepository,
         private val defectRepository: DefectRepository,
         private val conditionRepository: ConditionRepository,
+        private val observationNameRepository: ObservationNameRepository,
+        private val locationIdRepository: LocationIdRepository,
         private val resources: Resources,
         private val configuration: UavConfiguration,
         private val fileService: FileService
@@ -79,7 +80,9 @@ class MainDocumentFactory(
         private const val TERM_RATING = "Term Rating"
         private const val INSPECTED_BY_FORMAT = "Inspected by: %s (User id: %s)"
 
+        private const val ACTION_REPAIR_SCHEDULE = "Action & Repair Schedule: "
         private const val DEFECT_DESCRIPTION = "Defect description: "
+        private const val OBSERVATION_DESCRIPTION = "Observation description: "
 
         private val BORDER: Document.Border = Document.Border.Simple(BORDER_SIZE, BORDER_SPACE, ReportConstants.COLOR_BLACK)
         internal val BOLD_STYLE_LIST = listOf(BOLD)
@@ -124,14 +127,14 @@ class MainDocumentFactory(
         private val STRUCTURAL_DEFECTS_REPORT_ELEMENT =
             TextElement.Simple("Field Inspection Report - Structural Defects", styles = BOLD_STYLE_LIST)
         private val NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT =
-            TextElement.Simple("Field Inspection Report - Non-structural Defects", styles = BOLD_STYLE_LIST)
+            TextElement.Simple("Field Inspection Report - Non-structural Main Observations", styles = BOLD_STYLE_LIST)
     }
 
     override fun generateDocument(report: Report): Document {
-        val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(report.inspectionId)!!
-        val structure = inspection.structureId?.let { structureRepository.findFirstById(inspection.structureId!!) }
+        val inspection = report.getInspection().fillObjects()
+        val structure = inspection.getStructure()
         val company = Company(1, "Alta Vista Solutions")
-        val inspector = userRepository.findFirstById(inspection.updatedBy.toLong())!!
+        val inspector = inspection.getInspector()
 
         return Document.create {
             border { BORDER }
@@ -142,10 +145,8 @@ class MainDocumentFactory(
             page { createNonStructuralDefectsReport(inspection, inspector) }
             page { createObservationSummary(inspection) }
 
-            observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).forEach { observation ->
-                observation.fillObjects()
-                observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).forEach { defect ->
-                    defect.fillObjects()
+            inspection.observations?.forEach { observation ->
+                observation.defects?.forEach { defect ->
                     page { createDefectReportPage(inspection, inspector, structure, observation, defect) }
                 }
             }
@@ -322,31 +323,30 @@ class MainDocumentFactory(
             lineFeed { DOUBLE_LINE_FEED_ELEMENT }
         }
 
-        val observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid)
-        observations.forEach { it.fillObjects() }
-        observations
-            .sortedBy { it.structuralComponent?.name }
-            .groupBy { it.structuralComponent }
-            .forEach {
-                val component = it.key ?: return@forEach
-                val list = it.value.map {
-                    DefectSummaryFields.ObservationData(it, observationService)
-                }
-                val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
+        inspection.observations
+                ?.sortedBy { it.component?.name }
+                ?.groupBy { it.component }
+                ?.forEach {
+                    val component = it.key ?: return@forEach
+                    val list = it.value.map { observation ->
+                        val spansCount = observation.getSpansCount(inspection.spansCount) ?: 0
+                        DefectSummaryFields.ObservationData(observation, spansCount, observationService)
+                    }
+                    val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
 
-                table {
-                    width { TABLE_WIDTH_PORTRAIT }
-                    DefectSummaryFields.buildHeaderRows(this, component.name, totalHealthIndex)
-                    list.forEach {
-                        row {
-                            DefectSummaryFields.buildCells(this, it)
+                    table {
+                        width { TABLE_WIDTH_PORTRAIT }
+                        DefectSummaryFields.buildHeaderRows(this, component.name, totalHealthIndex)
+                        list.forEach {
+                            row {
+                                DefectSummaryFields.buildCells(this, it)
+                            }
                         }
                     }
+                    paragraph {
+                        lineFeed { DOUBLE_LINE_FEED_ELEMENT }
+                    }
                 }
-                paragraph {
-                    lineFeed { DOUBLE_LINE_FEED_ELEMENT }
-                }
-            }
     }
 
     private fun Page.Builder.createDefectReportPage(inspection: Inspection, inspector: User, structure: Structure?, observation: Observation, defect: ObservationDefect) {
@@ -373,7 +373,13 @@ class MainDocumentFactory(
         }
 
         paragraphLeft {
-            elementsKeyValue(DEFECT_DESCRIPTION, defect.description, SMALL_TEXT_SIZE)
+            elementsKeyValue(ACTION_REPAIR_SCHEDULE, null, SMALL_TEXT_SIZE)
+            val title = when (defect.type) {
+                StructuralType.STRUCTURAL -> DEFECT_DESCRIPTION
+                StructuralType.MAINTENANCE -> OBSERVATION_DESCRIPTION
+                else -> DEFECT_DESCRIPTION
+            }
+            elementsKeyValue(title, defect.description, SMALL_TEXT_SIZE)
         }
 
         paragraph {
@@ -415,7 +421,7 @@ class MainDocumentFactory(
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.uuid).getOrNull(index)?.let { photo ->
                 try {
-                    fileService.get(photo.link, photo.drawables, true)?.also {
+                    fileService.get(photo.link, photo.drawables, FileService.FileType.WITH_RECT_THUMB).also {
                         picture(photo.name, it, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
                         text { SPACE_ELEMENT }
                         lineFeed { SINGLE_LINE_FEED_ELEMENT }
@@ -445,19 +451,19 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType) {
+        orientation = Page.Orientation.LANDSCAPE
+
         paragraph {
             text { title }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
         }
 
-        orientation = Page.Orientation.LANDSCAPE
-
         table {
             width { TABLE_WIDTH_LANDSCAPE }
-            DefectsReportFields.buildHeaderRows(this)
-            DefectsReportFields.buildRows( this, inspection, inspector, type, configuration.server.host,
-                    observationRepository, observationDefectRepository, componentRepository,
-                    subcomponentRepository, defectRepository, conditionRepository)
+            with(DefectsReportFields) {
+                buildHeaderRow(type)
+                buildRows(inspection, inspector, type, configuration.server.host)
+            }
         }
     }
 
@@ -503,9 +509,20 @@ class MainDocumentFactory(
         return "$server/datarecon/$inspectorId/${inspection.uuid}/${observation?.id}/${observationDefect?.id}/$name"
     }
 
-    private fun Observation.fillObjects() {
-        if (structuralComponent == null) {
-            structuralComponent = structuralComponentId?.let {
+    private fun Inspection.fillObjects(): Inspection {
+        observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid)
+        observations?.forEach { observation ->
+            observation.fillObjects()
+            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).forEach { defect ->
+                defect.fillObjects()
+            }
+        }
+        return this
+    }
+
+    private fun Observation.fillObjects(): Observation {
+        if (component == null) {
+            component = structuralComponentId?.let {
                 componentRepository.findFirstById(structuralComponentId!!)
             }
         }
@@ -514,9 +531,13 @@ class MainDocumentFactory(
                 subcomponentRepository.findFirstById(subComponentId!!)
             }
         }
+        if (defects == null) {
+            defects = observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(uuid)
+        }
+        return this
     }
 
-    private fun ObservationDefect.fillObjects() {
+    private fun ObservationDefect.fillObjects(): ObservationDefect {
         if (defect == null) {
             defect = defectId?.let {
                 defectRepository.findFirstById(defectId!!)
@@ -527,5 +548,61 @@ class MainDocumentFactory(
                 conditionRepository.findFirstById(conditionId!!)
             }
         }
+        if (observationName == null) {
+            observationName = observationNameId?.let {
+                observationNameRepository.findFirstById(observationNameId!!)
+            }
+        }
+        return this
+    }
+
+    private fun Report.getInspection(): Inspection {
+        return inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)!!
+    }
+
+    private fun Inspection.getStructure(): Structure? {
+        return structureId?.let { structureRepository.findFirstById(it) }
+    }
+
+    private fun Inspection.getInspector(): User {
+        return userRepository.findFirstById(updatedBy.toLong())!!
+    }
+
+    private fun Observation.getSpansCount(spansCount: Int?): Int? {
+        return getLocationId()?.getAvailableSpans(spansCount)?.size
+    }
+
+    private fun Observation.getLocationId(): LocationId? {
+        if (structuralComponentId == null && subComponentId == null) return null
+
+        return locationIdRepository.findAll()
+                .firstOrNull { locationId ->
+                    var matches = true
+                    structuralComponentId?.let { majorId ->
+                        locationId.majorIds?.let { possibleIds ->
+                            matches = matches and possibleIds.contains(majorId)
+                        }
+                    }
+                    subComponentId?.let { subId ->
+                        locationId.subComponentIds?.let { possibleIds ->
+                            matches = matches and possibleIds.contains(subId)
+                        }
+                    }
+                    matches
+                }
+    }
+
+    private fun LocationId.getAvailableSpans(spanNumber: Int?): List<String> {
+        val spans = mutableListOf<String>()
+        alwaysShownSpans?.let {
+            spans += it
+        }
+        spanNumber?.let { inspectionSpanNumber ->
+            iteratedSpanPatterns?.split(",")?.let { patterns ->
+                for (i in 1..inspectionSpanNumber)
+                    spans += patterns.map { it.format(i) }
+            }
+        }
+        return spans
     }
 }

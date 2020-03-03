@@ -5,6 +5,7 @@ import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
 import com.uav_recon.app.api.repositories.ConditionRepository
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
+import com.uav_recon.app.api.utils.isEachMeasureUnit
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import javax.transaction.Transactional
@@ -91,43 +92,51 @@ class ObservationService(
         observationRepository.save(observation);
     }
 
-    fun getTotalQuantity(observation: Observation): Int = observation.dimensionNumber ?: 0
+    fun getTotalQuantity(observation: Observation, spansCount: Int): Int {
+        return when {
+            observation.subcomponent?.isEachMeasureUnit() ?: false -> spansCount
+            else -> observation.dimensionNumber ?: 0
+        }
+    }
 
-    fun getCsValue(observation: Observation, conditionType: ConditionType): Int {
+    fun getCsValue(observation: Observation, conditionType: ConditionType, spansCount: Int): Int {
         return when (conditionType) {
-            ConditionType.GOOD ->
-                getTotalQuantity(observation) - ConditionType.LIST_EXCLUDING_GOOD.sumBy { getCsValue(observation, it) }
-            else -> when (observation.subcomponent?.measureUnit?.toLowerCase()) {
-                MEASURE_TYPE_EACH -> calculateCsProcessB(observation, conditionType)
+            ConditionType.GOOD -> getTotalQuantity(observation, spansCount) - ConditionType.LIST_EXCLUDING_GOOD.sumBy { getCsValue(observation, it, spansCount) }
+            else -> when {
+                observation.subcomponent?.isEachMeasureUnit() ?: false -> calculateCsProcessB(observation, conditionType)
                 else -> calculateCsProcessA(observation, conditionType)
             }
         }
     }
 
     private fun calculateCsProcessA(observation: Observation, conditionType: ConditionType): Int {
-        val defects = observationDefectService.findAllByObservationIdAndNotDeleted(observation.uuid)
-        return defects
-                .filter { it.type == StructuralType.STRUCTURAL }
-                .filter { it.conditionId != null && conditionRepository.findFirstById(it.conditionId)?.type == conditionType }
-                .sumBy { it.size?.toIntOrNull() ?: 0 }
+        return observation.defects
+                ?.filter { it.type == StructuralType.STRUCTURAL }
+                ?.filter { conditionType == it.condition?.type }
+                ?.sumBy { it.size?.toIntOrNull() ?: 0 } ?: 0
     }
 
     private fun calculateCsProcessB(observation: Observation, conditionType: ConditionType): Int {
-        val defects = observationDefectService.findAllByObservationIdAndNotDeleted(observation.uuid)
-        val worstConditionType = defects
-                .filter { it.type == StructuralType.STRUCTURAL }
-                .mapNotNull { it.conditionId?.let { conditionRepository.findFirstById(it)?.type } }
-                .max()
-
-        return if (conditionType == worstConditionType) defects.size else 0
+        return observation.defects
+                ?.filter { it.type == StructuralType.STRUCTURAL }
+                ?.filter { it.span != null }
+                ?.groupBy(ObservationDefect::span)
+                ?.mapValues {
+                    it.value
+                            .mapNotNull { type -> type.condition?.type }
+                            .max()
+                }
+                ?.count {
+                    it.value == conditionType
+                } ?: 0
     }
 
-    fun getHealthIndex(observation: Observation): Double {
-        val totalQuantity =  getTotalQuantity(observation)
+    fun getHealthIndex(observation: Observation, spansCount: Int): Double {
+        val totalQuantity = getTotalQuantity(observation, spansCount)
         if (totalQuantity <= 0) return 0.0
 
         return ConditionType.values().sumByDouble {
-            getCsValue(observation, it) * it.csWeight / totalQuantity
+            getCsValue(observation, it, spansCount) * it.csWeight / totalQuantity
         }
     }
 }

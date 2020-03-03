@@ -147,16 +147,17 @@ internal enum class DefectSummaryFields(
 
         constructor(
             observation: Observation,
+            spansCount: Int,
             observationService: ObservationService
         ) : this(
                 observation.subcomponent?.name,
-                observationService.getTotalQuantity(observation),
+                observationService.getTotalQuantity(observation, spansCount),
                 observation.subcomponent?.measureUnit,
-                observationService.getCsValue(observation, ConditionType.GOOD),
-                observationService.getCsValue(observation, ConditionType.FAIR),
-                observationService.getCsValue(observation, ConditionType.POOR),
-                observationService.getCsValue(observation, ConditionType.SEVERE),
-                observationService.getHealthIndex(observation)
+                observationService.getCsValue(observation, ConditionType.GOOD, spansCount),
+                observationService.getCsValue(observation, ConditionType.FAIR, spansCount),
+                observationService.getCsValue(observation, ConditionType.POOR, spansCount),
+                observationService.getCsValue(observation, ConditionType.SEVERE, spansCount),
+                observationService.getHealthIndex(observation, spansCount)
         )
     }
 }
