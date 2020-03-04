@@ -79,6 +79,7 @@ dependencies {
     compile group: 'com.github.virtuald', name: 'curvesapi', version: '1.03'
 
     compile group: 'net.coobird', name: 'thumbnailator', version: '0.4.11'
+    implementation 'com.twelvemonkeys.imageio:imageio-jpeg:3.5'
 
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('io.zonky.test:embedded-database-spring-test:1.5.1')
