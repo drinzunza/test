@@ -6,7 +6,6 @@ import net.coobird.thumbnailator.Thumbnails
 import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.File
-import javax.imageio.ImageIO
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -17,17 +16,7 @@ fun ByteArray.saveWithRect(rect: Rect?, file: File, thumbFile: File, format: Str
     val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
     val inputStream = inputStream()
     val image = Thumbnails.of(inputStream).scale(1.0).asBufferedImage()
-    rect?.let {
-        val g = image.graphics as Graphics2D
-        g.stroke = BasicStroke(8.0f)
-        g.color = Color.GREEN
-        g.drawRect(
-                (image.width * rect.startX).toInt(),
-                (image.height * rect.startY).toInt(),
-                (image.width * abs(rect.endX - rect.startX)).toInt(),
-                (image.height * abs(rect.endY - rect.startY)).toInt())
-        g.dispose()
-    }
+    image.drawRect(rect)
     Thumbnails.of(image)
             .scale(1.0)
             .toFile(file)
@@ -37,27 +26,18 @@ fun ByteArray.saveWithRect(rect: Rect?, file: File, thumbFile: File, format: Str
     inputStream.close()
 }
 
-@Synchronized
-@Throws(Error::class)
-fun ByteArray.saveWithRectFast(rect: Rect?, file: File, smallFile: File, format: String, size: Int = 500) {
-    val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
-    val inputStream = inputStream()
-    val image = ImageIO.read(inputStream)
+fun BufferedImage.drawRect(rect: Rect?) {
     rect?.let {
-        val g = image.graphics as Graphics2D
+        val g = graphics as Graphics2D
         g.stroke = BasicStroke(8.0f)
         g.color = Color.GREEN
         g.drawRect(
-                (image.width * rect.startX).toInt(),
-                (image.height * rect.startY).toInt(),
-                (image.width * abs(rect.endX - rect.startX)).toInt(),
-                (image.height * abs(rect.endY - rect.startY)).toInt())
+                (width * rect.startX).toInt(),
+                (height * rect.startY).toInt(),
+                (width * abs(rect.endX - rect.startX)).toInt(),
+                (height * abs(rect.endY - rect.startY)).toInt())
         g.dispose()
     }
-    ImageIO.write(image, needFormat, file)
-    val resized = image.resize(size)
-    ImageIO.write(resized, needFormat, smallFile)
-    inputStream.close()
 }
 
 fun BufferedImage.resize(targetSize: Int): BufferedImage {
