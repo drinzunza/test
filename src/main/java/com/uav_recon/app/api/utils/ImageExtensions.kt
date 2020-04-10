@@ -10,7 +10,6 @@ import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
-@Synchronized
 @Throws(Error::class)
 fun ByteArray.saveWithRect(rect: Rect?, file: File, thumbFile: File, format: String, size: Int = 500) {
     val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
