@@ -29,7 +29,7 @@ class UserService(private val userRepository: UserRepository,
 
     private val emailPattern =
             Pattern.compile("^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&’*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$")
-    private val passwordPattern = Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$")
+    private val passwordPattern = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@\$%^&*-]).{8,16}$")
     private val resetPasswordTimeout = configuration.security.resetPasswordTimeout.toLong()
     private val resetPasswordCodeLength = configuration.security.resetPasswordCodeLength.toInt()
 
