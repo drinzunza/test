@@ -64,6 +64,7 @@ class MainDocumentFactory(
         private val conditionRepository: ConditionRepository,
         private val observationNameRepository: ObservationNameRepository,
         private val locationIdRepository: LocationIdRepository,
+        private val companyRepository: CompanyRepository,
         private val resources: Resources,
         private val configuration: UavConfiguration,
         private val fileService: FileService
@@ -133,8 +134,8 @@ class MainDocumentFactory(
     override fun generateDocument(report: Report): Document {
         val inspection = report.getInspection().fillObjects()
         val structure = inspection.getStructure()
-        val company = Company(1, "Alta Vista Solutions")
         val inspector = inspection.getInspector()
+        val company = inspector.getCompany()
 
         return Document.create {
             border { BORDER }
@@ -180,8 +181,8 @@ class MainDocumentFactory(
             text { REPORT_PREPARED_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             picture(
-                company?.name ?: "",
-                resources.getData("logo_altavista.png")!!.inputStream(),
+                company?.name ?: "Demo Company",
+                resources.getData(company?.logo ?: "logo_datarecon.png")!!.inputStream(),
                 LOGO_WIDTH,
                 LOGO_HEIGHT
             )
@@ -566,6 +567,10 @@ class MainDocumentFactory(
 
     private fun Inspection.getInspector(): User {
         return userRepository.findFirstById(updatedBy.toLong())!!
+    }
+
+    private fun User.getCompany(): Company {
+        return companyRepository.findFirstById(companyId!!)!!
     }
 
     private fun Observation.getSpansCount(spansCount: Int?): Int? {

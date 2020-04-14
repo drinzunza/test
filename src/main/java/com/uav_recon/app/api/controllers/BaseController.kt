@@ -10,4 +10,8 @@ abstract class BaseController {
     fun getAuthenticatedUserId(): Int {
         return (SecurityContextHolder.getContext().getAuthentication().principal as User).id!!.toInt()
     }
+
+    fun getAuthenticatedCompanyId(): Int {
+        return (SecurityContextHolder.getContext().getAuthentication().principal as User).companyId!!.toInt()
+    }
 }

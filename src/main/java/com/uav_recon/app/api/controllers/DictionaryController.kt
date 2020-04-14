@@ -26,16 +26,17 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
             @RequestHeader(VERSION_CODE, required = false, defaultValue = "") versionCode: String
     ): ResponseEntity<DictionaryDto> {
         val fixETag = etag.removePrefix("\"").removeSuffix("\"")
+        val companyId = getAuthenticatedCompanyId()
 
-        val lastEtagHash = dictionaryService.getLastEtagHash()
+        val lastEtagHash = dictionaryService.getLastEtagHash(companyId)
+        
         return if (lastEtagHash == fixETag) {
             ResponseEntity.status(HttpStatus.NOT_MODIFIED).header(ETAG, lastEtagHash)
                     .body(null)
         } else {
-            // TODO fix
             val tempEtag = if (versionCode.isNotEmpty()) lastEtagHash else fixETag
             ResponseEntity.ok().header(ETAG, tempEtag)
-                    .body(dictionaryService.getAll(fixETag, BuildType.parse(buildType)))
+                    .body(dictionaryService.getAll(fixETag, BuildType.parse(buildType), companyId.toLong()))
         }
     }
 }

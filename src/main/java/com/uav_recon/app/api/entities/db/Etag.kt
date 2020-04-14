@@ -13,5 +13,7 @@ class Etag(
         val hash: String,
         val change: String? = null,
         @Column(name = "created_at")
-        val createdAt: OffsetDateTime = OffsetDateTime.now()
+        val createdAt: OffsetDateTime = OffsetDateTime.now(),
+        @Column(name = "company_id")
+        val companyId: Long? = null
 ) : Serializable

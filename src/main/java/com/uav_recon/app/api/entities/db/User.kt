@@ -17,6 +17,7 @@ class User(
         val lastName: String,
         var position: String?,
         @Column(name = "created_at")
-        val createdAt: OffsetDateTime = OffsetDateTime.now()
-
+        val createdAt: OffsetDateTime = OffsetDateTime.now(),
+        @Column(name = "company_id")
+        val companyId: Long? = null
 )
