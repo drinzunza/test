@@ -96,7 +96,7 @@ class ObservationDefectService(
             val saved = observationDefectRepository.save(entity)
             return saveWeather(saved).toDto()
         } catch (e: Exception) {
-            logger.error("Error saving observation defect", e)
+            logger.error(e.message)
             if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
                 logger.info("Observation defect id (${dto.id}) incorrect")
                 dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId,
