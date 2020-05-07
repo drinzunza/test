@@ -1,8 +1,18 @@
 CREATE TABLE projects (
 	id	SERIAL PRIMARY KEY NOT NULL,
 	name VARCHAR(50) NOT NULL,
-	company_id INT NOT NULL
+	company_id INT NOT NULL,
+	created_by INT NOT NULL,
+    updated_by INT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+CREATE TRIGGER set_projects_updated_at
+    BEFORE UPDATE
+    ON projects
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_updated_at();
 
 CREATE TABLE project_structures (
 	id	SERIAL PRIMARY KEY NOT NULL,
@@ -17,6 +27,7 @@ CREATE TABLE roles (
 
 CREATE TABLE project_roles (
 	id	SERIAL PRIMARY KEY NOT NULL,
+	project_id INT NOT NULL,
 	user_id INT NOT NULL,
 	role_id INT NOT NULL
 );
