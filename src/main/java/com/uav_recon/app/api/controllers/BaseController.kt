@@ -8,10 +8,10 @@ abstract class BaseController {
     protected val success = Collections.singletonMap("success", true)
 
     fun getAuthenticatedUserId(): Int {
-        return (SecurityContextHolder.getContext().getAuthentication().principal as User).id!!.toInt()
+        return (SecurityContextHolder.getContext().authentication.principal as User).id!!.toInt()
     }
 
-    fun getAuthenticatedCompanyId(): Int {
-        return (SecurityContextHolder.getContext().getAuthentication().principal as User).companyId!!.toInt()
+    fun getAuthenticatedCompanyId(): Long? {
+        return (SecurityContextHolder.getContext().authentication.principal as User).companyId
     }
 }

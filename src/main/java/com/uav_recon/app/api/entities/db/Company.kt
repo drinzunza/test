@@ -8,9 +8,7 @@ import javax.persistence.*
 class Company(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    var id: Long = 0,
     var name: String,
     var logo: String
-
 ) : Serializable
-
