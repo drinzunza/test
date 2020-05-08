@@ -19,5 +19,6 @@ class User(
         @Column(name = "created_at")
         val createdAt: OffsetDateTime = OffsetDateTime.now(),
         @Column(name = "company_id")
-        val companyId: Long? = null
+        val companyId: Long? = null,
+        val admin: Boolean = false
 )

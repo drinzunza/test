@@ -2,6 +2,7 @@ CREATE TABLE projects (
 	id	SERIAL PRIMARY KEY NOT NULL,
 	name VARCHAR(50) NOT NULL,
 	company_id INT NOT NULL,
+	is_deleted BOOLEAN default false,
 	created_by INT NOT NULL,
     updated_by INT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -38,9 +39,10 @@ CREATE TABLE inspection_users (
 	user_id INT NOT NULL
 );
 
-INSERT INTO roles (name) VALUES ('Admin'),('Project Manager'),('Client');
+INSERT INTO roles (name) VALUES ('Admin'),('Project Manager'),('Inspector'),('Guest');
 
 ALTER TABLE observation_defects ADD COLUMN clock_position INT;
 ALTER TABLE observation_defects ADD COLUMN repair_date TIMESTAMP WITH TIME ZONE;
 ALTER TABLE observation_defects ADD COLUMN repair_method VARCHAR(255);
 ALTER TABLE inspections ADD COLUMN project_id INT;
+ALTER TABLE users ADD COLUMN admin BOOLEAN default false;

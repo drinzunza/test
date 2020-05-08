@@ -13,6 +13,8 @@ class Project(
         val name: String,
         @Column(name = "company_id")
         val companyId: Long,
+        @Column(name = "is_deleted")
+        val deleted: Boolean? = null,
         @Column(name = "created_by")
         val createdBy: Int,
         @Column(name = "updated_by")
