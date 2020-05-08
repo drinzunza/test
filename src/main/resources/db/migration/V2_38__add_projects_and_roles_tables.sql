@@ -43,3 +43,4 @@ INSERT INTO roles (name) VALUES ('Admin'),('Project Manager'),('Client');
 ALTER TABLE observation_defects ADD COLUMN clock_position INT;
 ALTER TABLE observation_defects ADD COLUMN repair_date TIMESTAMP WITH TIME ZONE;
 ALTER TABLE observation_defects ADD COLUMN repair_method VARCHAR(255);
+ALTER TABLE inspections ADD COLUMN project_id INT;
