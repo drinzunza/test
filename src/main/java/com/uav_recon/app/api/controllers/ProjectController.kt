@@ -17,14 +17,19 @@ class ProjectController(private val projectsService: ProjectService) : BaseContr
         return ResponseEntity.ok(projectsService.listNotDeleted(getAuthenticatedUser(), companyId))
     }
 
-    /*@PostMapping
-    fun addProject(@RequestHeader(X_TOKEN) token: String, @RequestBody body: ProjectDto): ResponseEntity<InspectionDto> {
-        return ResponseEntity.ok(projectsService.save(body, getAuthenticatedUserId()))
+    @GetMapping
+    fun getProject(@RequestHeader(X_TOKEN) token: String, @RequestParam projectId: Long): ResponseEntity<ProjectDto> {
+        return ResponseEntity.ok(projectsService.getNotDeleted(getAuthenticatedUser(), projectId))
     }
 
-    @DeleteMapping("/{uuid}")
-    fun delete(@RequestHeader(X_TOKEN) token: String, @PathVariable uuid: String): ResponseEntity<*> {
-        inspectionService.delete(uuid)
+    @PostMapping("/save")
+    fun saveProject(@RequestHeader(X_TOKEN) token: String, @RequestBody body: ProjectDto): ResponseEntity<ProjectDto> {
+        return ResponseEntity.ok(projectsService.save(getAuthenticatedUser(), body))
+    }
+
+    @DeleteMapping("/delete")
+    fun deleteProject(@RequestHeader(X_TOKEN) token: String, @RequestParam projectId: Long): ResponseEntity<*> {
+        projectsService.delete(getAuthenticatedUser(), projectId)
         return ResponseEntity.ok(success)
-    }*/
+    }
 }

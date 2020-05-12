@@ -46,22 +46,53 @@ class ProjectService(
     )
 
     fun listNotDeleted(user: User, companyId: Long?): List<ProjectDto> {
-        // SuperAdmin can see all projects
-        if (user.admin && companyId != null) {
+        // Admin can see all projects own company
+        if (user.admin && user.companyId == companyId && companyId != null) {
             return projectRepository.findAllByDeletedIsFalseAndCompanyId(companyId).map { i -> i.toDto() }
         }
-        // Company admins can see projects own company
+        // Others can see only assigned projects
         if (!user.admin && user.companyId == companyId && companyId != null) {
-            return projectRepository.findAllByDeletedIsFalseAndCompanyId(companyId).map { i -> i.toDto() }
-                    .filter { it.hasRole(user, Role.ADMIN) }
+            return projectRepository.findAllByDeletedIsFalseAndCompanyId(companyId)
+                    .map { i -> i.toDto() }
+                    .filter { it.hasAnyRole(user) }
         }
-        // Other users see empty list
         return listOf()
+    }
+
+    fun getNotDeleted(user: User, projectId: Long): ProjectDto {
+        val project = projectRepository.findFirstByDeletedIsFalseAndId(projectId)
+        val companyId = project?.companyId
+
+        if (project == null) throw Error(171, "Not found project")
+
+        // Admin can see all projects own company
+        if (user.admin && user.companyId == companyId && companyId != null) {
+            return project.toDto()
+        }
+        // Others can see only assigned projects
+        if (!user.admin && user.companyId == companyId && companyId != null && project.toDto().hasAnyRole(user)) {
+            return project.toDto()
+        }
+
+        throw Error(172, "Access denied to project")
+    }
+
+    fun save(user: User, body: ProjectDto): ProjectDto {
+        return body
+    }
+
+    fun delete(user: User, projectId: Long) {
     }
 
     fun ProjectDto.hasRole(user: User, role: Role): Boolean {
         return projectRoleRepository.findAllByProjectIdAndUserId(id, user.id).any {
             it.roles?.contains(role) ?: false
+        }
+    }
+
+    fun ProjectDto.hasAnyRole(user: User): Boolean {
+        return projectRoleRepository.findAllByProjectIdAndUserId(id, user.id).any {
+            it.roles != null
         }
     }
 
