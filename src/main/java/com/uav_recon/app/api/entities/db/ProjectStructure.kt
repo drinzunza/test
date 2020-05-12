@@ -12,5 +12,5 @@ class ProjectStructure(
         @Column(name = "project_id")
         val projectId: Long,
         @Column(name = "structure_id")
-        val structureId: Long
+        val structureId: String
 ) : Serializable

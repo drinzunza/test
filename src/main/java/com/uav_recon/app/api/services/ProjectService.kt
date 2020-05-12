@@ -14,14 +14,15 @@ class ProjectService(
         private val companyRepository: CompanyRepository,
         private val structureRepository: StructureRepository,
         private val projectRoleRepository: ProjectRoleRepository,
-        private val userRepository: UserRepository
+        private val userRepository: UserRepository,
+        private val projectStructureRepository: ProjectStructureRepository
 ) {
 
     fun Project.toDto() = ProjectDto(
             id = id,
             name = name,
             company = companyRepository.findFirstById(companyId)?.toDto(),
-            structures = structureRepository.findAllByCompanyId(companyId).map { i -> i.toDto() },
+            structures = getStructures(),
             projectManagers = getUsers(Role.PM),
             createdAt = createdAt,
             updatedAt = updatedAt
@@ -66,10 +67,21 @@ class ProjectService(
 
     fun Project.getUsers(role: Role): List<SimpleUserDto> {
         val results = mutableListOf<SimpleUserDto>()
-        val users = projectRoleRepository.findAllByProjectId(id)
+        val projectRoles = projectRoleRepository.findAllByProjectId(id)
                 .filter { it.roles?.contains(role) ?: false }
-        users.forEach {
+        projectRoles.forEach {
             userRepository.findFirstById(it.userId)?.toDto()?.let {
+                results.add(it)
+            }
+        }
+        return results
+    }
+
+    fun Project.getStructures(): List<SimpleStructureDto> {
+        val results = mutableListOf<SimpleStructureDto>()
+        val projectStructures = projectStructureRepository.findAllByProjectId(id)
+        projectStructures.forEach {
+            structureRepository.findFirstById(it.structureId)?.toDto()?.let {
                 results.add(it)
             }
         }
