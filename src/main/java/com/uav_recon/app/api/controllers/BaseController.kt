@@ -7,6 +7,10 @@ import java.util.Collections
 abstract class BaseController {
     protected val success = Collections.singletonMap("success", true)
 
+    fun getAuthenticatedUser(): User {
+        return SecurityContextHolder.getContext().authentication.principal as User
+    }
+
     fun getAuthenticatedUserId(): Int {
         return (SecurityContextHolder.getContext().authentication.principal as User).id!!.toInt()
     }
