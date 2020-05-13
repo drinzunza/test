@@ -6,7 +6,9 @@ data class UpdateUserInDTO(
         val email: String,
         val firstName: String,
         val lastName: String,
-        val position: String?
+        val position: String?,
+        val admin: Boolean,
+        val companyId: Long?
 ) : Serializable {
-    constructor() : this("","", "", null)
+    constructor() : this("","", "", null, false, null)
 }

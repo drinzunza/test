@@ -9,8 +9,9 @@ data class UserOutDTO(
         val lastName: String,
         val position: String?,
         val createdAt: String,
+        val admin: Boolean,
         val companyId: Long?
 
 ) : Serializable {
-    constructor() : this("", "", "", "", "", "", null)
+    constructor() : this("", "", "", "", "", "", false, null)
 }
