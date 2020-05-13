@@ -5,11 +5,11 @@ import java.io.Serializable
 import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-class ProjectDto(
+class ProjectIdsDto(
         val id: Long = 0,
         val name: String,
-        val structures: List<SimpleStructureDto>,
-        val projectManagers: List<SimpleUserDto>,
+        val structures: List<String>,
+        val projectManagers: List<Long>,
         val createdAt: OffsetDateTime?,
         val updatedAt: OffsetDateTime?
 ) : Serializable

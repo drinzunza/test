@@ -1,17 +1,15 @@
 package com.uav_recon.app.api.services
 
+import com.uav_recon.app.api.controllers.handlers.AccessDeniedException
 import com.uav_recon.app.api.entities.db.*
-import com.uav_recon.app.api.entities.requests.bridge.CompanyDto
-import com.uav_recon.app.api.entities.requests.bridge.ProjectDto
-import com.uav_recon.app.api.entities.requests.bridge.SimpleStructureDto
-import com.uav_recon.app.api.entities.requests.bridge.SimpleUserDto
+import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.repositories.*
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ProjectService(
         private val projectRepository: ProjectRepository,
-        private val companyRepository: CompanyRepository,
         private val structureRepository: StructureRepository,
         private val projectRoleRepository: ProjectRoleRepository,
         private val userRepository: UserRepository,
@@ -21,19 +19,22 @@ class ProjectService(
     fun Project.toDto() = ProjectDto(
             id = id,
             name = name,
-            company = companyRepository.findFirstById(companyId)?.toDto(),
             structures = getStructures(),
             projectManagers = getUsers(Role.PM),
             createdAt = createdAt,
             updatedAt = updatedAt
     )
 
-    fun Structure.toDto() = SimpleStructureDto(
+    fun Project.toIdsDto() = ProjectIdsDto(
             id = id,
-            name = name
+            name = name,
+            structures = getStructureIds(),
+            projectManagers = getUserIds(Role.PM),
+            createdAt = createdAt,
+            updatedAt = updatedAt
     )
 
-    fun Company.toDto() = CompanyDto(
+    fun Structure.toDto() = SimpleStructureDto(
             id = id,
             name = name
     )
@@ -74,14 +75,91 @@ class ProjectService(
             return project.toDto()
         }
 
-        throw Error(172, "Access denied to project")
+        throw AccessDeniedException()
     }
 
-    fun save(user: User, body: ProjectDto): ProjectDto {
-        return body
+    fun save(user: User, body: ProjectIdsDto): ProjectDto {
+        val project = if (body.id != 0L) projectRepository.findFirstById(body.id) else null
+
+        if (user.admin && project != null && project.companyId == user.companyId) {
+            // Admin can edit projects own company
+            project.name = body.name
+            project.updatedBy = user.id
+            return updateProject(user, project, body)
+        } else if (user.admin && project == null) {
+            // Admin can add projects own company
+            return addProject(user, body)
+        } else {
+            throw AccessDeniedException()
+        }
+    }
+
+    @Transactional
+    fun updateProject(user: User, project: Project, body: ProjectIdsDto): ProjectDto {
+        projectRepository.save(project)
+
+        val existStructures = projectStructureRepository.findAllByProjectId(project.id)
+        val projectStructures = body.structures.map {
+            ProjectStructure(
+                    projectId = project.id,
+                    structureId = it
+            )
+        }
+        projectStructureRepository.deleteAll(existStructures)
+        projectStructureRepository.saveAll(projectStructures)
+
+        val existRoles = projectRoleRepository.findAllByProjectId(project.id)
+        val projectRoles = body.projectManagers.map {
+            ProjectRole(
+                    projectId = project.id,
+                    userId = user.id,
+                    roles = arrayOf(Role.PM)
+            )
+        }
+        projectRoleRepository.deleteAll(existRoles)
+        projectRoleRepository.saveAll(projectRoles)
+
+        return project.toDto()
+    }
+
+    @Transactional
+    fun addProject(user: User, body: ProjectIdsDto): ProjectDto {
+        var newProject = Project(
+                name = body.name,
+                companyId = user.companyId ?: 0,
+                createdBy = user.id,
+                updatedBy = user.id
+        )
+        newProject = projectRepository.save(newProject)
+
+        val projectStructures = body.structures.map {
+            ProjectStructure(
+                    projectId = newProject.id,
+                    structureId = it
+            )
+        }
+        val projectRoles = body.projectManagers.map {
+            ProjectRole(
+                    projectId = newProject.id,
+                    userId = user.id,
+                    roles = arrayOf(Role.PM)
+            )
+        }
+        projectRoleRepository.saveAll(projectRoles)
+        projectStructureRepository.saveAll(projectStructures)
+        return newProject.toDto()
     }
 
     fun delete(user: User, projectId: Long) {
+        val project = projectRepository.findFirstById(projectId)
+
+        // Admin can delete projects own company
+        if (user.admin && project != null && project.companyId == user.companyId) {
+            project.deleted = true
+            projectRepository.save(project)
+        } else {
+            throw AccessDeniedException()
+        }
     }
 
     fun ProjectDto.hasRole(user: User, role: Role): Boolean {
@@ -114,6 +192,29 @@ class ProjectService(
         projectStructures.forEach {
             structureRepository.findFirstById(it.structureId)?.toDto()?.let {
                 results.add(it)
+            }
+        }
+        return results
+    }
+
+    fun Project.getUserIds(role: Role): List<Long> {
+        val results = mutableListOf<Long>()
+        val projectRoles = projectRoleRepository.findAllByProjectId(id)
+                .filter { it.roles?.contains(role) ?: false }
+        projectRoles.forEach {
+            userRepository.findFirstById(it.userId)?.toDto()?.let {
+                results.add(it.id)
+            }
+        }
+        return results
+    }
+
+    fun Project.getStructureIds(): List<String> {
+        val results = mutableListOf<String>()
+        val projectStructures = projectStructureRepository.findAllByProjectId(id)
+        projectStructures.forEach {
+            structureRepository.findFirstById(it.structureId)?.toDto()?.let {
+                results.add(it.id)
             }
         }
         return results

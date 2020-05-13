@@ -10,15 +10,15 @@ class Project(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         val id: Long = 0,
-        val name: String,
+        var name: String,
         @Column(name = "company_id")
         val companyId: Long,
         @Column(name = "is_deleted")
-        val deleted: Boolean? = null,
+        var deleted: Boolean = false,
         @Column(name = "created_by")
-        val createdBy: Int,
+        val createdBy: Long,
         @Column(name = "updated_by")
-        val updatedBy: Int,
+        var updatedBy: Long,
         @Column(name = "created_at")
         val createdAt: OffsetDateTime? = OffsetDateTime.now(),
         @Column(name = "updated_at")
