@@ -6,14 +6,16 @@ x-var: &APP_NAME
 services:
 
   database:
-    image: postgres
+    image: postgres:12.2-alpine
     container_name: pg-docker
     environment:
-      - POSTGRES_PASSWORD=docker
+      POSTGRES_PASSWORD: "docker"
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "uav_recon"
     ports:
       - 5432:5432
     volumes:
-      - /var/lib/uav-recon/docker/volumes/postgres:/var/lib/postgresql/data
+      - dbdata:/var/lib/postgresql/data
   server:
     image: *APP_NAME
     container_name: *APP_NAME
@@ -24,3 +26,6 @@ services:
       - ${HOME}/uav-recon:/uav-recon
     depends_on:
       - database
+
+volumes:
+  dbdata:

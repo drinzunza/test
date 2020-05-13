@@ -15,6 +15,7 @@ buildscript {
 
 apply plugin: 'idea'
 apply plugin: 'java'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin' // Required for Kotlin integration
 apply plugin: "kotlin-spring" // https://kotlinlang.org/docs/reference/compiler-plugins.html#spring-support
 apply plugin: 'kotlin-jpa'
@@ -39,6 +40,9 @@ dependencies {
 
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
     compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
+    implementation 'org.mapstruct:mapstruct:1.3.1.Final'
+    compileOnly 'org.mapstruct:mapstruct-processor:1.3.1.Final'
+    kapt 'org.mapstruct:mapstruct-processor:1.3.1.Final'
 
     compile group: 'com.google.cloud', name: 'google-cloud-storage', version: '1.101.0'
     compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
