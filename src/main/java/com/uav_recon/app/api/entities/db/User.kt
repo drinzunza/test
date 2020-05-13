@@ -22,5 +22,5 @@ class User(
         val companyId: Long? = null,
         val admin: Boolean = false
 ) {
-        constructor() : this(null, "", "", "", "", "", OffsetDateTime.now(), null)
+        constructor() : this(0, "", "", "", "", "", OffsetDateTime.now(), null)
 }
