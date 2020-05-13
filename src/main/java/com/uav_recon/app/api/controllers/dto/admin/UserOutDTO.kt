@@ -2,7 +2,7 @@ package com.uav_recon.app.api.controllers.dto.admin
 
 import java.io.Serializable
 
-data class CreateUserOutDTO(
+data class UserOutDTO(
         val id: String,
         val email: String,
         val firstName: String,
