@@ -6,5 +6,6 @@ import java.io.Serializable
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class CompanyDto(
         val id: Long,
-        val name: String
+        val name: String,
+        val logo: String?
 ) : Serializable

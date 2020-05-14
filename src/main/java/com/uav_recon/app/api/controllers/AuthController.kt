@@ -1,15 +1,18 @@
 package com.uav_recon.app.api.controllers
 
 import com.google.common.collect.ImmutableMap
+import com.uav_recon.app.api.entities.db.Company
 import com.uav_recon.app.api.entities.db.User
 import com.uav_recon.app.api.entities.requests.auth.AuthorizationRequest
 import com.uav_recon.app.api.entities.requests.auth.PasswordResetAttemptRequest
 import com.uav_recon.app.api.entities.requests.auth.RegistrationRequest
 import com.uav_recon.app.api.entities.requests.auth.VerificationCode
+import com.uav_recon.app.api.entities.requests.bridge.CompanyDto
 import com.uav_recon.app.api.entities.responses.Response
 import com.uav_recon.app.api.entities.responses.auth.Inspector
 import com.uav_recon.app.api.entities.responses.auth.RegSession
 import com.uav_recon.app.api.entities.responses.auth.UserResponse
+import com.uav_recon.app.api.repositories.CompanyRepository
 import com.uav_recon.app.api.services.UserService
 import com.uav_recon.app.configurations.ControllerConfiguration.APP_SESSION
 import com.uav_recon.app.configurations.ControllerConfiguration.REG_SESSION
@@ -26,19 +29,23 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class AuthController(private val userService: UserService,
-                     private val tokenManager: TokenManager,
-                     private val configuration: UavConfiguration) : BaseController() {
+class AuthController(
+        private val userService: UserService,
+        private val tokenManager: TokenManager,
+        private val configuration: UavConfiguration,
+        private val companyRepository: CompanyRepository
+) : BaseController() {
 
     private val logger = LoggerFactory.getLogger(AuthController::class.java)
     private val resetPasswordTimeout = configuration.security.resetPasswordTimeout.toLong()
 
     fun User.toInspector() = Inspector(
-            id = id!!.toString(),
+            id = id.toString(),
             email = email,
             firstName = firstName,
             lastName = lastName,
-            position = position
+            position = position,
+            company = companyId?.let { companyRepository.findFirstById(it)?.toDto() }
     )
 
     fun RegistrationRequest.toUser() = User(
@@ -49,16 +56,22 @@ class AuthController(private val userService: UserService,
             password = password
     )
 
+    fun Company.toDto() = CompanyDto(
+            id = id,
+            name = name,
+            logo = logo
+    )
+
     @PostMapping("$VERSION/auth")
-    fun auth(@RequestBody request: AuthorizationRequest?): ResponseEntity<*> {
+    fun auth(@RequestBody request: AuthorizationRequest?): ResponseEntity<UserResponse> {
         val user: User = userService.authenticate(request?.email, request?.password)
-        return ResponseEntity.ok(UserResponse(tokenManager.generate(user.id!!), user.toInspector()))
+        return ResponseEntity.ok(UserResponse(tokenManager.generate(user.id), user.toInspector()))
     }
 
     @PostMapping("$VERSION/auth/register")
     fun register(@RequestBody request: RegistrationRequest?): ResponseEntity<UserResponse> {
         val user = userService.register(request?.toUser())
-        return ResponseEntity.ok(UserResponse(tokenManager.generate(user.id!!), user.toInspector()))
+        return ResponseEntity.ok(UserResponse(tokenManager.generate(user.id), user.toInspector()))
     }
 
     @PostMapping("$VERSION/auth/forgot_password")
