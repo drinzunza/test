@@ -21,4 +21,6 @@ class User(
         @Column(name = "company_id")
         val companyId: Long? = null,
         val admin: Boolean = false
-)
+) {
+        constructor() : this(0, "", "", "", "", "", OffsetDateTime.now(), null)
+}

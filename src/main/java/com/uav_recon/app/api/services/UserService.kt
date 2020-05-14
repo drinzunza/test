@@ -1,11 +1,14 @@
 package com.uav_recon.app.api.services
 
+import com.uav_recon.app.api.controllers.dto.admin.UpdateUserInDTO
 import com.uav_recon.app.api.entities.db.PasswordResetAttempt
 import com.uav_recon.app.api.entities.db.User
 import com.uav_recon.app.api.repositories.PasswordResetAttemptRepository
 import com.uav_recon.app.api.repositories.UserRepository
+import com.uav_recon.app.api.services.mapper.AdminUserMapper
 import com.uav_recon.app.configurations.UavConfiguration
 import org.apache.commons.lang3.RandomStringUtils
+import org.mapstruct.factory.Mappers
 import org.springframework.security.core.userdetails.User.UserBuilder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -32,6 +35,7 @@ class UserService(private val userRepository: UserRepository,
     private val passwordPattern = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@\$%^&*-]).{8,16}$")
     private val resetPasswordTimeout = configuration.security.resetPasswordTimeout.toLong()
     private val resetPasswordCodeLength = configuration.security.resetPasswordCodeLength.toInt()
+    private val adminUserMapper = Mappers.getMapper(AdminUserMapper::class.java)
 
     @Throws(Error::class)
     fun register(user: User?): User {
@@ -121,8 +125,30 @@ class UserService(private val userRepository: UserRepository,
         }
     }
 
+    @Throws(Error::class)
+    fun update(userId: Long, userData: UpdateUserInDTO): User {
+
+        val user = userRepository.findFirstById(userId) ?: throw Error(18, "User not found");
+
+        adminUserMapper.update(userData, user)
+
+        return userRepository.save(user)
+    }
+
     fun findById(id: Long): Optional<User> {
         return userRepository.findById(id)
+    }
+
+    fun get(id: Long): User {
+        return userRepository.findFirstById(id) ?: throw Error(18, "User not found")
+    }
+
+    fun list(): List<User> {
+        return userRepository.findAll()
+    }
+
+    fun delete(id: Long) {
+        return userRepository.deleteById(id)
     }
 
     override fun loadUserByUsername(username: String): UserDetails {
