@@ -22,24 +22,32 @@ class CompanyService(private val companyRepository: CompanyRepository) {
         val companies = mutableListOf<Company>()
         // Users can see own company
         user.companyId?.let { companyRepository.findFirstByDeletedIsFalseAndId(it)?.let {
-            companies.add(it)
+            if (type == null || type == CompanyType.INSPECTION) {
+                companies.add(it)
+            }
         }}
 
         // Admins can see owner companies
-        // TODO add
+        if (user.admin && (type == null || type == CompanyType.OWNER) && user.companyId != null) {
+            companies.addAll(
+                    companyRepository.findAllByDeletedIsFalseAndTypeAndCreatorCompanyId(CompanyType.OWNER, user.companyId!!)
+            )
+        }
 
         return companies.map { c -> c.toDto() }
     }
 
     fun getNotDeleted(user: User, companyId: Long): CompanyDto {
-        val company = companyRepository.findFirstByDeletedIsFalseAndId(companyId)
-        // Users can see own company
-        if (company != null && company.id == user.companyId) {
-            return company.toDto()
-        }// else if () {
-            // Admins can see owner companies
-            // TODO add
-        //}
+        companyRepository.findFirstByDeletedIsFalseAndId(companyId)?.let {
+            if (it.id == user.companyId) {
+                // Users can see own company
+                return it.toDto()
+            } else if (user.admin && user.companyId != null && user.companyId == it.creatorCompanyId) {
+                // Admins can see owner companies
+                return it.toDto()
+            }
+        }
+
         throw AccessDeniedException()
     }
 
@@ -54,20 +62,35 @@ class CompanyService(private val companyRepository: CompanyRepository) {
             }
         }
         // Admin can edit owner companies
-        // TODO add
+        if (user.admin && body.type == CompanyType.OWNER) {
+            var company = companyRepository.findFirstById(body.id)
+            if (company == null) company = Company(
+                    name = body.name,
+                    logo = body.logo,
+                    createdBy = user.id,
+                    updatedBy = user.id,
+                    type = CompanyType.OWNER,
+                    creatorCompanyId = user.companyId
+            )
+            company.name = body.name
+            company.logo = body.logo
+            company.updatedBy = user.id
+            company.type = CompanyType.OWNER
+            return companyRepository.save(company).toDto()
+        }
 
         throw AccessDeniedException()
     }
 
     fun delete(user: User, companyId: Long) {
-        val company = companyRepository.findFirstById(companyId)
-
-        // Admin can delete OWNER company
-        if (user.admin && company != null && company.type == CompanyType.OWNER && company.id != user.companyId) {
-            company.deleted = true
-            companyRepository.save(company)
-        } else {
-            throw AccessDeniedException()
+        companyRepository.findFirstById(companyId)?.let {
+            // Admin can delete OWNER company
+            if (user.admin && it.type == CompanyType.OWNER && it.creatorCompanyId == user.companyId) {
+                it.deleted = true
+                companyRepository.save(it)
+                return
+            }
         }
+        throw AccessDeniedException()
     }
 }
