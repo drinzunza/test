@@ -59,7 +59,8 @@ class AuthController(
     fun Company.toDto() = CompanyDto(
             id = id,
             name = name,
-            logo = logo
+            logo = logo,
+            type = type
     )
 
     @PostMapping("$VERSION/auth")

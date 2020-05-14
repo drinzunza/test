@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.entities.db
 
+import org.hibernate.annotations.Type
 import java.io.Serializable
 import java.time.OffsetDateTime
 import javax.persistence.*
@@ -12,7 +13,11 @@ class Company(
         var id: Long = 0,
         var name: String,
         var logo: String?,
+        @Enumerated(EnumType.STRING)
+        @Type(type = "pgsql_enum")
         var type: CompanyType,
+        @Column(name = "creator_company_id")
+        var creatorCompanyId: Long? = null,
         @Column(name = "is_deleted")
         var deleted: Boolean = false,
         @Column(name = "created_by")
