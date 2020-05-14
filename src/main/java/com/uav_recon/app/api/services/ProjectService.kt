@@ -46,14 +46,14 @@ class ProjectService(
             email = email
     )
 
-    fun listNotDeleted(user: User, companyId: Long?): List<ProjectDto> {
+    fun listNotDeleted(user: User): List<ProjectDto> {
         // Admin can see all projects own company
-        if (user.admin && user.companyId == companyId && companyId != null) {
-            return projectRepository.findAllByDeletedIsFalseAndCompanyId(companyId).map { i -> i.toDto() }
+        if (user.admin && user.companyId != null) {
+            return projectRepository.findAllByDeletedIsFalseAndCompanyId(user.companyId!!).map { i -> i.toDto() }
         }
         // Others can see only assigned projects
-        if (!user.admin && user.companyId == companyId && companyId != null) {
-            return projectRepository.findAllByDeletedIsFalseAndCompanyId(companyId)
+        if (!user.admin && user.companyId != null) {
+            return projectRepository.findAllByDeletedIsFalseAndCompanyId(user.companyId!!)
                     .map { i -> i.toDto() }
                     .filter { it.hasAnyRole(user) }
         }

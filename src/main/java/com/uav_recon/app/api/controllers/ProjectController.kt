@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.*
 class ProjectController(private val projectsService: ProjectService) : BaseController() {
 
     @GetMapping
-    fun getProjects(@RequestHeader(X_TOKEN) token: String, @RequestParam(required = false) companyId: Long?): ResponseEntity<List<ProjectDto>> {
-        return ResponseEntity.ok(projectsService.listNotDeleted(getAuthenticatedUser(), companyId))
+    fun getProjects(@RequestHeader(X_TOKEN) token: String): ResponseEntity<List<ProjectDto>> {
+        return ResponseEntity.ok(projectsService.listNotDeleted(getAuthenticatedUser()))
     }
 
     @GetMapping("/{id}")
