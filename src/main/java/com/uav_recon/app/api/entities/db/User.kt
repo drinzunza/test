@@ -9,18 +9,18 @@ class User(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         var id: Long = 0,
-        val email: String,
+        var email: String,
         var password: String,
         @Column(name = "first_name")
-        val firstName: String,
+        var firstName: String,
         @Column(name = "last_name")
-        val lastName: String,
+        var lastName: String,
         var position: String?,
         @Column(name = "created_at")
         val createdAt: OffsetDateTime = OffsetDateTime.now(),
         @Column(name = "company_id")
-        val companyId: Long? = null,
-        val admin: Boolean = false
+        var companyId: Long? = null,
+        var admin: Boolean = false
 ) {
         constructor() : this(0, "", "", "", "", "", OffsetDateTime.now(), null)
 }

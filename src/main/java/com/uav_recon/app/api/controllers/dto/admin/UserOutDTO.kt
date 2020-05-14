@@ -3,14 +3,14 @@ package com.uav_recon.app.api.controllers.dto.admin
 import java.io.Serializable
 
 data class UserOutDTO(
-        val id: String,
-        val email: String,
-        val firstName: String,
-        val lastName: String,
-        val position: String?,
-        val createdAt: String,
-        val admin: Boolean,
-        val companyId: Long?
+        var id: String,
+        var email: String,
+        var firstName: String,
+        var lastName: String,
+        var position: String?,
+        var createdAt: String,
+        var admin: Boolean,
+        var companyId: Long?
 
 ) : Serializable {
     constructor() : this("", "", "", "", "", "", false, null)
