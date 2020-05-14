@@ -12,6 +12,7 @@ class Company(
         var id: Long = 0,
         var name: String,
         var logo: String?,
+        var type: CompanyType,
         @Column(name = "is_deleted")
         var deleted: Boolean = false,
         @Column(name = "created_by")
