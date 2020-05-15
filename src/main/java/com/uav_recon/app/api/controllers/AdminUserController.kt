@@ -47,8 +47,10 @@ class AdminUserController(private val userService: UserService,
             @RequestParam("companyId") companyId: Optional<Long>
     ): ResponseEntity<List<UserOutDTO>> {
         this.checkAdmin()
-        val userCompanyId: Long = companyId.get()
-                .or(this.getAuthenticatedCompanyId()?:throw Error(19, "You not have a company"))
+        var userCompanyId: Long = this.getAuthenticatedCompanyId()?:throw Error(19, "You not have a company");
+        if (companyId.isPresent()) {
+            userCompanyId = companyId.get()
+        }
 
         val users: List<User> = userService.listByCompanyId(userCompanyId)
         val usersDto: List<UserOutDTO> = users.stream().map {user -> adminUserMapper.map(user)}.collect(Collectors.toList());
