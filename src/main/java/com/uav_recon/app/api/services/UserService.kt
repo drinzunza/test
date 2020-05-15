@@ -83,7 +83,7 @@ class UserService(private val userRepository: UserRepository,
 
         if (companyId != null) {
             val company: Company = companyRepository.findFirstById(companyId)?: throw  Error(19, "company not found")
-            if (user.companyId != actor.companyId || actor.companyId != company.creatorCompanyId) {
+            if (user.companyId != actor.companyId && actor.companyId != company.creatorCompanyId) {
                 throw  Error(21, "action not allowed")
             }
         } else {

@@ -7,7 +7,7 @@ data class CreateUserInDTO(
         var password: String = "",
         var firstName: String = "",
         var lastName: String = "",
-        var position: String? = "",
+        var position: String? = null,
         var admin: Boolean = false,
         var companyId: Long? = null
 ) : Serializable
