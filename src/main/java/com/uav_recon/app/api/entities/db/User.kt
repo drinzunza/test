@@ -22,5 +22,5 @@ class User(
         var companyId: Long? = null,
         var admin: Boolean = false
 ) {
-        constructor() : this(0, "", "", "", "", "", OffsetDateTime.now(), null)
+    constructor() : this(0, "", "", "", "", "", OffsetDateTime.now(), null)
 }
