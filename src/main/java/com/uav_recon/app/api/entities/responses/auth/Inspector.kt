@@ -9,5 +9,6 @@ data class Inspector(
         val lastName: String,
         val email: String,
         val position: String?,
-        val company: CompanyDto?
+        val company: CompanyDto?,
+        val admin: Boolean
 ) : Serializable

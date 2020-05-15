@@ -45,7 +45,8 @@ class AuthController(
             firstName = firstName,
             lastName = lastName,
             position = position,
-            company = companyId?.let { companyRepository.findFirstById(it)?.toDto() }
+            company = companyId?.let { companyRepository.findFirstById(it)?.toDto() },
+            admin = admin
     )
 
     fun RegistrationRequest.toUser() = User(
