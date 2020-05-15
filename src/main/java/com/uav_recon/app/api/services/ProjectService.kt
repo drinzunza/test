@@ -112,7 +112,7 @@ class ProjectService(
         val projectRoles = body.projectManagers.map {
             ProjectRole(
                     projectId = project.id,
-                    userId = user.id,
+                    userId = it,
                     roles = arrayOf(Role.PM)
             )
         }
