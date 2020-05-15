@@ -4,6 +4,7 @@ import com.uav_recon.app.api.controllers.dto.admin.CreateUserInDTO
 import com.uav_recon.app.api.controllers.dto.admin.UpdateUserInDTO
 import com.uav_recon.app.api.controllers.dto.admin.UserOutDTO
 import com.uav_recon.app.api.entities.db.User
+import com.uav_recon.app.api.services.Error
 import com.uav_recon.app.api.services.mapper.AdminUserMapper
 import com.uav_recon.app.api.services.UserService
 import com.uav_recon.app.configurations.ControllerConfiguration
@@ -14,6 +15,7 @@ import org.mapstruct.factory.Mappers
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.util.*
 import java.util.stream.Collectors
 
 @RestController
@@ -27,32 +29,43 @@ class AdminUserController(private val userService: UserService,
 
     @PostMapping
     fun createUser(@RequestHeader(ControllerConfiguration.X_TOKEN) token: String, @RequestBody request: CreateUserInDTO): ResponseEntity<UserOutDTO> {
-        val user = userService.register(adminUserMapper.map(request))
+        this.checkAdmin()
+        val user = userService.createUser(adminUserMapper.map(request), this.getAuthenticatedUser())
         return ResponseEntity.ok(adminUserMapper.map(user))
     }
 
     @GetMapping("/{userId}")
     fun getUser(@RequestHeader(ControllerConfiguration.X_TOKEN) token: String, @PathVariable userId: Long): ResponseEntity<UserOutDTO> {
+        this.checkAdmin()
         val user: User = userService.get(userId)
         return ResponseEntity.ok(adminUserMapper.map(user))
     }
 
     @GetMapping
-    fun listUsers(@RequestHeader(ControllerConfiguration.X_TOKEN) token: String): ResponseEntity<List<UserOutDTO>> {
-        val users: List<User> = userService.list()
+    fun listUsers(
+            @RequestHeader(ControllerConfiguration.X_TOKEN) token: String,
+            @RequestParam("companyId") companyId: Optional<Long>
+    ): ResponseEntity<List<UserOutDTO>> {
+        this.checkAdmin()
+        val userCompanyId: Long = companyId.get()
+                .or(this.getAuthenticatedCompanyId()?:throw Error(19, "You not have a company"))
+
+        val users: List<User> = userService.listByCompanyId(userCompanyId)
         val usersDto: List<UserOutDTO> = users.stream().map {user -> adminUserMapper.map(user)}.collect(Collectors.toList());
         return ResponseEntity.ok(usersDto)
     }
 
     @PutMapping("/{userId}")
     fun updateUser(@RequestHeader(ControllerConfiguration.X_TOKEN) token: String, @RequestBody request: UpdateUserInDTO, @PathVariable userId: Long): ResponseEntity<UserOutDTO> {
-        val user = userService.update(userId, request)
+        this.checkAdmin()
+        val user = userService.update(userId, request, this.getAuthenticatedUser())
         return ResponseEntity.ok(adminUserMapper.map(user))
     }
 
     @DeleteMapping("/{userId}")
     fun deleteUser(@RequestHeader(ControllerConfiguration.X_TOKEN) token: String, @PathVariable userId: Long): ResponseEntity<Long> {
-        val user = userService.delete(userId)
+        this.checkAdmin()
+        val user = userService.delete(userId, this.getAuthenticatedUser())
         return ResponseEntity.ok(userId)
     }
 }

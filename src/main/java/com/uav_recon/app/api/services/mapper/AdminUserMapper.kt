@@ -14,9 +14,5 @@ interface AdminUserMapper {
     fun map(dto: CreateUserInDTO): User
     fun map(user: User): UserOutDTO
 
-    fun map(time: OffsetDateTime?): String? {
-        return time?.format(DateTimeFormatter.ISO_INSTANT)
-    }
-
     fun update(carDto: UpdateUserInDTO, @MappingTarget user: User?)
 }
