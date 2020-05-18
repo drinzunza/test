@@ -157,8 +157,8 @@ class UserService(private val userRepository: UserRepository,
 
         val user = userRepository.findFirstById(userId) ?: throw Error(18, "User not found");
 
-        this.checkAllowForEditingUser(user, actor);
         adminUserMapper.update(userData, user)
+        this.checkAllowForEditingUser(user, actor);
 
         return userRepository.save(user)
     }
