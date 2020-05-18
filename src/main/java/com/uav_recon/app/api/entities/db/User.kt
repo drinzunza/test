@@ -1,10 +1,15 @@
 package com.uav_recon.app.api.entities.db
 
+import org.hibernate.annotations.ResultCheckStyle
+import org.hibernate.annotations.SQLDelete
+import org.hibernate.annotations.Where
 import java.time.OffsetDateTime
 import javax.persistence.*
 
 @Entity
 @Table(name = "users")
+@SQLDelete(sql = "UPDATE \"users\" SET deleted_at = NOW() WHERE id = ?", check = ResultCheckStyle.COUNT)
+@Where(clause = "deleted_at IS NULL")
 class User(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
