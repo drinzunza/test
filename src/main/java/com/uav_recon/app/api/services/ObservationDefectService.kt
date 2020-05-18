@@ -47,7 +47,10 @@ class ObservationDefectService(
         size = size,
         type = type,
         weather = getWeather(this),
-        observationNameId = observationNameId
+        observationNameId = observationNameId,
+        clockPosition = clockPosition,
+        repairDate = repairDate,
+        repairMethod = repairMethod
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
