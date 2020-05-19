@@ -16,23 +16,23 @@ class InspectionController(private val inspectionService: InspectionService) : B
 
     @GetMapping
     fun get(@RequestHeader(X_TOKEN) token: String): ResponseEntity<List<InspectionDto>> {
-        return ResponseEntity.ok(inspectionService.listNotDeleted(getAuthenticatedUserId()))
+        return ResponseEntity.ok(inspectionService.listNotDeleted(getAuthenticatedUser()))
     }
 
     @PostMapping
     fun createOrUpdate(@RequestHeader(X_TOKEN) token: String, @RequestBody body: InspectionDto): ResponseEntity<InspectionDto> {
-        return ResponseEntity.ok(inspectionService.save(body, getAuthenticatedUserId()))
+        return ResponseEntity.ok(inspectionService.save(getAuthenticatedUser(), body))
     }
 
     @DeleteMapping("/{uuid}")
     fun delete(@RequestHeader(X_TOKEN) token: String, @PathVariable uuid: String): ResponseEntity<*> {
-        inspectionService.delete(uuid)
+        inspectionService.delete(getAuthenticatedUser(), uuid)
         return ResponseEntity.ok(success)
     }
 
     @PostMapping("/full")
     fun full(@RequestHeader(X_TOKEN) token: String, @RequestBody body: InspectionDto): ResponseEntity<InspectionDto> {
-        return ResponseEntity.ok(inspectionService.save(body, getAuthenticatedUserId()))
+        return ResponseEntity.ok(inspectionService.save(getAuthenticatedUser(), body))
     }
 
     @GetMapping("/users")

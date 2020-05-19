@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.*
 
 interface InspectionRepository : JpaRepository<Inspection, String> {
+    fun findAllByDeletedIsFalseAndProjectId(projectId: Long) : List<Inspection>
+    fun findAllByDeletedIsFalseAndProjectIdIn(ids: List<Long>) : List<Inspection>
     fun findAllByDeletedIsFalseAndCreatedBy(userId: Int) : List<Inspection>
     fun findByUuidAndDeletedIsFalse(id: String) : Optional<Inspection>
     fun findFirstByUuidAndDeletedIsFalse(id: String) : Inspection?

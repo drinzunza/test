@@ -170,7 +170,7 @@ class ProjectService(
 
     fun ProjectDto.hasAnyRole(user: User): Boolean {
         return projectRoleRepository.findAllByProjectIdAndUserId(id, user.id).any {
-            it.roles != null
+            !it.roles.isNullOrEmpty()
         }
     }
 

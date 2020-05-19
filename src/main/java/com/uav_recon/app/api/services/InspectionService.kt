@@ -39,7 +39,8 @@ class InspectionService(
         termRating = termRating,
         weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
         observations = observationService.findAllByInspectionUuidAndNotDeleted(uuid),
-        spansCount = spansCount
+        spansCount = spansCount,
+        projectId = projectId
     )
 
     fun InspectionDto.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) = Inspection(
@@ -69,15 +70,13 @@ class InspectionService(
             email = email
     )
 
-    fun Company.toDto() = CompanyDto(
-            id = id,
-            name = name,
-            logo = logo,
-            type = type
-    )
-
     @Transactional
-    fun save(dto: InspectionDto, updatedBy: Int): InspectionDto {
+    fun save(user: User, dto: InspectionDto): InspectionDto {
+        // Admins and PMs can edit inspection
+        if (!hasWriteRights(user, dto.uuid))
+            throw AccessDeniedException()
+
+        val updatedBy = user.id.toInt()
         var createdBy = updatedBy
         val inspection = inspectionRepository.findById(dto.uuid)
         if (inspection.isPresent) {
@@ -91,12 +90,27 @@ class InspectionService(
         return saved.toDto()
     }
 
-    fun listNotDeleted(userId: Int): List<InspectionDto> {
-        return inspectionRepository.findAllByDeletedIsFalseAndCreatedBy(userId).map { i -> i.toDto() };
+    fun listNotDeleted(user: User): List<InspectionDto> {
+        val projects = user.companyId?.let { projectRepository.findAllByDeletedIsFalseAndCompanyId(it) } ?: listOf()
+        val inspections = inspectionRepository.findAllByDeletedIsFalseAndProjectIdIn(projects.map { it.id })
+
+        return if (user.admin) {
+            // Admin can see all own company inspections
+            inspections.map { i -> i.toDto() }
+        } else {
+            // Inspectors can see assigned inspections & PMs can see inspections of assigned projects
+            inspections.filter {
+                hasInspectionRole(it.uuid, user.id, Role.INSPECTOR) || hasProjectRole(it.projectId, user.id, Role.PM)
+            }.map { i -> i.toDto() }
+        }
     }
 
     @Throws(Error::class)
-    fun delete(id: String) {
+    fun delete(user: User, id: String) {
+        // Admins and PMs can delete inspection
+        if (!hasWriteRights(user, id))
+            throw AccessDeniedException()
+
         val optional = inspectionRepository.findByUuidAndDeletedIsFalse(id)
         if (optional.isPresent) {
             val inspection = optional.get()
@@ -157,36 +171,57 @@ class InspectionService(
 
     @Transactional
     fun assignUsers(user: User, body: InspectionUsersDto): InspectionUsersDto {
-        val project = inspectionRepository.findFirstByUuid(body.inspectionId)?.let { inspection ->
+        // Admins and PMs can assign users to inspection
+        if (!hasWriteRights(user, body.inspectionId))
+            throw AccessDeniedException()
+
+        val existRoles = inspectionRoleRepository.findAllByInspectionId(body.inspectionId)
+        val inspectionRoles = body.users.map {
+            InspectionRole(
+                    inspectionId = body.inspectionId,
+                    userId = it.id,
+                    roles = it.roles.toTypedArray()
+            )
+        }
+        inspectionRoleRepository.deleteAll(existRoles)
+        inspectionRoleRepository.saveAll(inspectionRoles)
+        return body
+    }
+
+    fun hasWriteRights(user: User, inspectionId: String): Boolean {
+        val project = inspectionRepository.findFirstByUuid(inspectionId)?.let { inspection ->
             inspection.projectId?.let {
                 projectRepository.findFirstById(it)
             }
         }
-        val isPM = hasRole(project?.id, user.id, Role.PM)
+        val isPM = hasProjectRole(project?.id, user.id, Role.PM)
         val isAdmin = user.admin && user.companyId == project?.companyId
-
-        // Admins and PMs can assign users to inspection
-        if (isAdmin || isPM) {
-            val existRoles = inspectionRoleRepository.findAllByInspectionId(body.inspectionId)
-            val inspectionRoles = body.users.map {
-                InspectionRole(
-                        inspectionId = body.inspectionId,
-                        userId = it.id,
-                        roles = it.roles.toTypedArray()
-                )
-            }
-            inspectionRoleRepository.deleteAll(existRoles)
-            inspectionRoleRepository.saveAll(inspectionRoles)
-            return body
-        }
-        throw AccessDeniedException()
+        return isAdmin || isPM
     }
 
-    fun hasRole(projectId: Long?, userId: Long, role: Role): Boolean {
-        if (projectId == null)
-            return false
+    fun hasProjectRole(projectId: Long?, userId: Long, role: Role): Boolean {
+        if (projectId == null) return false
         return projectRoleRepository.findAllByProjectIdAndUserId(projectId, userId).any {
             it.roles?.contains(role) ?: false
+        }
+    }
+
+    fun hasInspectionRole(inspectionId: String, userId: Long, role: Role): Boolean {
+        return inspectionRoleRepository.findAllByInspectionIdAndUserId(inspectionId, userId).any {
+            it.roles?.contains(role) ?: false
+        }
+    }
+
+    fun hasAnyProjectRole(projectId: Long?, userId: Long): Boolean {
+        if (projectId == null) return false
+        return projectRoleRepository.findAllByProjectIdAndUserId(projectId, userId).any {
+            !it.roles.isNullOrEmpty()
+        }
+    }
+
+    fun hasAnyInspectionRole(inspectionId: String, userId: Long): Boolean {
+        return inspectionRoleRepository.findAllByInspectionIdAndUserId(inspectionId, userId).any {
+            !it.roles.isNullOrEmpty()
         }
     }
 }
