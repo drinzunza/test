@@ -1,15 +1,9 @@
 package com.uav_recon.app.api.services
 
-import com.uav_recon.app.api.entities.db.Inspection
-import com.uav_recon.app.api.entities.db.Photo
-import com.uav_recon.app.api.entities.requests.bridge.InspectionDto
-import com.uav_recon.app.api.entities.requests.bridge.InspectionReport
-import com.uav_recon.app.api.entities.requests.bridge.LocationDto
-import com.uav_recon.app.api.entities.requests.bridge.Weather
-import com.uav_recon.app.api.repositories.InspectionRepository
-import com.uav_recon.app.api.repositories.ObservationDefectRepository
-import com.uav_recon.app.api.repositories.ObservationRepository
-import com.uav_recon.app.api.repositories.PhotoRepository
+import com.uav_recon.app.api.controllers.handlers.AccessDeniedException
+import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.entities.requests.bridge.*
+import com.uav_recon.app.api.repositories.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
@@ -22,7 +16,11 @@ class InspectionService(
         val observationRepository: ObservationRepository,
         val observationDefectRepository: ObservationDefectRepository,
         val observationService: ObservationService,
-        val weatherService: WeatherService
+        val weatherService: WeatherService,
+        val userRepository: UserRepository,
+        val inspectionRoleRepository: InspectionRoleRepository,
+        val projectRoleRepository: ProjectRoleRepository,
+        val projectRepository: ProjectRepository
 ) {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
@@ -62,6 +60,20 @@ class InspectionService(
         wind = weather?.wind,
         createdBy = createdBy,
         updatedBy = updatedBy
+    )
+
+    fun User.toDto() = SimpleUserDto(
+            id = id,
+            firstName = firstName,
+            lastName = lastName,
+            email = email
+    )
+
+    fun Company.toDto() = CompanyDto(
+            id = id,
+            name = name,
+            logo = logo,
+            type = type
     )
 
     @Transactional
@@ -133,5 +145,48 @@ class InspectionService(
             logger.info("Inspection weather already set")
         }
         return inspection
+    }
+
+    fun getUsers(user: User, inspectionId: String, role: Role): List<SimpleUserDto> {
+        // All can see users on inspection
+        val ids = inspectionRoleRepository.findAllByInspectionId(inspectionId)
+                .filter { it.roles?.contains(role) ?: false }
+                .map { it.id }
+        return userRepository.findAllByIdIn(ids).map { u -> u.toDto() }
+    }
+
+    @Transactional
+    fun assignUsers(user: User, body: InspectionUsersDto): InspectionUsersDto {
+        val project = inspectionRepository.findFirstByUuid(body.inspectionId)?.let { inspection ->
+            inspection.projectId?.let {
+                projectRepository.findFirstById(it)
+            }
+        }
+        val isPM = hasRole(project?.id, user.id, Role.PM)
+        val isAdmin = user.admin && user.companyId == project?.companyId
+
+        // Admins and PMs can assign users to inspection
+        if (isAdmin || isPM) {
+            val existRoles = inspectionRoleRepository.findAllByInspectionId(body.inspectionId)
+            val inspectionRoles = body.users.map {
+                InspectionRole(
+                        inspectionId = body.inspectionId,
+                        userId = it.id,
+                        roles = it.roles.toTypedArray()
+                )
+            }
+            inspectionRoleRepository.deleteAll(existRoles)
+            inspectionRoleRepository.saveAll(inspectionRoles)
+            return body
+        }
+        throw AccessDeniedException()
+    }
+
+    fun hasRole(projectId: Long?, userId: Long, role: Role): Boolean {
+        if (projectId == null)
+            return false
+        return projectRoleRepository.findAllByProjectIdAndUserId(projectId, userId).any {
+            it.roles?.contains(role) ?: false
+        }
     }
 }

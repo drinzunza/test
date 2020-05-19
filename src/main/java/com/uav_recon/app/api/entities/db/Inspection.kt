@@ -51,7 +51,7 @@ class Inspection(
         @Column(name = "is_deleted")
         var deleted: Boolean? = false,
         @Column(name = "project_id")
-        var projectId: Int? = null,
+        var projectId: Long? = null,
         @Transient
         var observations: List<Observation>? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)

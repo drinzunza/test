@@ -6,26 +6,18 @@ import com.uav_recon.app.api.entities.db.User
 import com.uav_recon.app.api.entities.requests.auth.AuthorizationRequest
 import com.uav_recon.app.api.entities.requests.auth.PasswordResetAttemptRequest
 import com.uav_recon.app.api.entities.requests.auth.RegistrationRequest
-import com.uav_recon.app.api.entities.requests.auth.VerificationCode
 import com.uav_recon.app.api.entities.requests.bridge.CompanyDto
-import com.uav_recon.app.api.entities.responses.Response
 import com.uav_recon.app.api.entities.responses.auth.Inspector
-import com.uav_recon.app.api.entities.responses.auth.RegSession
 import com.uav_recon.app.api.entities.responses.auth.UserResponse
 import com.uav_recon.app.api.repositories.CompanyRepository
 import com.uav_recon.app.api.services.UserService
-import com.uav_recon.app.configurations.ControllerConfiguration.APP_SESSION
-import com.uav_recon.app.configurations.ControllerConfiguration.REG_SESSION
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.TokenManager
 import com.uav_recon.app.configurations.UavConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
