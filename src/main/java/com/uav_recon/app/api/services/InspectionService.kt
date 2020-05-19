@@ -165,7 +165,7 @@ class InspectionService(
         // All can see users on inspection
         val ids = inspectionRoleRepository.findAllByInspectionId(inspectionId)
                 .filter { it.roles?.contains(role) ?: false }
-                .map { it.id }
+                .map { it.userId }
         return userRepository.findAllByIdIn(ids).map { u -> u.toDto() }
     }
 
