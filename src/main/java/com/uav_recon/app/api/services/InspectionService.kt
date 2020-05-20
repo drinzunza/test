@@ -21,7 +21,7 @@ class InspectionService(
         val inspectionRoleRepository: InspectionRoleRepository,
         val projectRoleRepository: ProjectRoleRepository,
         val projectRepository: ProjectRepository
-) {
+) : BaseService() {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
 
@@ -91,16 +91,21 @@ class InspectionService(
     }
 
     fun listNotDeleted(user: User): List<InspectionDto> {
-        val projects = user.companyId?.let { projectRepository.findAllByDeletedIsFalseAndCompanyId(it) } ?: listOf()
-        val inspections = inspectionRepository.findAllByDeletedIsFalseAndProjectIdIn(projects.map { it.id })
+        val companyProjects = user.companyId?.let { projectRepository.findAllByDeletedIsFalseAndCompanyId(it) } ?: listOf()
+        val inspections = inspectionRepository.findAllByDeletedIsFalseAndProjectIdIn(companyProjects.map { it.id })
 
         return if (user.admin) {
             // Admin can see all own company inspections
             inspections.map { i -> i.toDto() }
         } else {
-            // Inspectors can see assigned inspections & PMs can see inspections of assigned projects
+            // Inspectors can see assigned inspections
+            val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
+
+            // PMs can see inspections of assigned projects
+            val projectRoles = projectRoleRepository.findAllByProjectIdIn(companyProjects.map { it.id })
+
             inspections.filter {
-                hasInspectionRole(it.uuid, user.id, Role.INSPECTOR) || hasProjectRole(it.projectId, user.id, Role.PM)
+                it.hasInspectionRole(user, inspectionRoles, Role.INSPECTOR) || it.hasProjectRole(user, projectRoles, Role.PM)
             }.map { i -> i.toDto() }
         }
     }
@@ -189,39 +194,27 @@ class InspectionService(
     }
 
     fun hasWriteRights(user: User, inspectionId: String): Boolean {
-        val project = inspectionRepository.findFirstByUuid(inspectionId)?.let { inspection ->
-            inspection.projectId?.let {
-                projectRepository.findFirstById(it)
-            }
-        }
-        val isPM = hasProjectRole(project?.id, user.id, Role.PM)
-        val isAdmin = user.admin && user.companyId == project?.companyId
+        val inspection = getInspection(inspectionId)
+        val project = getProject(inspection)
+        val roles = getProjectRoles(user, inspection)
+        val isPM = inspection?.hasProjectRole(user, roles, Role.PM) ?: false
+        val isAdmin = user.admin && user.companyId != null && user.companyId == project?.companyId
         return isAdmin || isPM
     }
 
-    fun hasProjectRole(projectId: Long?, userId: Long, role: Role): Boolean {
-        if (projectId == null) return false
-        return projectRoleRepository.findAllByProjectIdAndUserId(projectId, userId).any {
-            it.roles?.contains(role) ?: false
+    fun getProject(inspection: Inspection?): Project? {
+        return inspection?.projectId?.let {
+            projectRepository.findFirstById(it)
         }
     }
 
-    fun hasInspectionRole(inspectionId: String, userId: Long, role: Role): Boolean {
-        return inspectionRoleRepository.findAllByInspectionIdAndUserId(inspectionId, userId).any {
-            it.roles?.contains(role) ?: false
-        }
+    fun getProjectRoles(user: User, inspection: Inspection?): List<ProjectRole> {
+        return inspection?.projectId?.let {
+            projectRoleRepository.findAllByProjectIdAndUserId(it, user.id)
+        } ?: listOf()
     }
 
-    fun hasAnyProjectRole(projectId: Long?, userId: Long): Boolean {
-        if (projectId == null) return false
-        return projectRoleRepository.findAllByProjectIdAndUserId(projectId, userId).any {
-            !it.roles.isNullOrEmpty()
-        }
-    }
-
-    fun hasAnyInspectionRole(inspectionId: String, userId: Long): Boolean {
-        return inspectionRoleRepository.findAllByInspectionIdAndUserId(inspectionId, userId).any {
-            !it.roles.isNullOrEmpty()
-        }
+    fun getInspection(inspectionId: String): Inspection? {
+        return inspectionRepository.findFirstByUuid(inspectionId)
     }
 }

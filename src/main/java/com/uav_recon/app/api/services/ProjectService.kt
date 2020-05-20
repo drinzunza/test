@@ -13,8 +13,10 @@ class ProjectService(
         private val structureRepository: StructureRepository,
         private val projectRoleRepository: ProjectRoleRepository,
         private val userRepository: UserRepository,
-        private val projectStructureRepository: ProjectStructureRepository
-) {
+        private val projectStructureRepository: ProjectStructureRepository,
+        private val inspectionRoleRepository: InspectionRoleRepository,
+        private val inspectionRepository: InspectionRepository
+) : BaseService() {
 
     fun Project.toDto() = ProjectDto(
             id = id,
@@ -51,11 +53,16 @@ class ProjectService(
         if (user.admin && user.companyId != null) {
             return projectRepository.findAllByDeletedIsFalseAndCompanyId(user.companyId!!).map { i -> i.toDto() }
         }
-        // Others can see only assigned projects
+        // Others can see only assigned projects and assigned inspections
         if (!user.admin && user.companyId != null) {
-            return projectRepository.findAllByDeletedIsFalseAndCompanyId(user.companyId!!)
+            val projects = projectRepository.findAllByDeletedIsFalseAndCompanyId(user.companyId!!)
+            val projectRoles = projectRoleRepository.findAllByProjectIdIn(projects.map { it.id })
+            val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
+            val inspections = inspectionRepository.findAllByDeletedIsFalseAndProjectIdIn(projects.map { it.id })
+
+            return projects
+                    .filter { it.hasAnyProjectRole(user, projectRoles) || it.hasAnyInspectionRole(user, inspections, inspectionRoles) }
                     .map { i -> i.toDto() }
-                    .filter { it.hasAnyRole(user) }
         }
         return listOf()
     }
@@ -70,9 +77,21 @@ class ProjectService(
         if (user.admin && user.companyId == companyId && companyId != null) {
             return project.toDto()
         }
-        // Others can see only assigned projects
-        if (!user.admin && user.companyId == companyId && companyId != null && project.toDto().hasAnyRole(user)) {
-            return project.toDto()
+
+        if (!user.admin && user.companyId == companyId && companyId != null) {
+            val projectRoles = projectRoleRepository.findAllByProjectIdAndUserId(projectId, user.id)
+            val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
+
+            // Others can see assigned projects
+            if (project.hasAnyProjectRole(user, projectRoles)) {
+                return project.toDto()
+            }
+
+            // Others can see assigned inspections
+            val inspections = inspectionRepository.findAllByDeletedIsFalseAndProjectIdIn(listOf(project.id))
+            if (project.hasAnyInspectionRole(user, inspections, inspectionRoles)) {
+                return project.toDto()
+            }
         }
 
         throw AccessDeniedException()
@@ -159,18 +178,6 @@ class ProjectService(
             projectRepository.save(project)
         } else {
             throw AccessDeniedException()
-        }
-    }
-
-    fun ProjectDto.hasRole(user: User, role: Role): Boolean {
-        return projectRoleRepository.findAllByProjectIdAndUserId(id, user.id).any {
-            it.roles?.contains(role) ?: false
-        }
-    }
-
-    fun ProjectDto.hasAnyRole(user: User): Boolean {
-        return projectRoleRepository.findAllByProjectIdAndUserId(id, user.id).any {
-            !it.roles.isNullOrEmpty()
         }
     }
 
