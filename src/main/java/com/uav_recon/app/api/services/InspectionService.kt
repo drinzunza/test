@@ -161,10 +161,10 @@ class InspectionService(
         return inspection
     }
 
-    fun getUsers(user: User, inspectionId: String, role: Role): List<SimpleUserDto> {
+    fun getUsers(user: User, inspectionId: String): List<SimpleUserDto> {
         // All can see users on inspection
         val ids = inspectionRoleRepository.findAllByInspectionId(inspectionId)
-                .filter { it.roles?.contains(role) ?: false }
+                .filter { it.roles?.contains(Role.INSPECTOR) ?: false }
                 .map { it.userId }
         return userRepository.findAllByIdIn(ids).map { u -> u.toDto() }
     }
@@ -176,11 +176,11 @@ class InspectionService(
             throw AccessDeniedException()
 
         val existRoles = inspectionRoleRepository.findAllByInspectionId(body.inspectionId)
-        val inspectionRoles = body.users.map {
+        val inspectionRoles = body.inspectors.map {
             InspectionRole(
                     inspectionId = body.inspectionId,
-                    userId = it.id,
-                    roles = it.roles.toTypedArray()
+                    userId = it,
+                    roles = arrayOf(Role.INSPECTOR)
             )
         }
         inspectionRoleRepository.deleteAll(existRoles)

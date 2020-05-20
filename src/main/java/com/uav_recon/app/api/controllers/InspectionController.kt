@@ -35,16 +35,13 @@ class InspectionController(private val inspectionService: InspectionService) : B
         return ResponseEntity.ok(inspectionService.save(getAuthenticatedUser(), body))
     }
 
-    @GetMapping("/users")
-    fun getUsers(@RequestHeader(X_TOKEN) token: String,
-                 @RequestParam id: String,
-                 @RequestParam role: Role
-    ): ResponseEntity<List<SimpleUserDto>> {
-        return ResponseEntity.ok(inspectionService.getUsers(getAuthenticatedUser(), id, role))
+    @GetMapping("/inspectors")
+    fun getInspectors(@RequestHeader(X_TOKEN) token: String, @RequestParam id: String): ResponseEntity<List<SimpleUserDto>> {
+        return ResponseEntity.ok(inspectionService.getUsers(getAuthenticatedUser(), id))
     }
 
-    @PostMapping("/users")
-    fun setUsers(@RequestHeader(X_TOKEN) token: String, @RequestBody body: InspectionUsersDto): ResponseEntity<InspectionUsersDto> {
+    @PostMapping("/inspectors")
+    fun setInspectors(@RequestHeader(X_TOKEN) token: String, @RequestBody body: InspectionUsersDto): ResponseEntity<InspectionUsersDto> {
         return ResponseEntity.ok(inspectionService.assignUsers(getAuthenticatedUser(), body))
     }
 }
