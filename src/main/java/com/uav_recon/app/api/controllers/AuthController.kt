@@ -58,13 +58,15 @@ class AuthController(
 
     @PostMapping("$VERSION/auth")
     fun auth(@RequestBody request: AuthorizationRequest?): ResponseEntity<UserResponse> {
-        val user: User = userService.authenticate(request?.email, request?.password)
+        val user = userService.authenticate(request?.email, request?.password)
+        logger.info("Auth user ${user.id}, ${user.firstName} ${user.lastName}")
         return ResponseEntity.ok(UserResponse(tokenManager.generate(user.id), user.toInspector()))
     }
 
     @PostMapping("$VERSION/auth/register")
     fun register(@RequestBody request: RegistrationRequest?): ResponseEntity<UserResponse> {
         val user = userService.register(request?.toUser())
+        logger.info("Register user ${user.id}, ${user.firstName} ${user.lastName}")
         return ResponseEntity.ok(UserResponse(tokenManager.generate(user.id), user.toInspector()))
     }
 

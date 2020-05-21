@@ -20,7 +20,9 @@ class InspectionService(
         val userRepository: UserRepository,
         val inspectionRoleRepository: InspectionRoleRepository,
         val projectRoleRepository: ProjectRoleRepository,
-        val projectRepository: ProjectRepository
+        val projectRepository: ProjectRepository,
+        val companyRepository: CompanyRepository,
+        val structureRepository: StructureRepository
 ) : BaseService() {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
@@ -92,23 +94,33 @@ class InspectionService(
 
     fun listNotDeleted(user: User, projectId: Long?, structureId: String?): List<InspectionDto> {
         val companyProjects = user.companyId?.let { projectRepository.findAllByDeletedIsFalseAndCompanyId(it) } ?: listOf()
-        val inspections = inspectionRepository.findAllByDeletedIsFalseAndProjectIdIn(companyProjects.map { it.id })
+        val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
+        val projectRoles = projectRoleRepository.findAllByProjectIdIn(companyProjects.map { it.id })
 
-        val results: List<Inspection>
-        if (user.admin) {
-            // Admin can see all own company inspections
-            results = inspections.filter { !(projectId != null && it.projectId != projectId) }
-            logger.info("User admin, inspections: ${results.map { it.uuid }}")
+        val projectInspections = inspectionRepository.findAllByDeletedIsFalseAndProjectIdIn(companyProjects.map { it.id })
+        val userInspections = inspectionRepository.findAllByDeletedIsFalseAndCreatedBy(user.id.toInt())
+        val inspectorsInspections = inspectionRepository.findAllByDeletedIsFalseAndUuidIn(inspectionRoles.map { it.inspectionId })
+        val isOwnerCompany = companyRepository.findFirstByDeletedIsFalseAndId(user.companyId ?: 0)?.type == CompanyType.OWNER
+
+        var results = createInspections(projectInspections, userInspections, inspectorsInspections)
+        if (isOwnerCompany) {
+            // 1. Returns all inspections that are conducted on all his structures if he’s an owner company user
+            val structures = structureRepository.findAllByCompanyId(user.companyId!!)
+            results = inspectionRepository.findAllByDeletedIsFalseAndStructureIdIn(structures.map { it.id })
+            logger.info("Owner company user")
+        } else if (user.admin) {
+            // 2. Admin can see all own company inspections
         } else {
-            // 1. Users can see own created inspections
-            // 2. Inspectors can see assigned inspections
-            // 3. PMs can see inspections of assigned projects
-            val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
-            val projectRoles = projectRoleRepository.findAllByProjectIdIn(companyProjects.map { it.id })
-            results = inspections
-                    .filter { canSeeInspection(user, it, inspectionRoles, projectRoles)}
-                    .filter { !(projectId != null && it.projectId != projectId) }
+            // 3. Users can see own created inspections
+            // 4. Inspectors can see assigned inspections
+            // 5. PMs can see inspections of assigned projects
+            results = results
+                    .filter { it.canSeeInspection(user, inspectionRoles, projectRoles)}
         }
+        results = results
+                .filter { it.canSeeProject(projectId) }
+                .filter { it.canSeeStructure(structureId) }
+        logger.info("User ${user.id} can see ${results.size} inspections")
         return results.map { i -> i.toDto() }
     }
 
@@ -195,16 +207,24 @@ class InspectionService(
         return body
     }
 
-    fun canSeeInspection(user: User, inspection: Inspection,
+    fun Inspection.canSeeProject(id: Long?): Boolean {
+        return !(id != null && projectId != id)
+    }
+
+    fun Inspection.canSeeStructure(id: String?): Boolean {
+        return !(id != null && structureId != id)
+    }
+
+    fun Inspection.canSeeInspection(user: User,
                          inspectionRoles: List<InspectionRole>,
                          projectRoles: List<ProjectRole>
     ): Boolean {
-        val isInspector = inspection.hasInspectionRole(user, inspectionRoles, Role.INSPECTOR)
-        val isPm = inspection.hasProjectRole(user, projectRoles, Role.PM)
-        val isCreated = inspection.createdBy.toLong() == user.id
+        val isInspector = hasInspectionRole(user, inspectionRoles, Role.INSPECTOR)
+        val isPm = hasProjectRole(user, projectRoles, Role.PM)
+        val isCreated = createdBy.toLong() == user.id
         val canSee = isInspector || isPm || isCreated
         if (canSee) {
-            logger.info("Can see inspection ${inspection.uuid} isInspector=$isInspector, isPm=$isPm, isCreated=$isCreated")
+            logger.info("Can see $uuid isInspector=$isInspector, isPm=$isPm, isCreated=$isCreated")
         }
         return canSee
     }
@@ -231,5 +251,17 @@ class InspectionService(
 
     fun getInspection(inspectionId: String): Inspection? {
         return inspectionRepository.findFirstByUuid(inspectionId)
+    }
+
+    fun createInspections(vararg lists: List<Inspection>): List<Inspection> {
+        val results = mutableListOf<Inspection>()
+        for (inspections in lists) {
+            inspections.forEach { inspection ->
+                if (results.none { it.uuid == inspection.uuid }) {
+                    results.add(inspection)
+                }
+            }
+        }
+        return results
     }
 }
