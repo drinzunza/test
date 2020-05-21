@@ -100,14 +100,11 @@ class InspectionService(
             results = inspections.filter { !(projectId != null && it.projectId != projectId) }
             logger.info("User admin, inspections: ${results.map { it.uuid }}")
         } else {
-            // Users can see own created inspections
-
-            // Inspectors can see assigned inspections
+            // 1. Users can see own created inspections
+            // 2. Inspectors can see assigned inspections
+            // 3. PMs can see inspections of assigned projects
             val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
-
-            // PMs can see inspections of assigned projects
             val projectRoles = projectRoleRepository.findAllByProjectIdIn(companyProjects.map { it.id })
-
             results = inspections
                     .filter { canSeeInspection(user, it, inspectionRoles, projectRoles)}
                     .filter { !(projectId != null && it.projectId != projectId) }

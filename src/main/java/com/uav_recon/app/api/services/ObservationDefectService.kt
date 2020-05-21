@@ -69,7 +69,10 @@ class ObservationDefectService(
         observationType = observationType,
         size = size,
         type = type,
-        observationNameId = observationNameId
+        observationNameId = observationNameId,
+        clockPosition = clockPosition,
+        repairMethod = repairMethod,
+        repairDate = repairDate
     )
 
     @Synchronized
