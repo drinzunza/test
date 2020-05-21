@@ -15,9 +15,10 @@ class InspectionController(private val inspectionService: InspectionService) : B
 
     @GetMapping
     fun get(@RequestHeader(X_TOKEN) token: String,
-            @RequestParam(required = false) projectId: Long?
+            @RequestParam(required = false) projectId: Long?,
+            @RequestParam(required = false) structureId: String?
     ): ResponseEntity<List<InspectionDto>> {
-        return ResponseEntity.ok(inspectionService.listNotDeleted(getAuthenticatedUser(), projectId))
+        return ResponseEntity.ok(inspectionService.listNotDeleted(getAuthenticatedUser(), projectId, structureId))
     }
 
     @PostMapping
