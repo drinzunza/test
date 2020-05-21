@@ -1,9 +1,8 @@
 package com.uav_recon.app.api.controllers
 
-import com.uav_recon.app.api.entities.db.Role
 import com.uav_recon.app.api.entities.requests.bridge.InspectionDto
-import com.uav_recon.app.api.entities.requests.bridge.SimpleUserDto
 import com.uav_recon.app.api.entities.requests.bridge.InspectionUsersDto
+import com.uav_recon.app.api.entities.requests.bridge.SimpleUserDto
 import com.uav_recon.app.api.services.InspectionService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
@@ -15,8 +14,10 @@ import org.springframework.web.bind.annotation.*
 class InspectionController(private val inspectionService: InspectionService) : BaseController() {
 
     @GetMapping
-    fun get(@RequestHeader(X_TOKEN) token: String): ResponseEntity<List<InspectionDto>> {
-        return ResponseEntity.ok(inspectionService.listNotDeleted(getAuthenticatedUser()))
+    fun get(@RequestHeader(X_TOKEN) token: String,
+            @RequestParam(required = false) projectId: Long?
+    ): ResponseEntity<List<InspectionDto>> {
+        return ResponseEntity.ok(inspectionService.listNotDeleted(getAuthenticatedUser(), projectId))
     }
 
     @PostMapping

@@ -90,13 +90,13 @@ class InspectionService(
         return saved.toDto()
     }
 
-    fun listNotDeleted(user: User): List<InspectionDto> {
+    fun listNotDeleted(user: User, projectId: Long?): List<InspectionDto> {
         val companyProjects = user.companyId?.let { projectRepository.findAllByDeletedIsFalseAndCompanyId(it) } ?: listOf()
         val inspections = inspectionRepository.findAllByDeletedIsFalseAndProjectIdIn(companyProjects.map { it.id })
 
         return if (user.admin) {
             // Admin can see all own company inspections
-            inspections.map { i -> i.toDto() }
+            inspections.filter { !(projectId != null && it.projectId != projectId) }.map { i -> i.toDto() }
         } else {
             // Inspectors can see assigned inspections
             val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
@@ -106,7 +106,9 @@ class InspectionService(
 
             inspections.filter {
                 it.hasInspectionRole(user, inspectionRoles, Role.INSPECTOR) || it.hasProjectRole(user, projectRoles, Role.PM)
-            }.map { i -> i.toDto() }
+            }
+                    .filter { !(projectId != null && it.projectId != projectId) }
+                    .map { i -> i.toDto() }
         }
     }
 
