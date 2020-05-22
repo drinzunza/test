@@ -21,7 +21,7 @@ class PublicController(private val configuration: UavConfiguration) {
     @Throws(IOException::class)
     fun getCompanyImageAsByteArray(@PathVariable imageName: String, response: HttpServletResponse, session: HttpSession) {
         response.contentType = MediaType.IMAGE_JPEG_VALUE
-        val file = FileInputStream(File(configuration.files.root, imageName.split("/").last()))
+        val file = FileInputStream(File(configuration.files.uploadDir, imageName.split("/").last()))
         IOUtils.copy(file, response.outputStream)
     }
 }
