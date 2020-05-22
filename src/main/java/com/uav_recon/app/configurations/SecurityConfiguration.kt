@@ -106,6 +106,10 @@ open class SecurityConfiguration {
                     .and()
                     .formLogin().and().httpBasic()
         }
+
+        override fun configure(web: WebSecurity) {
+            web.ignoring().antMatchers("/datarecon-public/**")
+        }
     }
 }
 

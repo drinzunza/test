@@ -3,7 +3,6 @@ package com.uav_recon.app.api.entities.requests.bridge
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.uav_recon.app.api.entities.db.InspectionStatus
 import com.uav_recon.app.api.entities.db.InspectionTermRating
-import com.uav_recon.app.api.entities.db.Project
 import java.io.Serializable
 import java.time.OffsetDateTime
 
