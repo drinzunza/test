@@ -2,6 +2,7 @@ package com.uav_recon.app.api.services.report.document.main
 
 import com.uav_recon.app.api.beans.resources.Resources
 import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.entities.responses.bridge.SubcomponentHealthDto
 import com.uav_recon.app.api.repositories.*
 import com.uav_recon.app.api.services.FileService
 import com.uav_recon.app.api.services.ObservationService
@@ -573,7 +574,7 @@ class MainDocumentFactory(
         return companyRepository.findFirstById(companyId!!)!!
     }
 
-    private fun Observation.getSpansCount(spansCount: Int?): Int? {
+    fun Observation.getSpansCount(spansCount: Int?): Int? {
         return getLocationId()?.getAvailableSpans(spansCount)?.size
     }
 
@@ -609,5 +610,43 @@ class MainDocumentFactory(
             }
         }
         return spans
+    }
+
+    fun createObservationSummary(inspections: List<Inspection>): List<SubcomponentHealthDto> {
+        val results = mutableListOf<SubcomponentHealthDto>()
+        for (inspection in inspections) {
+            inspection.observations
+                    ?.sortedBy { it.component?.name }
+                    ?.groupBy { it.component }
+                    ?.forEach {
+                        val component = it.key ?: return@forEach
+                        val list = it.value.map { observation ->
+                            val spansCount = observation.getSpansCount(inspection.spansCount) ?: 0
+                            DefectSummaryFields.ObservationData(observation, spansCount, observationService)
+                        }
+                        val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
+
+                        list.forEach {
+                            results.add(SubcomponentHealthDto(
+                                    id = observation.subcomponent,
+                                    structureName = inspection.structureId, // TODO fix
+                                    inspectionId = inspection.uuid,
+                                    componentName = component.name,
+                                    subcomponentName = it.subComponentName,
+                                    subcomponentHealthIndex = it.healthIndex,
+                                    componentHealthIndex = totalHealthIndex,
+                                    conditionRating1 = it.cs1,
+                                    conditionRating2 = it.cs2,
+                                    conditionRating3 = it.cs3,
+                                    conditionRating4 = it.cs4
+                            ))
+                            row {
+                                DefectSummaryFields.buildCells(this, it)
+                            }
+                        }
+
+                    }
+        }
+        return results
     }
 }
