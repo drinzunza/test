@@ -3,6 +3,7 @@ package com.uav_recon.app.api.entities.requests.bridge
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.uav_recon.app.api.entities.db.InspectionStatus
 import com.uav_recon.app.api.entities.db.InspectionTermRating
+import com.uav_recon.app.api.entities.db.Project
 import java.io.Serializable
 import java.time.OffsetDateTime
 
@@ -22,5 +23,6 @@ data class InspectionDto(
         val sgrRating: String?,
         val termRating: InspectionTermRating?,
         val spansCount: Int?,
-        val projectId: Long?
+        val projectId: Long?,
+        val inspectors: List<SimpleUserDto>?
 ) : Serializable

@@ -27,7 +27,7 @@ class InspectionService(
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
 
-    fun Inspection.toDto() = InspectionDto(
+    fun Inspection.toDto(user: User?) = InspectionDto(
         uuid = uuid,
         location = if (latitude != null) LocationDto(latitude, longitude, altitude) else null,
         endDate = endDate,
@@ -42,7 +42,8 @@ class InspectionService(
         weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
         observations = observationService.findAllByInspectionUuidAndNotDeleted(uuid),
         spansCount = spansCount,
-        projectId = projectId
+        projectId = projectId,
+        inspectors = user?.let { getUsers(it, uuid) }
     )
 
     fun InspectionDto.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) = Inspection(
@@ -61,6 +62,7 @@ class InspectionService(
         temperature = weather?.temperature,
         humidity = weather?.humidity,
         wind = weather?.wind,
+        projectId = projectId,
         createdBy = createdBy,
         updatedBy = updatedBy
     )
@@ -89,7 +91,7 @@ class InspectionService(
         if (dto.observations != null) {
             observationService.save(dto.observations, dto.uuid, updatedBy)
         }
-        return saved.toDto()
+        return saved.toDto(user)
     }
 
     fun listNotDeleted(user: User, projectId: Long?, structureId: String?): List<InspectionDto> {
@@ -121,7 +123,7 @@ class InspectionService(
                 .filter { it.canSeeProject(projectId) }
                 .filter { it.canSeeStructure(structureId) }
         logger.info("User ${user.id} can see ${results.size} inspections")
-        return results.map { i -> i.toDto() }
+        return results.map { i -> i.toDto(user) }
     }
 
     @Throws(Error::class)
@@ -143,9 +145,9 @@ class InspectionService(
     fun findById(id: String): Optional<InspectionDto> {
         val optional = inspectionRepository.findById(id)
         if (optional.isPresent) {
-            return Optional.of(optional.get().toDto());
+            return Optional.of(optional.get().toDto(null))
         }
-        return Optional.empty();
+        return Optional.empty()
     }
 
     fun getPhotoWithCoordinates(inspection: Inspection): Photo? {
@@ -235,8 +237,9 @@ class InspectionService(
         val roles = getProjectRoles(user, inspection)
         val isPM = inspection?.hasProjectRole(user, roles, Role.PM) ?: false
         val isAdmin = user.admin && user.companyId != null && user.companyId == project?.companyId
-        logger.info("User ${user.id} company admin=$isAdmin, PM=$isPM, project company=${project?.companyId}")
-        return isAdmin || isPM
+        val isCreated = inspection?.createdBy?.toLong() == user.id
+        logger.info("User ${user.id} (admin=${user.admin}) company admin=$isAdmin, PM=$isPM, isCreated=$isCreated")
+        return isAdmin || isPM || isCreated
     }
 
     fun getProject(projectId: Long?): Project? {
