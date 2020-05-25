@@ -190,6 +190,11 @@ class InspectionService(
         return userRepository.findAllByIdIn(ids).map { u -> u.toDto() }
     }
 
+    fun getUserIds(user: User, inspectionId: String): InspectionUsersDto {
+        val users = getUsers(user, inspectionId)
+        return InspectionUsersDto(inspectionId = inspectionId, inspectors = users.map { it.id })
+    }
+
     @Transactional
     fun assignUsers(user: User, body: InspectionUsersDto): InspectionUsersDto {
         // Admins and PMs can assign users to inspection
