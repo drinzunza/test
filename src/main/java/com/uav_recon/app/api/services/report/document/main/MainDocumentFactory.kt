@@ -2,6 +2,7 @@ package com.uav_recon.app.api.services.report.document.main
 
 import com.uav_recon.app.api.beans.resources.Resources
 import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.entities.responses.bridge.ObservationDefectReportDto
 import com.uav_recon.app.api.entities.responses.bridge.SubcomponentHealthDto
 import com.uav_recon.app.api.repositories.*
 import com.uav_recon.app.api.services.FileService
@@ -68,7 +69,8 @@ class MainDocumentFactory(
         private val companyRepository: CompanyRepository,
         private val resources: Resources,
         private val configuration: UavConfiguration,
-        private val fileService: FileService
+        private val fileService: FileService,
+        private val projectRepository: ProjectRepository
 ) : DocumentFactory {
 
     private val logger = LoggerFactory.getLogger(MainDocumentFactory::class.java)
@@ -669,6 +671,58 @@ class MainDocumentFactory(
                                     conditionRating2 = it.cs2,
                                     conditionRating3 = it.cs3,
                                     conditionRating4 = it.cs4
+                            ))
+                        }
+                    }
+        }
+        return results
+    }
+
+    fun createObservationDefectSummary(inspections: List<Inspection>): List<ObservationDefectReportDto> {
+        inspections.fillObjects()
+
+        val structures = structureRepository.findAllByIdIn(inspections.map { it.structureId ?: "" })
+        val projects = projectRepository.findAllByIdIn(inspections.map { it.projectId ?: 0 })
+        val users = userRepository.findAllByIdIn(inspections.map { it.createdBy.toLong() })
+
+        val observationDefectIds = mutableListOf<String>()
+        inspections.forEach { it.observations?.forEach { it.defects?.forEach { observationDefectIds.add(it.id) } } }
+        val photos = photoRepository.findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefectIds)
+
+        val results = mutableListOf<ObservationDefectReportDto>()
+        for (inspection in inspections) {
+            inspection.observations
+                    ?.sortedBy { it.component?.name }
+                    ?.forEach { observation ->
+                        observation.defects?.forEach {
+                            val spansCount = observation.getSpansCount(inspection.spansCount) ?: 0
+                            val inspector = users.firstOrNull { it.id == inspection.createdBy.toLong() }
+                            results.add(ObservationDefectReportDto(
+                                    id = it.id,
+                                    stationMarker = it.stationMarker,
+                                    clockPosition = it.clockPosition,
+                                    observationType = it.observationType,
+                                    type = it.type,
+                                    defectName = it.defect?.name,
+                                    locationId = it.span,
+                                    description = it.description,
+                                    repairMethod = it.repairMethod,
+                                    repairDate = it.repairDate,
+                                    observationComponentName = observation.component?.name,
+                                    observationSubcomponentName = observation.subcomponent?.name,
+                                    observationDimensionNumber = observation.dimensionNumber,
+                                    observationConditionRating1 = observationService.getCsValue(observation, ConditionType.GOOD, spansCount),
+                                    observationConditionRating2 = observationService.getCsValue(observation, ConditionType.FAIR, spansCount),
+                                    observationConditionRating3 = observationService.getCsValue(observation, ConditionType.POOR, spansCount),
+                                    observationConditionRating4 = observationService.getCsValue(observation, ConditionType.SEVERE, spansCount),
+                                    pictureLinks = photos.filter { photo -> photo.observationDefectId == it.id }.map { it.link },
+                                    inspectionId = inspection.uuid,
+                                    inspectionDate = inspection.startDate,
+                                    structureId = inspection.structureId,
+                                    structureName = structures.firstOrNull { it.id == inspection.structureId }?.name,
+                                    projectId = inspection.projectId,
+                                    projectName = projects.firstOrNull { it.id == inspection.projectId }?.name,
+                                    inspectorName = inspector?.let { "${inspector.firstName} ${inspector.lastName}" }
                             ))
                         }
                     }
