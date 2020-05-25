@@ -1,9 +1,14 @@
 package com.uav_recon.app.api.controllers
 
 import com.uav_recon.app.api.entities.db.BuildType
+import com.uav_recon.app.api.entities.db.Inspection
+import com.uav_recon.app.api.entities.db.User
 import com.uav_recon.app.api.entities.requests.bridge.DictionaryDto
 import com.uav_recon.app.api.entities.requests.bridge.StructureIdsDto
+import com.uav_recon.app.api.entities.responses.bridge.SubcomponentHealthDto
 import com.uav_recon.app.api.services.DictionaryService
+import com.uav_recon.app.api.services.InspectionService
+import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory
 import com.uav_recon.app.configurations.ControllerConfiguration.BUILD_TYPE
 import com.uav_recon.app.configurations.ControllerConfiguration.ETAG
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
@@ -15,7 +20,11 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("${VERSION}/structures")
-class DictionaryController(private val dictionaryService: DictionaryService) : BaseController() {
+class DictionaryController(
+        private val dictionaryService: DictionaryService,
+        private val inspectionService: InspectionService,
+        private val mainDocumentFactory: MainDocumentFactory
+) : BaseController() {
 
     @GetMapping
     fun get(@RequestHeader(X_TOKEN) token: String,
@@ -69,4 +78,12 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
                     .body(dictionaryService.getAll(fixETag, BuildType.parse(buildType)))
         }
     }*/
+
+    @GetMapping("/subcomponents")
+    fun get(@RequestHeader(X_TOKEN) token: String,
+            @RequestParam(required = false) structureId: String?
+    ): ResponseEntity<List<SubcomponentHealthDto>> {
+        val inspections = inspectionService.listNotDeleted(getAuthenticatedUser(), null, structureId)
+        return ResponseEntity.ok(mainDocumentFactory.createObservationSummary(inspections))
+    }
 }

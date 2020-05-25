@@ -5,7 +5,7 @@ import java.io.Serializable
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class SubcomponentHealthDto(
-        val id: String,
+        val id: String?,
         val structureName: String?,
         val subcomponentName: String?,
         val componentName: String?,

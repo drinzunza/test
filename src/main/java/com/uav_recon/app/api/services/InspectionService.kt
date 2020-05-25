@@ -94,7 +94,11 @@ class InspectionService(
         return saved.toDto(user)
     }
 
-    fun listNotDeleted(user: User, projectId: Long?, structureId: String?): List<InspectionDto> {
+    fun listNotDeletedDto(user: User, projectId: Long?, structureId: String?): List<InspectionDto> {
+        return listNotDeleted(user, projectId, structureId).map { i -> i.toDto(user) }
+    }
+
+    fun listNotDeleted(user: User, projectId: Long?, structureId: String?): List<Inspection> {
         val companyProjects = user.companyId?.let { projectRepository.findAllByDeletedIsFalseAndCompanyId(it) } ?: listOf()
         val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
         val projectRoles = projectRoleRepository.findAllByProjectIdIn(companyProjects.map { it.id })
@@ -107,7 +111,7 @@ class InspectionService(
         var results = createInspections(projectInspections, userInspections, inspectorsInspections)
         if (isOwnerCompany) {
             // 1. Returns all inspections that are conducted on all his structures if he’s an owner company user
-            val structures = structureRepository.findAllByCompanyId(user.companyId!!)
+            val structures = structureRepository.findAllByCompanyId(user.companyId ?: 0)
             results = inspectionRepository.findAllByDeletedIsFalseAndStructureIdIn(structures.map { it.id })
             logger.info("Owner company user")
         } else if (user.admin) {
@@ -123,7 +127,7 @@ class InspectionService(
                 .filter { it.canSeeProject(projectId) }
                 .filter { it.canSeeStructure(structureId) }
         logger.info("User ${user.id} can see ${results.size} inspections")
-        return results.map { i -> i.toDto(user) }
+        return results
     }
 
     @Throws(Error::class)

@@ -511,6 +511,7 @@ class MainDocumentFactory(
         return "$server/datarecon/$inspectorId/${inspection.uuid}/${observation?.id}/${observationDefect?.id}/$name"
     }
 
+    @Deprecated("Use List<Inspection>.fillObjects()")
     private fun Inspection.fillObjects(): Inspection {
         observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid)
         observations?.forEach { observation ->
@@ -522,6 +523,7 @@ class MainDocumentFactory(
         return this
     }
 
+    @Deprecated("Use List<Inspection>.fillObjects()")
     private fun Observation.fillObjects(): Observation {
         if (component == null) {
             component = structuralComponentId?.let {
@@ -539,6 +541,7 @@ class MainDocumentFactory(
         return this
     }
 
+    @Deprecated("Use List<Inspection>.fillObjects()")
     private fun ObservationDefect.fillObjects(): ObservationDefect {
         if (defect == null) {
             defect = defectId?.let {
@@ -612,7 +615,34 @@ class MainDocumentFactory(
         return spans
     }
 
+    private fun List<Inspection>.fillObjects() {
+        val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(map { it.uuid })
+        val components = componentRepository.findAllByIdIn(observations.map { it.structuralComponentId ?: "" })
+        val subcomponents = subcomponentRepository.findAllByIdIn(observations.map { it.subComponentId ?: "" })
+        val observationDefects = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observations.map { it.uuid })
+        val defects = defectRepository.findAllByIdIn(observationDefects.map { it.defectId ?: "" })
+        val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
+        val observationNames = observationNameRepository.findAllByIdIn(observationDefects.map { it.observationNameId ?: "" })
+
+        observationDefects.forEach { observationDefect ->
+            observationDefect.defect = defects.firstOrNull { it.id == observationDefect.defectId }
+            observationDefect.condition = conditions.firstOrNull { it.id == observationDefect.conditionId }
+            observationDefect.observationName = observationNames.firstOrNull { it.id == observationDefect.observationNameId }
+        }
+        observations.forEach { observation ->
+            observation.component = components.firstOrNull { it.id == observation.structuralComponentId }
+            observation.subcomponent = subcomponents.firstOrNull { it.id == observation.subComponentId }
+            observation.defects = observationDefects.filter { it.observationId == observation.id }
+        }
+        forEach { inspection ->
+            inspection.observations = observations.filter { it.inspectionId == inspection.uuid }
+        }
+    }
+
     fun createObservationSummary(inspections: List<Inspection>): List<SubcomponentHealthDto> {
+        inspections.fillObjects()
+
+        val structures = structureRepository.findAllByIdIn(inspections.map { it.structureId ?: "" })
         val results = mutableListOf<SubcomponentHealthDto>()
         for (inspection in inspections) {
             inspection.observations
@@ -628,8 +658,8 @@ class MainDocumentFactory(
 
                         list.forEach {
                             results.add(SubcomponentHealthDto(
-                                    id = observation.subcomponent,
-                                    structureName = inspection.structureId, // TODO fix
+                                    id = it.subComponentId,
+                                    structureName = structures.firstOrNull { it.id == inspection.structureId }?.name,
                                     inspectionId = inspection.uuid,
                                     componentName = component.name,
                                     subcomponentName = it.subComponentName,
@@ -640,11 +670,7 @@ class MainDocumentFactory(
                                     conditionRating3 = it.cs3,
                                     conditionRating4 = it.cs4
                             ))
-                            row {
-                                DefectSummaryFields.buildCells(this, it)
-                            }
                         }
-
                     }
         }
         return results
