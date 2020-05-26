@@ -634,7 +634,7 @@ class MainDocumentFactory(
         observations.forEach { observation ->
             observation.component = components.firstOrNull { it.id == observation.structuralComponentId }
             observation.subcomponent = subcomponents.firstOrNull { it.id == observation.subComponentId }
-            observation.defects = observationDefects.filter { it.observationId == observation.id }
+            observation.defects = observationDefects.filter { it.observationId == observation.uuid }
         }
         forEach { inspection ->
             inspection.observations = observations.filter { it.inspectionId == inspection.uuid }
