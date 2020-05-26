@@ -29,11 +29,19 @@ class ReportController(
         return ResponseEntity.ok(reportService.generate(getAuthenticatedUserId(), inspectionId))
     }
 
-    @GetMapping("/subcomponents")
-    fun getSubcomponentsHealth(@RequestHeader(X_TOKEN) token: String,
-                               @RequestParam(required = false) structureId: String?
+    @GetMapping("/subcomponents/structure/{structureId}")
+    fun getSubcomponentsHealthByStructure(@RequestHeader(X_TOKEN) token: String,
+                                          @PathVariable structureId: String?
     ): ResponseEntity<List<SubcomponentHealthDto>> {
         val inspections = inspectionService.listNotDeleted(getAuthenticatedUser(), null, structureId, null)
+        return ResponseEntity.ok(mainDocumentFactory.createObservationSummary(inspections))
+    }
+
+    @GetMapping("/subcomponents/company/{companyId}")
+    fun getSubcomponentsHealthByCompany(@RequestHeader(X_TOKEN) token: String,
+                                        @PathVariable companyId: Long?
+    ): ResponseEntity<List<SubcomponentHealthDto>> {
+        val inspections = inspectionService.listNotDeleted(getAuthenticatedUser(), null, null, companyId)
         return ResponseEntity.ok(mainDocumentFactory.createObservationSummary(inspections))
     }
 
