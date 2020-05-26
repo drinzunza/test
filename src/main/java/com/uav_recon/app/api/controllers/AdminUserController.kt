@@ -46,7 +46,6 @@ class AdminUserController(private val userService: UserService,
             @RequestHeader(ControllerConfiguration.X_TOKEN) token: String,
             @RequestParam("companyId") companyId: Optional<Long>
     ): ResponseEntity<List<UserOutDTO>> {
-        this.checkAdmin()
         var userCompanyId: Long = this.getAuthenticatedCompanyId()?:throw Error(19, "You not have a company");
         if (companyId.isPresent()) {
             userCompanyId = companyId.get()
