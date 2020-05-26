@@ -100,19 +100,18 @@ class InspectionService(
     }
 
     fun listNotDeleted(user: User, projectId: Long?, structureId: String?, companyId: Long?): List<Inspection> {
-        val companyIds = mutableListOf<Long>()
+        // Creator company user can see created companies
+        var companyIds = mutableListOf<Long>()
         user.companyId?.let { companyIds.add(it) }
-
-        // Owner company can see own companies
-        val isOwnerCompany = companyRepository.findFirstByDeletedIsFalseAndId(user.companyId ?: 0)?.type == CompanyType.OWNER
-        if (isOwnerCompany) {
-            companyRepository.findAllByDeletedIsFalseAndCreatorCompanyId(user.companyId ?: 0).forEach {
-                if (companyId == null || it.id == companyId) {
-                    companyIds.add(it.id)
-                }
+        companyRepository.findAllByDeletedIsFalseAndCreatorCompanyId(user.companyId ?: 0).forEach {
+            if (companyId == null) {
+                companyIds.add(it.id)
+            } else if (it.id == companyId) {
+                companyIds = mutableListOf(companyId)
             }
         }
 
+        val isOwnerCompany = companyRepository.findFirstByDeletedIsFalseAndId(user.companyId ?: 0)?.type == CompanyType.OWNER
         val companyProjects = projectRepository.findAllByDeletedIsFalseAndCompanyIdIn(companyIds)
         val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
         val projectRoles = projectRoleRepository.findAllByProjectIdIn(companyProjects.map { it.id })
@@ -130,14 +129,14 @@ class InspectionService(
         } else if (user.admin) {
             // 2. Admin can see all own company inspections
             results = results
-                    .filter { !(companyId != null && user.companyId != companyId) }
+                    .filter { !(companyId != null && !companyIds.contains(companyId)) }
         } else {
             // 3. Users can see own created inspections
             // 4. Inspectors can see assigned inspections
             // 5. PMs can see inspections of assigned projects
             results = results
                     .filter { it.canSeeInspection(user, inspectionRoles, projectRoles)}
-                    .filter { !(companyId != null && user.companyId != companyId) }
+                    .filter { !(companyId != null && !companyIds.contains(companyId)) }
         }
         results = results
                 .filter { it.canSeeProject(projectId) }
