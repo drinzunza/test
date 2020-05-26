@@ -1,8 +1,8 @@
 package com.uav_recon.app.api.controllers
 
 import com.uav_recon.app.api.entities.requests.bridge.InspectionDto
-import com.uav_recon.app.api.entities.requests.bridge.InspectionUsersDto
-import com.uav_recon.app.api.entities.requests.bridge.SimpleUserDto
+import com.uav_recon.app.api.entities.requests.bridge.InspectionUserIdsDto
+import com.uav_recon.app.api.entities.responses.bridge.InspectionUsersDto
 import com.uav_recon.app.api.services.InspectionService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
@@ -38,12 +38,12 @@ class InspectionController(private val inspectionService: InspectionService) : B
     }
 
     @GetMapping("/inspectors")
-    fun getInspectors(@RequestHeader(X_TOKEN) token: String, @RequestParam id: String): ResponseEntity<InspectionUsersDto> {
+    fun getInspectors(@RequestHeader(X_TOKEN) token: String, @RequestParam id: String): ResponseEntity<InspectionUserIdsDto> {
         return ResponseEntity.ok(inspectionService.getUserIds(getAuthenticatedUser(), id))
     }
 
     @PostMapping("/inspectors")
-    fun setInspectors(@RequestHeader(X_TOKEN) token: String, @RequestBody body: InspectionUsersDto): ResponseEntity<InspectionUsersDto> {
+    fun setInspectors(@RequestHeader(X_TOKEN) token: String, @RequestBody body: InspectionUserIdsDto): ResponseEntity<InspectionUsersDto> {
         return ResponseEntity.ok(inspectionService.assignUsers(getAuthenticatedUser(), body))
     }
 }

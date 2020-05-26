@@ -3,6 +3,7 @@ package com.uav_recon.app.api.services
 import com.uav_recon.app.api.controllers.handlers.AccessDeniedException
 import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.*
+import com.uav_recon.app.api.entities.responses.bridge.InspectionUsersDto
 import com.uav_recon.app.api.repositories.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -194,17 +195,18 @@ class InspectionService(
         return userRepository.findAllByIdIn(ids).map { u -> u.toDto() }
     }
 
-    fun getUserIds(user: User, inspectionId: String): InspectionUsersDto {
+    fun getUserIds(user: User, inspectionId: String): InspectionUserIdsDto {
         val users = getUsers(user, inspectionId)
-        return InspectionUsersDto(inspectionId = inspectionId, inspectors = users.map { it.id })
+        return InspectionUserIdsDto(inspectionId = inspectionId, inspectors = users.map { it.id })
     }
 
     @Transactional
-    fun assignUsers(user: User, body: InspectionUsersDto): InspectionUsersDto {
+    fun assignUsers(user: User, body: InspectionUserIdsDto): InspectionUsersDto {
         // Admins and PMs can assign users to inspection
         if (!hasWriteRights(user, body.inspectionId, null))
             throw AccessDeniedException()
 
+        val users = userRepository.findAllByIdIn(body.inspectors)
         val existRoles = inspectionRoleRepository.findAllByInspectionId(body.inspectionId)
         val inspectionRoles = body.inspectors.map {
             InspectionRole(
@@ -215,7 +217,9 @@ class InspectionService(
         }
         inspectionRoleRepository.deleteAll(existRoles)
         inspectionRoleRepository.saveAll(inspectionRoles)
-        return body
+        return InspectionUsersDto(body.inspectionId,
+                users.map { SimpleUserDto(it.id, it.email, it.firstName, it.lastName) }
+        )
     }
 
     fun Inspection.canSeeProject(id: Long?): Boolean {

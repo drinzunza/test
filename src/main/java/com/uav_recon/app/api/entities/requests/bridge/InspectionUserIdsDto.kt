@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import java.io.Serializable
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class InspectionUsersDto(
+data class InspectionUserIdsDto(
         val inspectionId: String,
         val inspectors: List<Long>
 ) : Serializable
