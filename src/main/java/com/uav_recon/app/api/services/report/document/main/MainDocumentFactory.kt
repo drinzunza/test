@@ -659,10 +659,13 @@ class MainDocumentFactory(
                         val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
 
                         list.forEach {
+                            val structure = structures.firstOrNull { it.id == inspection.structureId }
                             results.add(SubcomponentHealthDto(
                                     id = it.subComponentId,
-                                    structureName = structures.firstOrNull { it.id == inspection.structureId }?.name,
+                                    structureId = structure?.id,
+                                    structureName = structure?.name,
                                     inspectionId = inspection.uuid,
+                                    inspectionDate = inspection.startDate,
                                     componentName = component.name,
                                     subcomponentName = it.subComponentName,
                                     subcomponentHealthIndex = it.healthIndex,
@@ -695,26 +698,24 @@ class MainDocumentFactory(
                     ?.sortedBy { it.component?.name }
                     ?.forEach { observation ->
                         observation.defects?.forEach {
-                            val spansCount = observation.getSpansCount(inspection.spansCount) ?: 0
                             val inspector = users.firstOrNull { it.id == inspection.createdBy.toLong() }
                             results.add(ObservationDefectReportDto(
+                                    uuid = it.uuid,
                                     id = it.id,
                                     stationMarker = it.stationMarker,
                                     clockPosition = it.clockPosition,
                                     observationType = it.observationType,
-                                    type = it.type,
-                                    defectName = it.defect?.name,
+                                    classification = it.type,
                                     locationId = it.span,
-                                    description = it.description,
+                                    summary = it.description,
+                                    description = it.defect?.name,
                                     repairMethod = it.repairMethod,
                                     repairDate = it.repairDate,
-                                    observationComponentName = observation.component?.name,
-                                    observationSubcomponentName = observation.subcomponent?.name,
-                                    observationDimensionNumber = observation.dimensionNumber,
-                                    observationConditionRating1 = observationService.getCsValue(observation, ConditionType.GOOD, spansCount),
-                                    observationConditionRating2 = observationService.getCsValue(observation, ConditionType.FAIR, spansCount),
-                                    observationConditionRating3 = observationService.getCsValue(observation, ConditionType.POOR, spansCount),
-                                    observationConditionRating4 = observationService.getCsValue(observation, ConditionType.SEVERE, spansCount),
+                                    size = it.size,
+                                    componentName = observation.component?.name,
+                                    subcomponentName = observation.subcomponent?.name,
+                                    dimensionNumber = observation.dimensionNumber,
+                                    csRating = it.condition?.type?.title,
                                     pictureLinks = photos.filter { photo -> photo.observationDefectId == it.id }.map { it.link },
                                     inspectionId = inspection.uuid,
                                     inspectionDate = inspection.startDate,

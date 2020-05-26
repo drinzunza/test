@@ -1,16 +1,18 @@
 package com.uav_recon.app.api.entities.responses.bridge
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.uav_recon.app.api.entities.db.ConditionType
 import com.uav_recon.app.api.entities.db.ObservationType
 import com.uav_recon.app.api.entities.db.StructuralType
+import org.hibernate.cache.spi.support.AccessedDataClassification
 import java.io.Serializable
 import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ObservationDefectReportDto(
+        val uuid: String,
         val id: String,
-        val type : StructuralType?,
-        val defectName: String?,
+        val classification: StructuralType?,
         val locationId: String?,
         val stationMarker: String?,
         val clockPosition: Int?,
@@ -18,13 +20,12 @@ data class ObservationDefectReportDto(
         val repairMethod: String?,
         val repairDate: OffsetDateTime?,
         val description: String?,
-        val observationComponentName: String?,
-        val observationSubcomponentName: String?,
-        val observationDimensionNumber: Int?,
-        val observationConditionRating1: Int?,
-        val observationConditionRating2: Int?,
-        val observationConditionRating3: Int?,
-        val observationConditionRating4: Int?,
+        val summary: String?,
+        val size: String?,
+        val componentName: String?,
+        val subcomponentName: String?,
+        val dimensionNumber: Int?,
+        val csRating: String?,
         val pictureLinks: List<String>,
         val inspectionId: String?,
         val inspectionDate: OffsetDateTime?,
