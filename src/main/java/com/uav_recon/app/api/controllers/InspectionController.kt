@@ -18,7 +18,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
             @RequestParam(required = false) projectId: Long?,
             @RequestParam(required = false) structureId: String?
     ): ResponseEntity<List<InspectionDto>> {
-        return ResponseEntity.ok(inspectionService.listNotDeletedDto(getAuthenticatedUser(), projectId, structureId))
+        return ResponseEntity.ok(inspectionService.listNotDeletedDto(getAuthenticatedUser(), projectId, structureId, null))
     }
 
     @PostMapping

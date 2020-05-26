@@ -33,16 +33,26 @@ class ReportController(
     fun getSubcomponentsHealth(@RequestHeader(X_TOKEN) token: String,
                                @RequestParam(required = false) structureId: String?
     ): ResponseEntity<List<SubcomponentHealthDto>> {
-        val inspections = inspectionService.listNotDeleted(getAuthenticatedUser(), null, structureId)
+        val inspections = inspectionService.listNotDeleted(getAuthenticatedUser(), null, structureId, null)
         return ResponseEntity.ok(mainDocumentFactory.createObservationSummary(inspections))
     }
 
-    @GetMapping("/defects")
-    fun getObservationDefects(@RequestHeader(X_TOKEN) token: String,
-                              @RequestParam(required = false) structureId: String?,
-                              @RequestParam(required = false) inspectionId: String?
+    @GetMapping("/defects/company/{companyId}")
+    fun getObservationDefectsByCompany(@RequestHeader(X_TOKEN) token: String,
+                                       @PathVariable companyId: Long,
+                                       @RequestParam(required = false) inspectionId: String?
     ): ResponseEntity<List<ObservationDefectReportDto>> {
-        val inspections = inspectionService.listNotDeleted(getAuthenticatedUser(), null, structureId)
+        val inspections = inspectionService.listNotDeleted(getAuthenticatedUser(), null, null, companyId)
+                .filter { !(inspectionId != null && it.uuid != inspectionId) }
+        return ResponseEntity.ok(mainDocumentFactory.createObservationDefectSummary(inspections))
+    }
+
+    @GetMapping("/defects/structure/{structureId}")
+    fun getObservationDefectsByStructure(@RequestHeader(X_TOKEN) token: String,
+                                         @PathVariable structureId: String,
+                                         @RequestParam(required = false) inspectionId: String?
+    ): ResponseEntity<List<ObservationDefectReportDto>> {
+        val inspections = inspectionService.listNotDeleted(getAuthenticatedUser(), null, structureId, null)
                 .filter { !(inspectionId != null && it.uuid != inspectionId) }
         return ResponseEntity.ok(mainDocumentFactory.createObservationDefectSummary(inspections))
     }
