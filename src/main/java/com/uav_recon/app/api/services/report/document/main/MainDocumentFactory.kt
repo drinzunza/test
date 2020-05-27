@@ -678,6 +678,7 @@ class MainDocumentFactory(
                         }
                     }
         }
+        logger.info("Get ${results.size} subcomponents")
         return results
     }
 
@@ -689,7 +690,7 @@ class MainDocumentFactory(
         val users = userRepository.findAllByIdIn(inspections.map { it.createdBy.toLong() })
 
         val observationDefectIds = mutableListOf<String>()
-        inspections.forEach { it.observations?.forEach { it.defects?.forEach { observationDefectIds.add(it.id) } } }
+        inspections.forEach { it.observations?.forEach { it.defects?.forEach { observationDefectIds.add(it.uuid) } } }
         val photos = photoRepository.findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefectIds)
 
         val results = mutableListOf<ObservationDefectReportDto>()
@@ -716,7 +717,7 @@ class MainDocumentFactory(
                                     subcomponentName = observation.subcomponent?.name,
                                     dimensionNumber = observation.dimensionNumber,
                                     csRating = it.condition?.type?.title,
-                                    pictureLinks = photos.filter { photo -> photo.observationDefectId == it.id }.map { it.link },
+                                    pictureLinks = photos.filter { photo -> photo.observationDefectId == it.uuid }.map { it.link },
                                     inspectionId = inspection.uuid,
                                     inspectionDate = inspection.startDate,
                                     structureId = inspection.structureId,
@@ -728,6 +729,7 @@ class MainDocumentFactory(
                         }
                     }
         }
+        logger.info("Get ${results.size} defects")
         return results
     }
 }

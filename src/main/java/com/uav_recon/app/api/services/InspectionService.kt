@@ -99,10 +99,8 @@ class InspectionService(
         return listNotDeleted(user, projectId, structureId, companyId).map { i -> i.toDto(user) }
     }
 
-    fun listNotDeleted(user: User, projectId: Long?, structureId: String?, companyId: Long?): List<Inspection> {
-        // Creator company user can see created companies
-        var companyIds = mutableListOf<Long>()
-        user.companyId?.let { companyIds.add(it) }
+    fun getCompanyIds(user: User, companyId: Long?): List<Long> {
+        var companyIds = mutableListOf(user.companyId ?: 0)
         companyRepository.findAllByDeletedIsFalseAndCreatorCompanyId(user.companyId ?: 0).forEach {
             if (companyId == null) {
                 companyIds.add(it.id)
@@ -110,22 +108,36 @@ class InspectionService(
                 companyIds = mutableListOf(companyId)
             }
         }
+        return companyIds
+    }
 
-        val isOwnerCompany = companyRepository.findFirstByDeletedIsFalseAndId(user.companyId ?: 0)?.type == CompanyType.OWNER
+    fun getUserIds(user: User, companyIds: List<Long>): List<Int> {
+        val userIds = mutableListOf(user.id.toInt())
+        userRepository.findAllByCompanyIdIn(companyIds).forEach {
+            userIds.add(it.id.toInt())
+        }
+        return userIds
+    }
+
+    fun listNotDeleted(user: User, projectId: Long?, structureId: String?, companyId: Long?): List<Inspection> {
+        // Creator company user can see created companies
+        val companyIds = getCompanyIds(user, companyId)
+        val userIds = getUserIds(user, companyIds)
+
+        val isOwnerCompany = companyRepository.findFirstByDeletedIsFalseAndId(companyId ?: 0)?.type == CompanyType.OWNER
         val companyProjects = projectRepository.findAllByDeletedIsFalseAndCompanyIdIn(companyIds)
         val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
         val projectRoles = projectRoleRepository.findAllByProjectIdIn(companyProjects.map { it.id })
 
-        val projectInspections = inspectionRepository.findAllByDeletedIsFalseAndProjectIdIn(companyProjects.map { it.id })
-        val userInspections = inspectionRepository.findAllByDeletedIsFalseAndCreatedBy(user.id.toInt())
-        val inspectorsInspections = inspectionRepository.findAllByDeletedIsFalseAndUuidIn(inspectionRoles.map { it.inspectionId })
+        var results = if (!isOwnerCompany) inspectionRepository.findAllByProjectIdInOrCreatedByInOrUuidIn(
+                companyProjects.map { it.id }, userIds, inspectionRoles.map { it.inspectionId }
+        ).filter { it.deleted == false } else listOf()
 
-        var results = createInspections(projectInspections, userInspections, inspectorsInspections)
         if (isOwnerCompany) {
             // 1. Returns all inspections that are conducted on all his structures if he’s an owner company user
-            val structures = structureRepository.findAllByCompanyId(user.companyId ?: 0)
+            val structures = structureRepository.findAllByCompanyId(companyId ?: 0)
             results = inspectionRepository.findAllByDeletedIsFalseAndStructureIdIn(structures.map { it.id })
-            logger.info("Owner company user")
+            logger.info("Owner company")
         } else if (user.admin) {
             // 2. Admin can see all own company inspections
             results = results
