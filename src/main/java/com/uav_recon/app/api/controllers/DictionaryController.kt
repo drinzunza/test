@@ -1,10 +1,7 @@
 package com.uav_recon.app.api.controllers
 
 import com.uav_recon.app.api.entities.db.BuildType
-import com.uav_recon.app.api.entities.requests.bridge.DictionariesDto
-import com.uav_recon.app.api.entities.requests.bridge.DictionaryDto
-import com.uav_recon.app.api.entities.requests.bridge.DictionaryIdsDto
-import com.uav_recon.app.api.entities.requests.bridge.StructureIdsDto
+import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.services.DictionaryService
 import com.uav_recon.app.configurations.ControllerConfiguration.BUILD_TYPE
 import com.uav_recon.app.configurations.ControllerConfiguration.ETAG
@@ -74,17 +71,16 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
 
     @GetMapping("/dictionaries")
     fun getDictionaries(@RequestHeader(X_TOKEN) token: String): ResponseEntity<DictionariesDto> {
-        val result = DictionariesDto(listOf())
-        return ResponseEntity.ok(result)
+        return ResponseEntity.ok(dictionaryService.getDictionaries(getAuthenticatedUser()))
     }
 
     @PostMapping("/dictionaries/save")
-    fun saveDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionariesDto): ResponseEntity<DictionariesDto> {
-        return ResponseEntity.ok(body)
+    fun saveDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionariesListDto): ResponseEntity<DictionariesDto> {
+        return ResponseEntity.ok(dictionaryService.saveDictionaries(getAuthenticatedUser(), body))
     }
 
     @PostMapping("/dictionaries/delete")
-    fun deleteDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionaryIdsDto): ResponseEntity<DictionaryIdsDto> {
-        return ResponseEntity.ok(body)
+    fun deleteDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionaryIdsDto): ResponseEntity<*> {
+        return ResponseEntity.ok(success)
     }
 }
