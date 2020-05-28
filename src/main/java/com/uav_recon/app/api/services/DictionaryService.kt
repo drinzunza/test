@@ -99,6 +99,7 @@ class DictionaryService(
         val saveComponents = mutableListOf<Component>()
         val saveSubcomponents = mutableListOf<Subcomponent>()
         val saveDefects = mutableListOf<Defect>()
+        val saveSubcomponentDefects = mutableListOf<SubcomponentDefect>()
         body.components?.forEach { component ->
             if (component.id == null || components.any { it.id == component.id }) {
                 val componentDto = component.toDto(user)
@@ -111,7 +112,9 @@ class DictionaryService(
 
                         subcomponent.defects?.forEach { defect ->
                             if (defect.id == null || defects.any { it.id == defect.id }) {
+                                val defectDto = defect.toDto()
                                 saveDefects.add(defect.toDto())
+                                saveSubcomponentDefects.add(SubcomponentDefect(0, subcomponentDto.id, defectDto.id))
                             }
                         }
                     }
@@ -122,6 +125,7 @@ class DictionaryService(
         componentRepository.saveAll(saveComponents)
         subcomponentRepository.saveAll(saveSubcomponents)
         defectRepository.saveAll(saveDefects)
+        subcomponentDefectRepository.saveAll(saveSubcomponentDefects)
         etagRepository.save(getEtag(
                 components = saveComponents,
                 subcomponents = saveSubcomponents,
