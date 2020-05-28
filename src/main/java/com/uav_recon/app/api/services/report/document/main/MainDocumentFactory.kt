@@ -161,7 +161,7 @@ class MainDocumentFactory(
         paragraph {
             createElements(
                 TRIPLE_LINE_FEED_ELEMENT,
-                STRUCTURE_TYPE_ELEMENT, structure?.type ?: ""
+                STRUCTURE_TYPE_ELEMENT, structure?.type?.name ?: ""
             )
             createElements(prefix = STRUCTURE_ID_ELEMENT, text = structure?.id)
             createElements(prefix = STRUCTURE_NAME_ELEMENT, text = structure?.name)

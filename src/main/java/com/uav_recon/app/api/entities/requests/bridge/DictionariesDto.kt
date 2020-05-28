@@ -9,7 +9,5 @@ data class DictionariesDto(
         val components: List<Component>,
         val subcomponents: List<Subcomponent>,
         val defects: List<Defect>,
-        val observationNames: List<ObservationName>,
-        val conditions: List<Condition>,
-        val locationIds: List<LocationIdDto>
+        val observationNames: List<ObservationName>
 ) : Serializable

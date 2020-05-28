@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("$VERSION")
+@RequestMapping(VERSION)
 class DictionaryController(private val dictionaryService: DictionaryService) : BaseController() {
 
     @GetMapping("/structures")
@@ -76,6 +76,7 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
     fun saveDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionariesDto): ResponseEntity<DictionariesDto> {
         return ResponseEntity.ok(body)
     }
+
     @PostMapping("/dictionaries/delete")
     fun deleteDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionaryIdsDto): ResponseEntity<DictionaryIdsDto> {
         return ResponseEntity.ok(body)

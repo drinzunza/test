@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.entities.db
 
+import org.hibernate.annotations.Type
 import java.io.Serializable
 import javax.persistence.*
 
@@ -10,7 +11,9 @@ class Structure(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: String,
     var name: String,
-    var type: String,
+    @Enumerated(EnumType.STRING)
+    @Type(type = "pgsql_enum")
+    var type: StructureComponentType,
     @Column(name = "primary_owner")
     var primaryOwner: String? = null,
     @Column(name = "caltrans_bridge_no")
