@@ -5,8 +5,8 @@ import java.io.Serializable
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class DictionaryIdsDto(
-        val componentIds: List<String>,
-        val subcomponentIds: List<String>,
-        val defectIds: List<String>,
-        val observationNameIds: List<String>
+        val componentIds: List<String>?,
+        val subcomponentIds: List<String>?,
+        val defectIds: List<String>?,
+        val observationNameIds: List<String>?
 ) : Serializable

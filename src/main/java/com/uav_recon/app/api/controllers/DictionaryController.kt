@@ -72,6 +72,12 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
         }
     }*/
 
+    @GetMapping("/dictionaries")
+    fun getDictionaries(@RequestHeader(X_TOKEN) token: String): ResponseEntity<DictionariesDto> {
+        val result = DictionariesDto(listOf())
+        return ResponseEntity.ok(result)
+    }
+
     @PostMapping("/dictionaries/save")
     fun saveDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionariesDto): ResponseEntity<DictionariesDto> {
         return ResponseEntity.ok(body)

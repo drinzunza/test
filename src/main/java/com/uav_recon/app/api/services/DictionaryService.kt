@@ -196,6 +196,8 @@ class DictionaryService(
     private fun Component.toDto() = ComponentDto(
             id = id,
             name = name,
+            type = type,
+            companyId = companyId,
             deleted = deleted,
             subComponentIds = subcomponentRepository.findAllByComponentId(id).toSubComponentIds()
     )
