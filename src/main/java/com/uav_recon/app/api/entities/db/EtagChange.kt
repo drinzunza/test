@@ -6,11 +6,11 @@ import java.io.Serializable
     При создании сущности (кроме структуры) обязательно должен приходить родительский элемент
  */
 class EtagChange : Serializable {
-    val defects: List<String> = mutableListOf()
-    val conditions: List<String> = mutableListOf()
-    val components: List<String> = mutableListOf()
-    val subcomponents: List<String> = mutableListOf()
-    val structures: List<String> = mutableListOf()
-    val locationIds: List<String> = mutableListOf()
-    val observationNames: List<String> = mutableListOf()
+    val defects = mutableListOf<String>()
+    val conditions = mutableListOf<String>()
+    val components = mutableListOf<String>()
+    val subcomponents = mutableListOf<String>()
+    val structures = mutableListOf<String>()
+    val locationIds = mutableListOf<String>()
+    val observationNames = mutableListOf<String>()
 }

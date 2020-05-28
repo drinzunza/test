@@ -75,12 +75,14 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
     }
 
     @PostMapping("/dictionaries/save")
-    fun saveDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionariesListDto): ResponseEntity<DictionariesDto> {
-        return ResponseEntity.ok(dictionaryService.saveDictionaries(getAuthenticatedUser(), body))
+    fun saveDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionariesDto): ResponseEntity<DictionariesDto> {
+        dictionaryService.saveDictionaries(getAuthenticatedUser(), body)
+        return ResponseEntity.ok(dictionaryService.getDictionaries(getAuthenticatedUser()))
     }
 
-    @PostMapping("/dictionaries/delete")
+    /*@PostMapping("/dictionaries/delete")
     fun deleteDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionaryIdsDto): ResponseEntity<*> {
+        dictionaryService.deleteDictionaries(getAuthenticatedUser(), body)
         return ResponseEntity.ok(success)
-    }
+    }*/
 }

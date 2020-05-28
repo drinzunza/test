@@ -8,5 +8,5 @@ import java.io.Serializable
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class DictionariesDto(
-        val components: List<ComponentWithSubcomponentDto>
+        val components: List<ComponentWithSubcomponentDto>?
 ) : Serializable

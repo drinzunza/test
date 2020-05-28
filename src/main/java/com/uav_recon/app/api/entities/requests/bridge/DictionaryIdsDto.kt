@@ -7,6 +7,5 @@ import java.io.Serializable
 data class DictionaryIdsDto(
         val componentIds: List<String>?,
         val subcomponentIds: List<String>?,
-        val defectIds: List<String>?,
-        val observationNameIds: List<String>?
+        val defectIds: List<String>?
 ) : Serializable
