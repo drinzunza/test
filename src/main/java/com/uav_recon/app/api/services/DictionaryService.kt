@@ -143,7 +143,7 @@ class DictionaryService(
             observationNames: List<ObservationName>? = null
     ): Etag {
         val change = EtagChange()
-        structures?.forEach { change.structures.add(it.id) }
+        structures?.forEach { change.structures.add(it.id!!) }
         components?.forEach { change.components.add(it.id) }
         subcomponents?.forEach { change.subcomponents.add(it.id) }
         defects?.forEach { change.defects.add(it.id) }
@@ -342,7 +342,7 @@ class DictionaryService(
     )
 
     private fun Structure.toDto() = StructureDto(
-            id = id,
+            id = id!!,
             name = name,
             type = type,
             primaryOwner = primaryOwner,
@@ -351,7 +351,7 @@ class DictionaryService(
             beginStationing = beginStationing,
             endStationing = endStationing,
             deleted = deleted,
-            structuralComponentIds = structureComponentRepository.findAllByStructureId(id).toComponentIds()
+            structuralComponentIds = structureComponentRepository.findAllByStructureId(id!!).toComponentIds()
     )
 
     private fun Component.toDto() = ComponentDto(

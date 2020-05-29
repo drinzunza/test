@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.entities.db
 
+import org.hibernate.annotations.SQLDelete
 import org.hibernate.annotations.Type
 import org.hibernate.annotations.Where
 import java.io.Serializable
@@ -9,6 +10,7 @@ import javax.persistence.*
 @Entity
 @Table(name = "structures")
 @Where(clause = "is_deleted is false")
+@SQLDelete(sql = "UPDATE structures SET is_deleted=true WHERE id=?")
 class Structure(
     @Id
     var id: String = UUID.randomUUID().toString(),

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("${VERSION}/admin/structures")
-class StructureController(
+class AdminStructureController(
         private val structureService: StructureService
 ) : BaseController() {
     private val structureMapper = Mappers.getMapper(AdminStructureMapper::class.java)
