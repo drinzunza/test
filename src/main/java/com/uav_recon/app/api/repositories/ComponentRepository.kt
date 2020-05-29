@@ -7,5 +7,7 @@ interface ComponentRepository : CrudRepository<Component, String> {
     fun findAllByIdIn(ids: List<String>): List<Component>
     fun findAllByIdInAndIdContains(ids: List<String>, buildType: String): List<Component>
     fun findAllByIdContains(buildType: String): List<Component>
+    fun findAllByCompanyIdIn(ids: List<Long>): List<Component>
+    fun findAllByCompanyId(companyId: Long): List<Component>
     fun findFirstById(id: String): Component?
 }
