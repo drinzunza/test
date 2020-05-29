@@ -8,4 +8,5 @@ import org.springframework.data.repository.CrudRepository
 interface StructureComponentRepository : CrudRepository<StructureComponent, Int> {
     fun findAllByStructureId(structureId: String): List<StructureComponent>
     fun findAllByStructureIdIn(structureId: List<String>): List<StructureComponent>
+    fun deleteByStructureId(structureId: String)
 }

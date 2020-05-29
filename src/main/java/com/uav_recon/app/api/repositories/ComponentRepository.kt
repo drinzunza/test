@@ -1,6 +1,7 @@
 package com.uav_recon.app.api.repositories
 
 import com.uav_recon.app.api.entities.db.Component
+import com.uav_recon.app.api.entities.db.StructureComponentType
 import org.springframework.data.repository.CrudRepository
 
 interface ComponentRepository : CrudRepository<Component, String> {
@@ -9,5 +10,6 @@ interface ComponentRepository : CrudRepository<Component, String> {
     fun findAllByIdContains(buildType: String): List<Component>
     fun findAllByCompanyIdIn(ids: List<Long>): List<Component>
     fun findAllByCompanyId(companyId: Long): List<Component>
+    fun findAllByType(type: StructureComponentType): List<Component>
     fun findFirstById(id: String): Component?
 }

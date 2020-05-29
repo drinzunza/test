@@ -13,7 +13,9 @@ import java.util.*
 @Service
 class StructureService(private val structureRepository: StructureRepository,
                        private val companyRepository: CompanyRepository,
-                       private val etagRepository: EtagRepository
+                       private val etagRepository: EtagRepository,
+                       private val structureComponentService: StructureComponentService
+
 ) {
 
     fun listStructures(actor: User, companyId: Long?): List<Structure> {
@@ -35,6 +37,7 @@ class StructureService(private val structureRepository: StructureRepository,
     fun create(structure: Structure, actor: User): Structure {
         checkAllowForEditingStructure(structure, actor)
         createEtag(listOf(structure.id))
+        structureComponentService.refreshStructureComponents(structure.id, structure.type)
         return structureRepository.save(structure)
     }
 
@@ -46,6 +49,7 @@ class StructureService(private val structureRepository: StructureRepository,
 
         checkAllowForEditingStructure(structure, actor)
         createEtag(listOf(structure.id))
+        structureComponentService.deleteAllByStructure(structure.id)
         structureRepository.delete(structure)
         return structure.id
     }

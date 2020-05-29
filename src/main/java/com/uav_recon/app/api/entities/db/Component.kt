@@ -16,8 +16,6 @@ class Component(
     var type: StructureComponentType? = null,
     @Column(name = "company_id")
     var companyId: Long? = null,
-    @Column(name = "creator_company_id")
-    var creatorCompanyId: Long? = null,
     @Column(name = "is_deleted")
     var deleted: Boolean? = null
 ) : Serializable
