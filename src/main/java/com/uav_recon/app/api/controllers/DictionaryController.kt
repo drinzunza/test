@@ -31,11 +31,27 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
         } else {
             val tempEtag = if (versionCode.isNotEmpty()) lastEtagHash else fixETag
             ResponseEntity.ok().header(ETAG, tempEtag)
-                    .body(dictionaryService.getAll(fixETag, BuildType.parse(buildType)))
+                    .body(dictionaryService.getEtagChanges(getAuthenticatedUser(), fixETag, BuildType.parse(buildType), listOf()))
         }
     }
 
     @PostMapping("/structures")
+    fun getWithModified(@RequestHeader(X_TOKEN) token: String,
+                        @RequestHeader(ETAG, required = false, defaultValue = "") etag: String,
+                        @RequestHeader(BUILD_TYPE, required = false, defaultValue = "") buildType: String,
+                        @RequestHeader(VERSION_CODE, required = false, defaultValue = "") versionCode: String,
+                        @RequestBody body: StructureIdsDto
+    ): ResponseEntity<DictionaryDto> {
+        val fixETag = etag.removePrefix("\"").removeSuffix("\"")
+        val lastEtagHash = dictionaryService.getLastEtagHash()
+        val tempEtag = if (versionCode.isNotEmpty()) lastEtagHash else fixETag
+        return ResponseEntity.ok().header(ETAG, tempEtag)
+                .body(dictionaryService.getEtagChanges(
+                        getAuthenticatedUser(), fixETag, BuildType.parse(buildType), body.structureIds
+                ))
+    }
+
+    /*@PostMapping("/structures")
     fun getWithModified(@RequestHeader(X_TOKEN) token: String,
             @RequestHeader(ETAG, required = false, defaultValue = "") etag: String,
             @RequestHeader(BUILD_TYPE, required = false, defaultValue = "") buildType: String,
@@ -51,9 +67,9 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
         } else {
             val tempEtag = if (versionCode.isNotEmpty()) lastEtagHash else fixETag
             ResponseEntity.ok().header(ETAG, tempEtag)
-                    .body(dictionaryService.getAll(fixETag, BuildType.parse(buildType)))
+                    .body(dictionaryService.getEtagChanges(fixETag, BuildType.parse(buildType)))
         }
-    }
+    }*/
 
     /*fun getDictionaries(etag: String, buildType: String, versionCode: String, body: StructureIdsDto?): DictionaryDto {
         val fixETag = etag.removePrefix("\"").removeSuffix("\"")
@@ -79,10 +95,4 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
         dictionaryService.saveDictionaries(getAuthenticatedUser(), body)
         return ResponseEntity.ok(dictionaryService.getDictionaries(getAuthenticatedUser()))
     }
-
-    /*@PostMapping("/dictionaries/delete")
-    fun deleteDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionaryIdsDto): ResponseEntity<*> {
-        dictionaryService.deleteDictionaries(getAuthenticatedUser(), body)
-        return ResponseEntity.ok(success)
-    }*/
 }
