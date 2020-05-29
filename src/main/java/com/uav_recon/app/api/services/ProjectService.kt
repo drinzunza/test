@@ -37,7 +37,7 @@ class ProjectService(
     )
 
     fun Structure.toDto() = SimpleStructureDto(
-            id = id!!,
+            id = id,
             name = name
     )
 
