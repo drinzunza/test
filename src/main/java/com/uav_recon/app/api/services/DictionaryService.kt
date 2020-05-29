@@ -25,55 +25,11 @@ class DictionaryService(
         private val locationIdRepository: LocationIdRepository,
         private val observationNameRepository: ObservationNameRepository,
         private val etagRepository: EtagRepository,
-        private val companyRepository: CompanyRepository
+        private val projectStructureRepository: ProjectStructureRepository,
+        private val inspectionRoleRepository: InspectionRoleRepository,
+        private val inspectionRepository: InspectionRepository
 ) {
     private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
-
-    private fun Component.toDto(subcomponents: List<Subcomponent>, defects: List<Defect>, subcomponentDefects: List<SubcomponentDefect>) = ComponentWithSubcomponentDto(
-            id = id,
-            name = name,
-            type = type,
-            deleted = deleted,
-            subcomponents = subcomponents.filter { it.componentId == id }.map { s -> s.toDtoWithDefects(defects, subcomponentDefects) }
-    )
-
-    private fun Subcomponent.toDtoWithDefects(defects: List<Defect>, subcomponentDefects: List<SubcomponentDefect>) = SubcomponentWithDefectsDto(
-            id = id,
-            name = name,
-            deleted = deleted,
-            defects = defects.filter { d -> subcomponentDefects.filter { it.subcomponentId == id }
-                    .map { it.defectId }.contains(d.id) }
-                    .map { d -> d.toSaveDto() }
-    )
-
-    private fun Defect.toSaveDto() = DefectSaveDto(
-            id = id,
-            name = name,
-            number = number,
-            deleted = deleted
-    )
-
-    private fun ComponentWithSubcomponentDto.toDto(user: User) = Component(
-            id = id ?: UUID.randomUUID().toString(),
-            name = name,
-            type = type,
-            companyId = user.companyId,
-            deleted = deleted
-    )
-
-    private fun SubcomponentWithDefectsDto.toDto(componentId: String) = Subcomponent(
-            id = id ?: UUID.randomUUID().toString(),
-            name = name,
-            componentId = componentId,
-            deleted = deleted
-    )
-
-    private fun DefectSaveDto.toDto() = Defect(
-            id = id ?: UUID.randomUUID().toString(),
-            name = name,
-            number = number,
-            deleted = deleted
-    )
 
     fun getDictionaries(user: User): DictionariesDto {
         val companyId = user.companyId ?: 0
@@ -157,34 +113,7 @@ class DictionaryService(
         )
     }
 
-    /*@Transactional
-    fun deleteDictionaries(user: User, body: DictionaryIdsDto) {
-        if (!user.admin) throw AccessDeniedException()
-
-        val companyId = user.companyId ?: 0
-        val components = componentRepository.findAllByCompanyId(companyId)
-        val subcomponents = subcomponentRepository.findAllByComponentIdIn(components.map { it.id })
-        val subcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(subcomponents.map { it.id })
-        val defects = defectRepository.findAllByIdIn(subcomponentDefects.map { it.defectId })
-
-        body.componentIds?.let { componentIds ->
-            val saveComponents = components.filter { componentIds.contains(it.id) }
-            saveComponents.forEach { it.deleted = true }
-            componentRepository.saveAll(saveComponents)
-        }
-        body.subcomponentIds?.let { subcomponentIds ->
-            val saveSubcomponents = subcomponents.filter { subcomponentIds.contains(it.id) }
-            saveSubcomponents.forEach { it.deleted = true }
-            subcomponentRepository.saveAll(saveSubcomponents)
-        }
-        body.defectIds?.let { defectIds ->
-            val saveDefects = defects.filter { defectIds.contains(it.id) }
-            saveDefects.forEach { it.deleted = true }
-            defectRepository.saveAll(saveDefects)
-        }
-    }*/
-
-    fun getAll(etagHash: String, buildType: BuildType): DictionaryDto {
+    fun getEtagChanges(user: User, etagHash: String, buildType: BuildType, clientStructureIds: List<String>): DictionaryDto {
         val etag = etagRepository.findFirstByHash(etagHash)
         val etags = if (etag != null) etagRepository.findAllSinceEtagId(etag.id) else listOf()
 
@@ -204,22 +133,50 @@ class DictionaryService(
                 null
             }
             if (change != null) {
-                conditionIds?.addAll(change.conditions)
-                defectIds?.addAll(change.defects)
-                subcomponentIds?.addAll(change.subcomponents)
-                componentIds?.addAll(change.components)
-                structureIds?.addAll(change.structures)
-                locationIds?.addAll(change.locationIds)
-                observationNameIds?.addAll(change.observationNames)
+                change.conditions.forEach { if (conditionIds?.contains(it) == false) conditionIds.add(it) }
+                change.defects.forEach { if (defectIds?.contains(it) == false) defectIds.add(it) }
+                change.subcomponents.forEach { if (subcomponentIds?.contains(it) == false) subcomponentIds.add(it) }
+                change.components.forEach { if (componentIds?.contains(it) == false) componentIds.add(it) }
+                change.structures.forEach { if (structureIds?.contains(it) == false) structureIds.add(it) }
+                change.locationIds.forEach { if (locationIds?.contains(it) == false) locationIds.add(it) }
+                change.observationNames.forEach { if (observationNameIds?.contains(it) == false) observationNameIds.add(it) }
             }
         }
 
+        return filterUserDictionaries(user, buildType, clientStructureIds, conditionIds, defectIds,
+                subcomponentIds, componentIds, structureIds, locationIds, observationNameIds
+        )
+    }
+
+    fun filterUserDictionaries(
+            user: User, buildType: BuildType, clientStructureIds: List<String>,
+            conditionIds: MutableList<String>?, defectIds: MutableList<String>?,
+            subcomponentIds: MutableList<String>?, componentIds: MutableList<String>?,
+            structureIds: MutableList<String>?, locationIds: MutableList<String>?,
+            observationNameIds: MutableList<String>?
+    ): DictionaryDto {
+        val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
+        val inspections = inspectionRepository.findAllByDeletedIsFalseAndUuidInAndCreatedByIn(inspectionRoles.map { it.inspectionId }, listOf(user.id.toInt()))
+        val projectIds = inspections.mapNotNull { it.projectId }
+        val projectStructureIds = projectStructureRepository.findAllByProjectIdIn(projectIds).map { it.structureId }
+        val mergedStructureIds = if (structureIds.isNullOrEmpty()) clientStructureIds else structureIds
+
+        val structures = getStructuresByIds(buildType, mergedStructureIds)
+                .filter { projectStructureIds.contains(it.id) }
+        val components = getComponentsByIds(buildType, componentIds)
+                .filter { it.companyId == user.companyId }
+        val subcomponents = getSubcomponentsByIds(buildType, subcomponentIds)
+                .filter { components.map { it.id }.contains(it.componentId) }
+        val subcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(subcomponents.map { it.id })
+        val defects = getDefectsByIds(buildType, defectIds)
+                .filter { subcomponentDefects.map { it.defectId }.contains(it.id) }
+
         return DictionaryDto(
                 getConditionsByIds(buildType, conditionIds),
-                getDefectsByIds(buildType, defectIds),
-                getSubcomponentsByIds(buildType, subcomponentIds),
-                getComponentsByIds(buildType, componentIds),
-                getStructuresByIds(buildType, structureIds),
+                defects,
+                subcomponents,
+                components,
+                structures,
                 getLocationByIds(buildType, locationIds),
                 getObservationNameByIds(buildType, observationNameIds))
     }
@@ -319,6 +276,82 @@ class DictionaryService(
                 structureRepository.findAll().map { s -> s.toDto() }
     }
 
+    private fun List<ObservationName>.toObservationNameIds(): List<String> {
+        val ids = mutableListOf<String>()
+        forEach { ids.add(it.id) }
+        return ids
+    }
+
+    private fun List<Condition>.toConditionIds(): List<String> {
+        val ids = mutableListOf<String>()
+        forEach { ids.add(it.id) }
+        return ids
+    }
+
+    private fun List<SubcomponentDefect>.toDefectIds(): List<String> {
+        val ids = mutableListOf<String>()
+        forEach { ids.add(it.defectId) }
+        return ids
+    }
+
+    private fun List<StructureComponent>.toComponentIds(): List<String> {
+        val ids = mutableListOf<String>()
+        forEach { ids.add(it.componentId) }
+        return ids
+    }
+
+    private fun List<Subcomponent>.toSubComponentIds(): List<String> {
+        val ids = mutableListOf<String>()
+        forEach { ids.add(it.id) }
+        return ids
+    }
+
+    private fun Component.toDto(subcomponents: List<Subcomponent>, defects: List<Defect>, subcomponentDefects: List<SubcomponentDefect>) = ComponentWithSubcomponentDto(
+            id = id,
+            name = name,
+            type = type,
+            deleted = deleted,
+            subcomponents = subcomponents.filter { it.componentId == id }.map { s -> s.toDtoWithDefects(defects, subcomponentDefects) }
+    )
+
+    private fun Subcomponent.toDtoWithDefects(defects: List<Defect>, subcomponentDefects: List<SubcomponentDefect>) = SubcomponentWithDefectsDto(
+            id = id,
+            name = name,
+            deleted = deleted,
+            defects = defects.filter { d -> subcomponentDefects.filter { it.subcomponentId == id }
+                    .map { it.defectId }.contains(d.id) }
+                    .map { d -> d.toSaveDto() }
+    )
+
+    private fun Defect.toSaveDto() = DefectSaveDto(
+            id = id,
+            name = name,
+            number = number,
+            deleted = deleted
+    )
+
+    private fun ComponentWithSubcomponentDto.toDto(user: User) = Component(
+            id = id ?: UUID.randomUUID().toString(),
+            name = name,
+            type = type,
+            companyId = user.companyId,
+            deleted = deleted
+    )
+
+    private fun SubcomponentWithDefectsDto.toDto(componentId: String) = Subcomponent(
+            id = id ?: UUID.randomUUID().toString(),
+            name = name,
+            componentId = componentId,
+            deleted = deleted
+    )
+
+    private fun DefectSaveDto.toDto() = Defect(
+            id = id ?: UUID.randomUUID().toString(),
+            name = name,
+            number = number,
+            deleted = deleted
+    )
+
     private fun Defect.toDto() = DefectDto(
             id = id,
             name = name,
@@ -351,6 +384,7 @@ class DictionaryService(
             beginStationing = beginStationing,
             endStationing = endStationing,
             deleted = deleted,
+            companyId = companyId,
             structuralComponentIds = structureComponentRepository.findAllByStructureId(id).toComponentIds()
     )
 
@@ -372,34 +406,4 @@ class DictionaryService(
             iteratedSpanPatterns = iteratedSpanPatterns?.split(','),
             deleted = deleted
     )
-
-    private fun List<ObservationName>.toObservationNameIds(): List<String> {
-        val ids = mutableListOf<String>()
-        forEach { ids.add(it.id) }
-        return ids
-    }
-
-    private fun List<Condition>.toConditionIds(): List<String> {
-        val ids = mutableListOf<String>()
-        forEach { ids.add(it.id) }
-        return ids
-    }
-
-    private fun List<SubcomponentDefect>.toDefectIds(): List<String> {
-        val ids = mutableListOf<String>()
-        forEach { ids.add(it.defectId) }
-        return ids
-    }
-
-    private fun List<StructureComponent>.toComponentIds(): List<String> {
-        val ids = mutableListOf<String>()
-        forEach { ids.add(it.componentId) }
-        return ids
-    }
-
-    private fun List<Subcomponent>.toSubComponentIds(): List<String> {
-        val ids = mutableListOf<String>()
-        forEach { ids.add(it.id) }
-        return ids
-    }
 }
