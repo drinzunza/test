@@ -11,7 +11,6 @@ import javax.persistence.*
 @Where(clause = "is_deleted is false")
 class Structure(
     @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: String = UUID.randomUUID().toString(),
     var name: String = "",
     @Enumerated(EnumType.STRING)
