@@ -124,7 +124,8 @@ class InspectionService(
         val companyIds = getCompanyIds(user, companyId)
         val userIds = getUserIds(user, companyIds)
 
-        val isOwnerCompany = companyRepository.findFirstByDeletedIsFalseAndId(companyId ?: 0)?.type == CompanyType.OWNER
+        val isOwnerCompany = companyRepository.findFirstByDeletedIsFalseAndId(companyId ?: user.companyId ?: 0)
+                ?.type == CompanyType.OWNER
         val companyProjects = projectRepository.findAllByDeletedIsFalseAndCompanyIdIn(companyIds)
         val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
         val projectRoles = projectRoleRepository.findAllByProjectIdIn(companyProjects.map { it.id })
