@@ -156,13 +156,19 @@ class DictionaryService(
             observationNameIds: MutableList<String>?
     ): DictionaryDto {
         val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
-        val inspections = inspectionRepository.findAllByDeletedIsFalseAndUuidInAndCreatedByIn(inspectionRoles.map { it.inspectionId }, listOf(user.id.toInt()))
+        val inspections = inspectionRepository.findAllByUuidInOrCreatedByIn(inspectionRoles.map { it.inspectionId }, listOf(user.id.toInt()))
+                .filter { it.deleted == false }
         val projectIds = inspections.mapNotNull { it.projectId }
         val projectStructureIds = projectStructureRepository.findAllByProjectIdIn(projectIds).map { it.structureId }
-        val mergedStructureIds = if (structureIds.isNullOrEmpty()) clientStructureIds else structureIds
+        val mergedStructureIds = mutableListOf<String>()
+        clientStructureIds.forEach { mergedStructureIds.add(it) }
+        structureIds?.forEach {
+            if (!mergedStructureIds.contains(it) && projectStructureIds.contains(it)) {
+                mergedStructureIds.add(it)
+            }
+        }
 
         val structures = getStructuresByIds(buildType, mergedStructureIds)
-                .filter { projectStructureIds.contains(it.id) }
         val components = getComponentsByIds(buildType, componentIds)
                 .filter { it.companyId == user.companyId }
         val subcomponents = getSubcomponentsByIds(buildType, subcomponentIds)

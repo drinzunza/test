@@ -124,7 +124,8 @@ class InspectionService(
         val companyIds = getCompanyIds(user, companyId)
         val userIds = getUserIds(user, companyIds)
 
-        val isOwnerCompany = companyRepository.findFirstByDeletedIsFalseAndId(companyId ?: 0)?.type == CompanyType.OWNER
+        val isOwnerCompany = companyRepository.findFirstByDeletedIsFalseAndId(companyId ?: user.companyId ?: 0)
+                ?.type == CompanyType.OWNER
         val companyProjects = projectRepository.findAllByDeletedIsFalseAndCompanyIdIn(companyIds)
         val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
         val projectRoles = projectRoleRepository.findAllByProjectIdIn(companyProjects.map { it.id })
@@ -135,8 +136,8 @@ class InspectionService(
 
         if (isOwnerCompany) {
             // 1. Returns all inspections that are conducted on all his structures if he’s an owner company user
-            val structures = structureRepository.findAllByCompanyId(companyId ?: 0)
-            results = inspectionRepository.findAllByDeletedIsFalseAndStructureIdIn(structures.map { it.id!! })
+            val structures = structureRepository.findAllByCompanyId(companyId ?: user.companyId ?: 0)
+            results = inspectionRepository.findAllByDeletedIsFalseAndStructureIdIn(structures.map { it.id })
             logger.info("Owner company")
         } else if (user.admin) {
             // 2. Admin can see all own company inspections
