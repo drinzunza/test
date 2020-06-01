@@ -1,4 +1,4 @@
-package com.uav_recon.app.api.services.mapper
+package com.uav_recon.app.api.controllers.mapper
 
 import com.uav_recon.app.api.controllers.dto.admin.AdminStructureInDTO
 import com.uav_recon.app.api.controllers.dto.admin.AdminStructureOutDTO

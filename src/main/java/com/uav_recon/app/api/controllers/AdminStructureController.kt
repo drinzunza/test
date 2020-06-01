@@ -2,17 +2,14 @@ package com.uav_recon.app.api.controllers
 
 import com.uav_recon.app.api.controllers.dto.admin.AdminStructureInDTO
 import com.uav_recon.app.api.controllers.dto.admin.AdminStructureOutDTO
-import com.uav_recon.app.api.services.mapper.AdminStructureMapper
-import com.uav_recon.app.api.entities.responses.bridge.ObservationDefectReportDto
-import com.uav_recon.app.api.entities.responses.bridge.SubcomponentHealthDto
-import com.uav_recon.app.api.services.InspectionService
+import com.uav_recon.app.api.controllers.mapper.AdminStructureMapper
 import com.uav_recon.app.api.services.StructureService
-import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
 import org.mapstruct.factory.Mappers
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import javax.validation.Valid
 
 @RestController
 @RequestMapping("${VERSION}/admin/structures")
@@ -30,8 +27,15 @@ class AdminStructureController(
     }
 
     @PostMapping
-    fun create(@RequestHeader(X_TOKEN) token: String, @RequestBody dto: AdminStructureInDTO): ResponseEntity<AdminStructureOutDTO> {
+    fun create(@RequestHeader(X_TOKEN) token: String, @Valid @RequestBody dto: AdminStructureInDTO): ResponseEntity<AdminStructureOutDTO> {
         val structure = structureService.create(structureMapper.map(dto), this.getAuthenticatedUser())
+        return ResponseEntity.ok(structureMapper.map(structure))
+    }
+
+    @PutMapping("/{structureId}")
+    fun update(@RequestHeader(X_TOKEN) token: String, @PathVariable structureId: String, @RequestBody dto: AdminStructureInDTO):
+            ResponseEntity<AdminStructureOutDTO> {
+        val structure = structureService.update(structureId, structureMapper.map(dto), this.getAuthenticatedUser())
         return ResponseEntity.ok(structureMapper.map(structure))
     }
 
