@@ -1,5 +1,6 @@
 #!/bin/sh
 # Run
+# copy ssh key files and .sh into frontend main dir
 # cd path/to/dir
 # ./deploy_frontend.sh
 
