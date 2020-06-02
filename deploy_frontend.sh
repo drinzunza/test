@@ -15,10 +15,16 @@ SSH_KEY_PATH=".ssh/cicd_rsa"
 SERVER_PATH="/opt/uav-recon-frontend/"
 FRONTEND_PORT="8080"
 
+# Build fontend
+npm install
+npm build
+
 # Add ssh key
 chmod 0600 $SSH_KEY_PATH
 ssh-add -K $SSH_KEY_PATH
 
+# Clear frontend dir
+ssh -i $SSH_KEY_PATH $SSH_HOST -p $SSH_PORT "rm -rf $SERVER_PATH && mkdir $SERVER_PATH"
 
 # Send run server script
 echo "#!/bin/sh
@@ -47,8 +53,8 @@ scp -P $SSH_PORT -i $SSH_KEY_PATH uav_recon_fr.conf $SSH_HOST:$SERVER_PATH
 scp -P $SSH_PORT -i $SSH_KEY_PATH uav_recon_fr.conf $SSH_HOST:/etc/supervisor/conf.d
 
 
-# Send server
+# Send frontend files
 scp -P $SSH_PORT -i $SSH_KEY_PATH -rp ./* $SSH_HOST:$SERVER_PATH
 
-# Run server
+# Run frontend
 ssh -i $SSH_KEY_PATH $SSH_HOST -p $SSH_PORT "supervisorctl stop uav_recon_fr:uav_recon_fr_00 && supervisorctl reread && supervisorctl update && supervisorctl restart uav_recon_fr:uav_recon_fr_00 && supervisorctl status"
