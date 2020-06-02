@@ -1,4 +1,7 @@
 #!/bin/sh
+# Run
+# cd path/to/dir
+# ./deploy_frontend.sh
 
 # Develop
 HOST="34.70.68.149"
@@ -21,7 +24,6 @@ yarn build
 # Add ssh key
 chmod 0600 $SSH_KEY_PATH
 ssh-add -K $SSH_KEY_PATH
-
 
 # Send frontend files
 ssh -i $SSH_KEY_PATH $SSH_HOST -p $SSH_PORT "rm -rf $SERVER_PATH && mkdir $SERVER_PATH"
