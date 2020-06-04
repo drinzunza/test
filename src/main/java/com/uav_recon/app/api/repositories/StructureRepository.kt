@@ -2,8 +2,11 @@ package com.uav_recon.app.api.repositories
 
 import com.uav_recon.app.api.entities.db.Structure
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
+import org.springframework.data.repository.query.Param
+import javax.transaction.Transactional
 
 interface StructureRepository : CrudRepository<Structure, String> {
     fun findAllByIdIn(ids: List<String>): List<Structure>
@@ -17,5 +20,13 @@ interface StructureRepository : CrudRepository<Structure, String> {
             inner join Company c on s.companyId = c.id
             where c.creatorCompanyId = :companyId
     """ )
-    fun listByParentCompanyId(companyId: Long): List<Structure>
+    fun listByParentCompanyId(@Param("companyId") companyId: Long): List<Structure>
+
+    @Transactional
+    @Modifying
+    @Query("""
+        delete from Structure  
+            where id = :structureId
+    """ )
+    fun hardDeleteStructure(@Param("structureId") structureId: String)
 }
