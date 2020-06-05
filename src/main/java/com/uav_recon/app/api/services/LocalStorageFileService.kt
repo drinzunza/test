@@ -30,6 +30,8 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         } else {
             Files.write(absolutePath, bytes, StandardOpenOption.CREATE_NEW)
         }
+        logger.info("File $absolutePath (${absolutePath.toFile().exists()})")
+
         generateRectImages(bytes, getRect(drawables), absolutePathWithRect.toFile(), absolutePathWithRectThumb.toFile(), format)
         return "$linkPrefix$path"
     }
