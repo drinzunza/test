@@ -272,12 +272,12 @@ class DictionaryService(
         val idPart = buildType.toStructureTypePart()
         return if (ids != null)
             if (idPart != null)
-                structureRepository.findAllByIdInAndTypeContains(ids, idPart).map { s -> s.toDto() }
+                structureRepository.findAllByIdInAndType(ids, idPart).map { s -> s.toDto() }
             else
                 structureRepository.findAllByIdIn(ids).map { s -> s.toDto() }
         else
             if (idPart != null)
-                structureRepository.findAllByTypeContains(idPart).map { s -> s.toDto() }
+                structureRepository.findAllByType(idPart).map { s -> s.toDto() }
             else
                 structureRepository.findAll().map { s -> s.toDto() }
     }
