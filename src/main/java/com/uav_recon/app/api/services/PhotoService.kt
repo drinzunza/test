@@ -88,6 +88,8 @@ class PhotoService(
              observationDefectId: String,
              updatedBy: Int
     ): PhotoDto {
+        logger.info("Saving photo ${dto.uuid}, ${dto.name}, ${dto.drawables}, ${dto.location?.latitude}x${dto.location?.longitude}")
+
         //checkRelationship(inspectionId, observationId, observationDefectId)
         var createdBy = updatedBy
         val link: String?
@@ -100,7 +102,9 @@ class PhotoService(
             link = photo.link
             dto.name = photo.name
             createdAtClient = photo.createdAtClient
+            logger.info("Photo ${dto.uuid} exists")
         } else {
+            logger.info("Photo ${dto.uuid} not exists")
             createdAtClient = dto.createdAt ?: OffsetDateTime.now()
             if (!dto.name.isNullOrBlank() && photoRepository
                             .findAllByNameAndObservationDefectId(dto.name!!, observationDefectId).isNotEmpty()) {
@@ -115,6 +119,7 @@ class PhotoService(
             val format = getFileFormat(data.contentType)
             link = fileService.save(updatedBy, inspectionId, observationId, observationDefectId,
                     dto.uuid, dto.drawables, format, data.bytes)
+            logger.info("Photo ${dto.uuid} saved with link $link")
         }
 
         dto.link = link
@@ -178,6 +183,8 @@ class PhotoService(
             } else {
                 logger.info("Photo defect weather already set or null (id=${observationDefect?.id}, temp=${observationDefect?.temperature})")
             }
+        } else {
+            logger.info("No latitude for weather")
         }
     }
 
