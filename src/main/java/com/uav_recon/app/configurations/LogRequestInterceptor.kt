@@ -24,6 +24,6 @@ class LogRequestInterceptor : HandlerInterceptorAdapter() {
     override fun afterCompletion(request: HttpServletRequest?, response: HttpServletResponse?, handler: Any?, ex: Exception?) {
         val startTime = (request?.getAttribute("startTime") ?: 0) as Long
         val time = Instant.now().toEpochMilli() - startTime
-        logger.info("${request?.method}::${request?.requestURL.toString()}:: Time=$time ms")
+        logger.info("${request?.method}::${request?.requestURL.toString()}:: Time=$time ms, Code=${response?.status}")
     }
 }
