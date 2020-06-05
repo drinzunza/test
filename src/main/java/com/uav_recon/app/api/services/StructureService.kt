@@ -36,8 +36,10 @@ class StructureService(private val structureRepository: StructureRepository,
     }
 
     @Throws(Error::class)
+    @Transactional
     fun create(structure: Structure, actor: User): Structure {
         checkAllowForEditingStructure(structure, actor)
+        structureRepository.hardDeleteStructure(structure.id)
         if (structureRepository.existsById(structure.id)) throw Error(400, "Structure with this id already exist")
         createEtag(listOf(structure.id))
         structureComponentService.refreshStructureComponents(structure.id, structure.type)
