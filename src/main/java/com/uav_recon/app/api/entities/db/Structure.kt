@@ -1,16 +1,12 @@
 package com.uav_recon.app.api.entities.db
 
-import org.hibernate.annotations.SQLDelete
 import org.hibernate.annotations.Type
-import org.hibernate.annotations.Where
 import java.io.Serializable
 import java.util.*
 import javax.persistence.*
 
 @Entity
 @Table(name = "structures")
-@Where(clause = "is_deleted is false")
-@SQLDelete(sql = "UPDATE structures SET is_deleted=true WHERE id=?")
 class Structure(
     @Id
     var id: String = UUID.randomUUID().toString(),
@@ -18,17 +14,17 @@ class Structure(
     @Enumerated(EnumType.STRING)
     @Type(type = "pgsql_enum")
     var type: StructureComponentType = StructureComponentType.BRIDGES_AND_AERIAL_STRUCTURE,
-        @Column(name = "primary_owner")
+    @Column(name = "primary_owner")
     var primaryOwner: String? = null,
-        @Column(name = "caltrans_bridge_no")
+    @Column(name = "caltrans_bridge_no")
     var caltransBridgeNo: String? = null,
-        var postmile: Double? = null,
-        @Column(name = "begin_stationing")
+    var postmile: Double? = null,
+    @Column(name = "begin_stationing")
     var beginStationing: String? = null,
-        @Column(name = "end_stationing")
+    @Column(name = "end_stationing")
     var endStationing: String? = null,
-        @Column(name = "is_deleted")
+    @Column(name = "is_deleted")
     var deleted: Boolean? = false,
-        @Column(name = "company_id")
+    @Column(name = "company_id")
     var companyId: Long? = null
 ) : Serializable

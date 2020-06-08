@@ -12,35 +12,35 @@ import java.util.*
 import javax.transaction.Transactional
 
 @Service
-class StructureService(private val structureRepository: StructureRepository,
-                       private val companyRepository: CompanyRepository,
-                       private val etagRepository: EtagRepository,
-                       private val structureComponentService: StructureComponentService
+class StructureService(
+        private val structureRepository: StructureRepository,
+        private val companyRepository: CompanyRepository,
+        private val etagRepository: EtagRepository,
+        private val structureComponentService: StructureComponentService
 ) {
 
     private val structureMapper = Mappers.getMapper(AdminStructureServiceMapper::class.java)
 
     fun listStructures(actor: User, companyId: Long?): List<Structure> {
-        return if (companyId === null) {
+        return if (companyId == null) {
             structureRepository.listByParentCompanyId(actor.companyId!!)
         } else {
-            structureRepository.findAllByCompanyId(companyId)
+            structureRepository.findAllByDeletedIsFalseAndCompanyId(companyId)
         }
     }
 
     @Throws(Error::class)
     fun get(structureId: String): Structure {
-        val optional = structureRepository.findById(structureId)
-        if (!optional.isPresent) throw Error(404, "Structure with this id not found")
-        return optional.get()
+        structureRepository.findFirstById(structureId)?.let { return it }
+        throw Error(404, "Structure with this id not found")
     }
 
     @Throws(Error::class)
     @Transactional
     fun create(structure: Structure, actor: User): Structure {
         checkAllowForEditingStructure(structure, actor)
-        structureRepository.hardDeleteStructure(structure.id)
-        if (structureRepository.existsById(structure.id)) throw Error(400, "Structure with this id already exist")
+        if (structureRepository.existsById(structure.id))
+            throw Error(400, "Structure with this id already exist")
         createEtag(listOf(structure.id))
         structureComponentService.refreshStructureComponents(structure.id, structure.type)
         return structureRepository.save(structure)
@@ -49,37 +49,31 @@ class StructureService(private val structureRepository: StructureRepository,
     @Throws(Error::class)
     @Transactional
     fun update(id: String, data: Structure, actor: User): Structure {
-
-        val optional = structureRepository.findById(id)
-        if (!optional.isPresent) throw Error(404, "Structure with this id not found")
-        var structure = optional.get()
-
-        structureMapper.update(data, structure)
-
-        checkAllowForEditingStructure(structure, actor)
-        createEtag(listOf(structure.id))
-        structureComponentService.refreshStructureComponents(structure.id, structure.type)
-        return structureRepository.save(structure)
+        structureRepository.findFirstById(id)?.let {
+            structureMapper.update(data, it)
+            checkAllowForEditingStructure(it, actor)
+            createEtag(listOf(it.id))
+            structureComponentService.refreshStructureComponents(it.id, it.type)
+            return structureRepository.save(it)
+        }
+        throw Error(404, "Structure with this id not found")
     }
 
     @Throws(Error::class)
     fun delete(structureId: String, actor: User): String {
-        val optional = structureRepository.findById(structureId)
-        if (!optional.isPresent) throw Error(404, "Structure with this id not found")
-        val structure = optional.get()
-
-        checkAllowForEditingStructure(structure, actor)
-        createEtag(listOf(structure.id))
-        structureComponentService.deleteAllByStructure(structure.id)
-        structureRepository.delete(structure)
-        return structure.id
+        structureRepository.findFirstById(structureId)?.let {
+            checkAllowForEditingStructure(it, actor)
+            createEtag(listOf(it.id))
+            structureRepository.safeDelete(it.id)
+            return it.id
+        }
+        throw Error(404, "Structure with this id not found")
     }
 
     private fun checkAllowForEditingStructure(structure: Structure, actor: User) {
-        val companyId: Long? = structure.companyId;
-
-        if (companyId != null) {
-            val company: Company = companyRepository.findFirstById(companyId) ?: throw  Error(19, "company not found")
+        if (structure.companyId != null) {
+            val company = companyRepository.findFirstById(structure.companyId!!)
+                    ?: throw  Error(19, "Company not found")
             if (structure.companyId != actor.companyId && actor.companyId != company.creatorCompanyId) {
                 throw  Error(21, "action not allowed")
             }

@@ -22,34 +22,41 @@ class AdminStructureController(
     fun list(@RequestHeader(X_TOKEN) token: String,
              @RequestParam(required = false) companyId: Long?
     ): ResponseEntity<List<AdminStructureOutDTO>> {
-        val dtoList = structureService.listStructures(this.getAuthenticatedUser(), companyId).map { structureMapper.map(it) }
+        val dtoList = structureService.listStructures(getAuthenticatedUser(), companyId)
+                .map { structureMapper.map(it) }
         return ResponseEntity.ok(dtoList)
     }
 
     @PostMapping
-    fun create(@RequestHeader(X_TOKEN) token: String, @Valid @RequestBody dto: AdminStructureInDTO): ResponseEntity<AdminStructureOutDTO> {
-        val structure = structureService.create(structureMapper.map(dto), this.getAuthenticatedUser())
+    fun create(@RequestHeader(X_TOKEN) token: String,
+               @Valid @RequestBody dto: AdminStructureInDTO
+    ): ResponseEntity<AdminStructureOutDTO> {
+        val structure = structureService.create(structureMapper.map(dto), getAuthenticatedUser())
         return ResponseEntity.ok(structureMapper.map(structure))
     }
 
     @PutMapping("/{structureId}")
-    fun update(@RequestHeader(X_TOKEN) token: String, @PathVariable structureId: String, @RequestBody dto: AdminStructureInDTO):
-            ResponseEntity<AdminStructureOutDTO> {
-        val structure = structureService.update(structureId, structureMapper.map(dto), this.getAuthenticatedUser())
+    fun update(@RequestHeader(X_TOKEN) token: String,
+               @PathVariable structureId: String,
+               @RequestBody dto: AdminStructureInDTO
+    ): ResponseEntity<AdminStructureOutDTO> {
+        val structure = structureService.update(structureId, structureMapper.map(dto), getAuthenticatedUser())
         return ResponseEntity.ok(structureMapper.map(structure))
     }
 
     @GetMapping("/{structureId}")
-    fun get(@RequestHeader(X_TOKEN) token: String, @PathVariable structureId: String
+    fun get(@RequestHeader(X_TOKEN) token: String,
+            @PathVariable structureId: String
     ): ResponseEntity<AdminStructureOutDTO> {
         val structure = structureService.get(structureId)
         return ResponseEntity.ok(structureMapper.map(structure))
     }
 
     @DeleteMapping("/{structureId}")
-    fun delete(@RequestHeader(X_TOKEN) token: String, @PathVariable structureId: String
+    fun delete(@RequestHeader(X_TOKEN) token: String,
+               @PathVariable structureId: String
     ): ResponseEntity<String> {
-        val id = structureService.delete(structureId, this.getAuthenticatedUser())
+        val id = structureService.delete(structureId, getAuthenticatedUser())
         return ResponseEntity.ok(id)
     }
 }

@@ -136,7 +136,7 @@ class InspectionService(
 
         if (isOwnerCompany) {
             // 1. Returns all inspections that are conducted on all his structures if he’s an owner company user
-            val structures = structureRepository.findAllByCompanyId(companyId ?: user.companyId ?: 0)
+            val structures = structureRepository.findAllByDeletedIsFalseAndCompanyId(companyId ?: user.companyId ?: 0)
             results = inspectionRepository.findAllByDeletedIsFalseAndStructureIdIn(structures.map { it.id })
             logger.info("Owner company")
         } else if (user.admin) {
