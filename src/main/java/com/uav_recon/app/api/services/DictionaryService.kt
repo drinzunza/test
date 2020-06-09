@@ -158,12 +158,17 @@ class DictionaryService(
         val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
         val inspections = inspectionRepository.findAllByUuidInOrCreatedByIn(inspectionRoles.map { it.inspectionId }, listOf(user.id.toInt()))
                 .filter { it.deleted == false }
-        val projectIds = inspections.mapNotNull { it.projectId }
+        val projectIds = inspections.mapNotNull { it.projectId }.toHashSet().toList()
         val projectStructureIds = projectStructureRepository.findAllByProjectIdIn(projectIds).map { it.structureId }
         val mergedStructureIds = mutableListOf<String>()
         clientStructureIds.forEach { mergedStructureIds.add(it) }
         structureIds?.forEach {
-            if (!mergedStructureIds.contains(it) && projectStructureIds.contains(it)) {
+            if (!mergedStructureIds.contains(it)) {
+                mergedStructureIds.add(it)
+            }
+        }
+        projectStructureIds.forEach {
+            if (!mergedStructureIds.contains(it)) {
                 mergedStructureIds.add(it)
             }
         }
