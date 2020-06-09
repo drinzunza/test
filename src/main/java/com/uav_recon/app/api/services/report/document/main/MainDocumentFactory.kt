@@ -163,7 +163,7 @@ class MainDocumentFactory(
                 TRIPLE_LINE_FEED_ELEMENT,
                 STRUCTURE_TYPE_ELEMENT, structure?.type?.name ?: ""
             )
-            createElements(prefix = STRUCTURE_ID_ELEMENT, text = structure?.id)
+            createElements(prefix = STRUCTURE_ID_ELEMENT, text = structure?.code)
             createElements(prefix = STRUCTURE_NAME_ELEMENT, text = structure?.name)
             createElements(prefix = PRIMARY_OWNER_ELEMENT, text = structure?.primaryOwner)
             lineFeed { LineFeedElement.Simple(1) }

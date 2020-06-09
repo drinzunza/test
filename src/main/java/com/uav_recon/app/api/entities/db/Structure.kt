@@ -10,6 +10,7 @@ import javax.persistence.*
 class Structure(
     @Id
     var id: String = UUID.randomUUID().toString(),
+    var code: String = "",
     var name: String = "",
     @Enumerated(EnumType.STRING)
     @Type(type = "pgsql_enum")

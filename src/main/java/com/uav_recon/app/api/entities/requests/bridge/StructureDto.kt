@@ -7,6 +7,7 @@ import java.io.Serializable
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class StructureDto(
         val id: String,
+        val code: String,
         val name: String,
         val type: StructureComponentType,
         val primaryOwner: String? = null,

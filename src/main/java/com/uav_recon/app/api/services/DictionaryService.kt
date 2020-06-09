@@ -382,6 +382,7 @@ class DictionaryService(
 
     private fun Structure.toDto() = StructureDto(
             id = id,
+            code = code,
             name = name,
             type = type,
             primaryOwner = primaryOwner,
