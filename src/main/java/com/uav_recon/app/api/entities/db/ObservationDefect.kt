@@ -27,7 +27,7 @@ import javax.persistence.Transient
 )
 class ObservationDefect(
         uuid: String,
-        val id: String,
+        var id: String,
         createdBy: Int,
         updatedBy: Int,
         @Column(name = "observation_id")

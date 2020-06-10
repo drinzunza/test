@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.repositories.CompanyRepository
 import com.uav_recon.app.api.repositories.EtagRepository
+import com.uav_recon.app.api.repositories.ObservationDefectRepository
 import com.uav_recon.app.api.repositories.StructureRepository
 import com.uav_recon.app.api.services.mapper.AdminStructureServiceMapper
 import org.mapstruct.factory.Mappers
@@ -16,10 +17,21 @@ class StructureService(
         private val structureRepository: StructureRepository,
         private val companyRepository: CompanyRepository,
         private val etagRepository: EtagRepository,
-        private val structureComponentService: StructureComponentService
+        private val structureComponentService: StructureComponentService,
+        private val observationDefectRepository: ObservationDefectRepository
 ) {
 
     private val structureMapper = Mappers.getMapper(AdminStructureServiceMapper::class.java)
+
+    fun regenerateObservationDefectIds(structureId: String, code: String) {
+        val defects = observationDefectRepository.getByStructureId(structureId)
+        defects.forEach {
+            val oldStructureId = it.id.replace("-\\w-[\\d]{3}-[\\d]+-[\\d]{8}".toRegex(), "")
+            val newId = it.id.replace(oldStructureId, code)
+            it.id = newId
+        }
+        observationDefectRepository.saveAll(defects)
+    }
 
     fun listStructures(actor: User, companyId: Long?): List<Structure> {
         return if (companyId == null) {
@@ -53,6 +65,7 @@ class StructureService(
             structureMapper.update(data, it)
             checkAllowForEditingStructure(it, actor)
             createEtag(listOf(it.id))
+            regenerateObservationDefectIds(id, it.code)
             structureComponentService.refreshStructureComponents(it.id, it.type)
             return structureRepository.save(it)
         }

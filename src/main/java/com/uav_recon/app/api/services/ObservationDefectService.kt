@@ -153,9 +153,7 @@ class ObservationDefectService(
     }
 
     @Throws(Error::class)
-    fun generateObservationDefectDisplayId(inspectorId: String, structureId: String?,
-                                           structuralObservation: Boolean?
-    ): String {
+    fun generateObservationDefectDisplayId(inspectorId: String, structureId: String?, structuralObservation: Boolean?): String {
         val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
         val observationLetter = if (structuralObservation != null && structuralObservation)
             OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE
