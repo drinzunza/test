@@ -7,6 +7,7 @@ import java.io.Serializable
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AdminStructureOutDTO(
         var id: String = "",
+        var code: String = "",
         var name: String = "",
         var type: StructureComponentType? = null,
         var clientId: Long? = null ,

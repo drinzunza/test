@@ -10,6 +10,8 @@ import javax.validation.constraints.NotEmpty
 data class AdminStructureInDTO(
         var id: String? = null,
         @NotEmpty
+        var code: String,
+        @NotEmpty
         var name: String,
         @NotEmpty
         var type: StructureComponentType,
