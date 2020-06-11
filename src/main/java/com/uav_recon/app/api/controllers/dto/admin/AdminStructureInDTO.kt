@@ -8,7 +8,7 @@ import javax.validation.constraints.NotEmpty
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AdminStructureInDTO(
-        var id: String? = null,
+        var id: String = "",
         @NotEmpty
         var code: String,
         @NotEmpty

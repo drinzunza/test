@@ -50,6 +50,9 @@ class StructureService(
     @Throws(Error::class)
     @Transactional
     fun create(structure: Structure, actor: User): Structure {
+        if (structure.id.isBlank()) {
+            structure.id = UUID.randomUUID().toString()
+        }
         checkAllowForEditingStructure(structure, actor)
         if (structureRepository.existsById(structure.id))
             throw Error(400, "Structure with this id already exist")
