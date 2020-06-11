@@ -40,7 +40,8 @@ class DictionaryService(
         val defects = defectRepository.findAllByIdIn(subcomponentDefects.map { it.defectId })
 
         return DictionariesDto(components.filter { it.companyId == companyId }
-                .map { c -> c.toDtoWithSubcomponents(subcomponents, defects, subcomponentDefects) })
+                .map { c -> c.toDtoWithSubcomponents(subcomponents, defects, subcomponentDefects) }
+                .filter { it.deleted == null || it.deleted == false })
     }
 
     @Transactional
