@@ -160,6 +160,7 @@ class DictionaryService(
             observationNameIds: MutableList<String>?
     ): DictionaryDto {
         // TODO add
+        checkDictionaryDto(allUserDictionaries)
         return allUserDictionaries
     }
 
@@ -212,6 +213,39 @@ class DictionaryService(
 
     fun getLastEtagHash(): String {
         return etagRepository.findTopByOrderByIdDesc()!!.hash
+    }
+
+    fun checkDictionaryDto(dic: DictionaryDto) {
+        logger.error("Start check dictionary relations")
+        dic.structures.forEach { s ->
+            s.structuralComponentIds.forEach {
+                if (!dic.structuralComponents.map { it.id }.contains(it)) {
+                    logger.error("Cannot find structure ${s.id} component $it")
+                }
+            }
+        }
+        dic.structuralComponents.forEach { c ->
+            c.subComponentIds.forEach {
+                if (!dic.subComponents.map { it.id }.contains(it)) {
+                    logger.error("Cannot find structuralComponent ${c.id} subcomponent $it")
+                }
+            }
+        }
+        dic.subComponents.forEach { s ->
+            s.defectIds.forEach {
+                if (!dic.defects.map { it.id }.contains(it)) {
+                    logger.error("Cannot find subComponent ${s.id} defect $it")
+                }
+            }
+        }
+        dic.defects.forEach { d ->
+            d.conditionIds.forEach {
+                if (!dic.conditions.map { it.id }.contains(it)) {
+                    logger.error("Cannot find defect ${d.id} condition $it")
+                }
+            }
+        }
+        logger.error("Stop check dictionary relations")
     }
 
     private fun Component.toDtoWithSubcomponents(subcomponents: List<Subcomponent>, defects: List<Defect>, subcomponentDefects: List<SubcomponentDefect>) = ComponentWithSubcomponentDto(
