@@ -153,15 +153,18 @@ class DictionaryService(
         )
     }
 
-    fun filterUserDictionaries(allUserDictionaries: DictionaryDto,
+    fun filterUserDictionaries(dic: DictionaryDto,
             conditionIds: MutableList<String>?, defectIds: MutableList<String>?,
             subcomponentIds: MutableList<String>?, componentIds: MutableList<String>?,
             structureIds: MutableList<String>?, locationIds: MutableList<String>?,
             observationNameIds: MutableList<String>?
     ): DictionaryDto {
         // TODO add
-        checkDictionaryDto(allUserDictionaries)
-        return allUserDictionaries
+        checkDictionaryDto(dic)
+        logger.info("structures=${dic.structures.size}, components=${dic.structuralComponents.size}, subcomponents=${dic.subComponents.size}, " +
+                "defects=${dic.defects.size}, conditions=${dic.conditions.size}, " +
+                "locations=${dic.locationIds.size}, observationNames=${dic.observationNames.size}")
+        return dic
     }
 
     fun getAllUserDictionaries(user: User, buildType: BuildType, clientStructureIds: List<String>): DictionaryDto {
@@ -178,12 +181,22 @@ class DictionaryService(
         projectStructureIds.forEach { if (!mergedStructureIds.contains(it)) mergedStructureIds.add(it) }
 
         // Show user company components, subcomponents, defects
-        val userStructureComponents = structureComponentRepository.findAllByStructureIdIn(mergedStructureIds)
+        val userStructures = structureRepository.findAllByIdIn(mergedStructureIds)
+                .filter { it.deleted != true }
+        var userStructureComponents = structureComponentRepository.findAllByStructureIdIn(mergedStructureIds)
         val userComponents = componentRepository.findAllByIdIn(userStructureComponents.map { it.componentId })
+                .filter { it.deleted != true }
         val userSubcomponents = subcomponentRepository.findAllByComponentIdIn(userComponents.map { it.id })
-        val userSubcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(userSubcomponents.map { it.id })
+                .filter { it.deleted != true }
+        var userSubcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(userSubcomponents.map { it.id })
         val userDefects = defectRepository.findAllByIdIn(userSubcomponentDefects.map { it.defectId })
+                .filter { it.deleted != true }
         val userConditions = conditionRepository.findAllByDefectIdIn(userDefects.map { it.id })
+                .filter { it.deleted != true }
+        userStructureComponents = userStructureComponents
+                .filter { userComponents.map { it.id }.contains(it.componentId) }
+        userSubcomponentDefects = userSubcomponentDefects
+                .filter { userDefects.map { it.id }.contains(it.defectId) }
 
         // Get all values
         val locations = locationIdRepository.findAll().map { s -> s.toDto() }
@@ -191,7 +204,7 @@ class DictionaryService(
 
         // Get dictionaries with ids
         val type = buildType.toStructureTypePart()
-        val structures = structureRepository.findAllByIdIn(mergedStructureIds)
+        val structures = userStructures
                 .filter { type == null || it.type == type }
                 .map { s -> s.toDto(userStructureComponents) }
         val components = userComponents
