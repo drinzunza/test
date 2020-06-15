@@ -21,5 +21,5 @@ class Subcomponent(
     @Column(name = "group_name")
     val groupName: String? = null,
     @Column(name = "is_deleted")
-    val deleted: Boolean? = null
+    var deleted: Boolean? = null
 ) : Serializable

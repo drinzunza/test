@@ -47,7 +47,10 @@ class ObservationDefectService(
         size = size,
         type = type,
         weather = getWeather(this),
-        observationNameId = observationNameId
+        observationNameId = observationNameId,
+        clockPosition = clockPosition,
+        repairDate = repairDate,
+        repairMethod = repairMethod
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
@@ -66,7 +69,10 @@ class ObservationDefectService(
         observationType = observationType,
         size = size,
         type = type,
-        observationNameId = observationNameId
+        observationNameId = observationNameId,
+        clockPosition = clockPosition,
+        repairMethod = repairMethod,
+        repairDate = repairDate
     )
 
     @Synchronized
@@ -96,7 +102,7 @@ class ObservationDefectService(
             val saved = observationDefectRepository.save(entity)
             return saveWeather(saved).toDto()
         } catch (e: Exception) {
-            logger.error("Error saving observation defect", e)
+            logger.error(e.message)
             if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
                 logger.info("Observation defect id (${dto.id}) incorrect")
                 dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId,
@@ -147,9 +153,7 @@ class ObservationDefectService(
     }
 
     @Throws(Error::class)
-    fun generateObservationDefectDisplayId(inspectorId: String, structureId: String?,
-                                           structuralObservation: Boolean?
-    ): String {
+    fun generateObservationDefectDisplayId(inspectorId: String, structureId: String?, structuralObservation: Boolean?): String {
         val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
         val observationLetter = if (structuralObservation != null && structuralObservation)
             OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE

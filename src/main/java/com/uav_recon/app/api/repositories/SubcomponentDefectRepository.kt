@@ -5,4 +5,5 @@ import org.springframework.data.repository.CrudRepository
 
 interface SubcomponentDefectRepository : CrudRepository<SubcomponentDefect, Int> {
     fun findAllBySubcomponentId(subcomponentId: String): List<SubcomponentDefect>
+    fun findAllBySubcomponentIdIn(subcomponentId: List<String>): List<SubcomponentDefect>
 }

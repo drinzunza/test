@@ -2,6 +2,8 @@ package com.uav_recon.app.api.services.report.document.main
 
 import com.uav_recon.app.api.beans.resources.Resources
 import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.entities.responses.bridge.ObservationDefectReportDto
+import com.uav_recon.app.api.entities.responses.bridge.SubcomponentHealthDto
 import com.uav_recon.app.api.repositories.*
 import com.uav_recon.app.api.services.FileService
 import com.uav_recon.app.api.services.ObservationService
@@ -64,9 +66,11 @@ class MainDocumentFactory(
         private val conditionRepository: ConditionRepository,
         private val observationNameRepository: ObservationNameRepository,
         private val locationIdRepository: LocationIdRepository,
+        private val companyRepository: CompanyRepository,
         private val resources: Resources,
         private val configuration: UavConfiguration,
-        private val fileService: FileService
+        private val fileService: FileService,
+        private val projectRepository: ProjectRepository
 ) : DocumentFactory {
 
     private val logger = LoggerFactory.getLogger(MainDocumentFactory::class.java)
@@ -133,8 +137,8 @@ class MainDocumentFactory(
     override fun generateDocument(report: Report): Document {
         val inspection = report.getInspection().fillObjects()
         val structure = inspection.getStructure()
-        val company = Company(1, "Alta Vista Solutions")
         val inspector = inspection.getInspector()
+        val company = inspector.getCompany()
 
         return Document.create {
             border { BORDER }
@@ -157,9 +161,9 @@ class MainDocumentFactory(
         paragraph {
             createElements(
                 TRIPLE_LINE_FEED_ELEMENT,
-                STRUCTURE_TYPE_ELEMENT, structure?.type ?: ""
+                STRUCTURE_TYPE_ELEMENT, structure?.type?.name ?: ""
             )
-            createElements(prefix = STRUCTURE_ID_ELEMENT, text = structure?.id)
+            createElements(prefix = STRUCTURE_ID_ELEMENT, text = structure?.code)
             createElements(prefix = STRUCTURE_NAME_ELEMENT, text = structure?.name)
             createElements(prefix = PRIMARY_OWNER_ELEMENT, text = structure?.primaryOwner)
             lineFeed { LineFeedElement.Simple(1) }
@@ -180,8 +184,8 @@ class MainDocumentFactory(
             text { REPORT_PREPARED_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             picture(
-                company?.name ?: "",
-                resources.getData("logo_altavista.png")!!.inputStream(),
+                company?.name ?: "Demo Company",
+                resources.getData(company?.logo ?: "logo_datarecon.png")!!.inputStream(),
                 LOGO_WIDTH,
                 LOGO_HEIGHT
             )
@@ -509,6 +513,7 @@ class MainDocumentFactory(
         return "$server/datarecon/$inspectorId/${inspection.uuid}/${observation?.id}/${observationDefect?.id}/$name"
     }
 
+    @Deprecated("Use List<Inspection>.fillObjects()")
     private fun Inspection.fillObjects(): Inspection {
         observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid)
         observations?.forEach { observation ->
@@ -520,6 +525,7 @@ class MainDocumentFactory(
         return this
     }
 
+    @Deprecated("Use List<Inspection>.fillObjects()")
     private fun Observation.fillObjects(): Observation {
         if (component == null) {
             component = structuralComponentId?.let {
@@ -537,6 +543,7 @@ class MainDocumentFactory(
         return this
     }
 
+    @Deprecated("Use List<Inspection>.fillObjects()")
     private fun ObservationDefect.fillObjects(): ObservationDefect {
         if (defect == null) {
             defect = defectId?.let {
@@ -568,7 +575,11 @@ class MainDocumentFactory(
         return userRepository.findFirstById(updatedBy.toLong())!!
     }
 
-    private fun Observation.getSpansCount(spansCount: Int?): Int? {
+    private fun User.getCompany(): Company {
+        return companyRepository.findFirstById(companyId!!)!!
+    }
+
+    fun Observation.getSpansCount(spansCount: Int?): Int? {
         return getLocationId()?.getAvailableSpans(spansCount)?.size
     }
 
@@ -604,5 +615,121 @@ class MainDocumentFactory(
             }
         }
         return spans
+    }
+
+    private fun List<Inspection>.fillObjects() {
+        val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(map { it.uuid })
+        val components = componentRepository.findAllByIdIn(observations.map { it.structuralComponentId ?: "" })
+        val subcomponents = subcomponentRepository.findAllByIdIn(observations.map { it.subComponentId ?: "" })
+        val observationDefects = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observations.map { it.uuid })
+        val defects = defectRepository.findAllByIdIn(observationDefects.map { it.defectId ?: "" })
+        val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
+        val observationNames = observationNameRepository.findAllByIdIn(observationDefects.map { it.observationNameId ?: "" })
+
+        observationDefects.forEach { observationDefect ->
+            observationDefect.defect = defects.firstOrNull { it.id == observationDefect.defectId }
+            observationDefect.condition = conditions.firstOrNull { it.id == observationDefect.conditionId }
+            observationDefect.observationName = observationNames.firstOrNull { it.id == observationDefect.observationNameId }
+        }
+        observations.forEach { observation ->
+            observation.component = components.firstOrNull { it.id == observation.structuralComponentId }
+            observation.subcomponent = subcomponents.firstOrNull { it.id == observation.subComponentId }
+            observation.defects = observationDefects.filter { it.observationId == observation.uuid }
+        }
+        forEach { inspection ->
+            inspection.observations = observations.filter { it.inspectionId == inspection.uuid }
+        }
+    }
+
+    fun createObservationSummary(inspections: List<Inspection>): List<SubcomponentHealthDto> {
+        inspections.fillObjects()
+
+        val structures = structureRepository.findAllByIdIn(inspections.map { it.structureId ?: "" })
+        val results = mutableListOf<SubcomponentHealthDto>()
+        for (inspection in inspections) {
+            inspection.observations
+                    ?.sortedBy { it.component?.name }
+                    ?.groupBy { it.component }
+                    ?.forEach {
+                        val component = it.key ?: return@forEach
+                        val list = it.value.map { observation ->
+                            val spansCount = observation.getSpansCount(inspection.spansCount) ?: 0
+                            DefectSummaryFields.ObservationData(observation, spansCount, observationService)
+                        }
+                        val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
+
+                        list.forEach {
+                            val structure = structures.firstOrNull { it.id == inspection.structureId }
+                            results.add(SubcomponentHealthDto(
+                                    id = it.subComponentId,
+                                    structureId = structure?.id,
+                                    structureName = structure?.name,
+                                    inspectionId = inspection.uuid,
+                                    inspectionDate = inspection.startDate,
+                                    componentName = component.name,
+                                    subcomponentName = it.subComponentName,
+                                    subcomponentHealthIndex = it.healthIndex,
+                                    componentHealthIndex = totalHealthIndex,
+                                    conditionRating1 = it.cs1,
+                                    conditionRating2 = it.cs2,
+                                    conditionRating3 = it.cs3,
+                                    conditionRating4 = it.cs4
+                            ))
+                        }
+                    }
+        }
+        logger.info("Get ${results.size} subcomponents")
+        return results
+    }
+
+    fun createObservationDefectSummary(inspections: List<Inspection>): List<ObservationDefectReportDto> {
+        inspections.fillObjects()
+
+        val structures = structureRepository.findAllByIdIn(inspections.map { it.structureId ?: "" })
+        val projects = projectRepository.findAllByIdIn(inspections.map { it.projectId ?: 0 })
+        val users = userRepository.findAllByIdIn(inspections.map { it.createdBy.toLong() })
+
+        val observationDefectIds = mutableListOf<String>()
+        inspections.forEach { it.observations?.forEach { it.defects?.forEach { observationDefectIds.add(it.uuid) } } }
+        val photos = photoRepository.findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefectIds)
+
+        val results = mutableListOf<ObservationDefectReportDto>()
+        for (inspection in inspections) {
+            inspection.observations
+                    ?.sortedBy { it.component?.name }
+                    ?.forEach { observation ->
+                        observation.defects?.forEach {
+                            val inspector = users.firstOrNull { it.id == inspection.createdBy.toLong() }
+                            results.add(ObservationDefectReportDto(
+                                    uuid = it.uuid,
+                                    id = it.id,
+                                    stationMarker = it.stationMarker,
+                                    clockPosition = it.clockPosition,
+                                    observationType = it.observationType,
+                                    classification = it.type,
+                                    locationId = it.span,
+                                    summary = it.description,
+                                    description = it.defect?.name,
+                                    repairMethod = it.repairMethod,
+                                    repairDate = it.repairDate,
+                                    size = it.size,
+                                    componentName = observation.component?.name,
+                                    subcomponentName = observation.subcomponent?.name,
+                                    dimensionNumber = observation.dimensionNumber,
+                                    csRating = it.condition?.type?.title,
+                                    pictureLinks = photos.filter { photo -> photo.observationDefectId == it.uuid }.map { it.link },
+                                    inspectionId = inspection.uuid,
+                                    inspectionDate = inspection.startDate,
+                                    structureId = inspection.structureId,
+                                    structureName = structures.firstOrNull { it.id == inspection.structureId }?.name,
+                                    projectId = inspection.projectId,
+                                    projectName = projects.firstOrNull { it.id == inspection.projectId }?.name,
+                                    inspectorName = inspector?.let { "${inspector.firstName} ${inspector.lastName}" }
+                            ))
+                        }
+                    }
+        }
+        logger.info("Get ${results.size} defects")
+        return results
     }
 }

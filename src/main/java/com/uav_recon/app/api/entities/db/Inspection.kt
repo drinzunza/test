@@ -50,6 +50,8 @@ class Inspection(
         var spansCount: Int? = 0,
         @Column(name = "is_deleted")
         var deleted: Boolean? = false,
+        @Column(name = "project_id")
+        var projectId: Long? = null,
         @Transient
         var observations: List<Observation>? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)

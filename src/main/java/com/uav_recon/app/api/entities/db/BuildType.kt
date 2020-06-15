@@ -11,10 +11,10 @@ enum class BuildType {
         }
     }
 
-    fun toStructureTypePart(): String? {
+    fun toStructureTypePart(): StructureComponentType? {
         return when(this) {
-            BRIDGES -> "BRIDGES"
-            TUNNELS -> "TUNNELS"
+            BRIDGES -> StructureComponentType.BRIDGES_AND_AERIAL_STRUCTURE
+            TUNNELS -> StructureComponentType.SUBWAY_TUNNELS_USECTION
             else -> null
         }
     }
