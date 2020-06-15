@@ -181,7 +181,7 @@ class DictionaryService(
         val userComponents = componentRepository.findAllByIdIn(userStructureComponents.map { it.componentId })
         val userSubcomponents = subcomponentRepository.findAllByComponentIdIn(userComponents.map { it.id })
         val userSubcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(userSubcomponents.map { it.id })
-        val userDefects = defectRepository.findAllByIdIn(userSubcomponentDefects.map { it.defectId }.toHashSet().toList())
+        val userDefects = defectRepository.findAllByIdIn(userSubcomponentDefects.map { it.defectId })
         val userConditions = conditionRepository.findAllByDefectIdIn(userDefects.map { it.id })
 
         // Get all values
@@ -278,7 +278,7 @@ class DictionaryService(
             componentId = componentId,
             groupName = groupName,
             deleted = deleted,
-            defectIds = subcomponentDefects.filter { it.subcomponentId == id }.map { it.defectId },
+            defectIds = subcomponentDefects.filter { it.subcomponentId == id }.map { it.defectId }.toHashSet().toList(),
             observationNameIds = observationNames.map { it.id }
     )
 
