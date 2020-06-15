@@ -115,17 +115,19 @@ class DictionaryService(
         )
     }
 
+    fun initIds(etags: List<Etag>) = if (etags.isNotEmpty()) mutableListOf<String>() else null
+
     fun getEtagChanges(user: User, etagHash: String, buildType: BuildType, clientStructureIds: List<String>): DictionaryDto {
         val etag = etagRepository.findFirstByHash(etagHash)
         val etags = if (etag != null) etagRepository.findAllSinceEtagId(etag.id) else listOf()
 
-        val conditionIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
-        val defectIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
-        val subcomponentIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
-        val componentIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
-        val structureIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
-        val locationIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
-        val observationNameIds = if (etags.isNotEmpty()) mutableListOf<String>() else null
+        val conditionIds = initIds(etags)
+        val defectIds = initIds(etags)
+        val subcomponentIds = initIds(etags)
+        val componentIds = initIds(etags)
+        val structureIds = initIds(etags)
+        val locationIds = initIds(etags)
+        val observationNameIds = initIds(etags)
 
         etags.forEach {
             val change = try {
@@ -171,23 +173,35 @@ class DictionaryService(
         projectStructureIds.forEach { if (!mergedStructureIds.contains(it)) mergedStructureIds.add(it) }
 
         // Show user company components, subcomponents, defects
-        val userComponents = componentRepository.findAllByCompanyId(user.companyId ?: 0)
+        val userStructureComponents = structureComponentRepository.findAllByStructureIdIn(mergedStructureIds)
+        val userComponents = componentRepository.findAllByIdIn(userStructureComponents.map { it.componentId })
         val userSubcomponents = subcomponentRepository.findAllByComponentIdIn(userComponents.map { it.id })
         val userSubcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(userSubcomponents.map { it.id })
+        val userDefects = defectRepository.findAllByIdIn(userSubcomponentDefects.map { it.defectId })
+        val userConditions = conditionRepository.findAllByDefectIdIn(userDefects.map { it.id })
 
         // Get all values
-        val conditions = getConditionsByIds(buildType, conditionIds)
         val locations = getLocationByIds(buildType, locationIds)
         val observationNames = getObservationNameByIds(buildType, observationNameIds)
 
         // Get dictionaries with ids
-        val structures = getStructuresByIds(buildType, mergedStructureIds)
-        val components = getComponentsByIds(buildType, componentIds, userSubcomponents)
-                .filter { it.companyId == user.companyId }
-        val subcomponents = getSubcomponentsByIds(buildType, subcomponentIds, userSubcomponentDefects, observationNames)
+        val type = buildType.toStructureTypePart()
+        val structures = structureRepository.findAllByIdIn(mergedStructureIds)
+                .filter { type == null || it.type == type }
+                .map { s -> s.toDto(userStructureComponents) }
+        val components = userComponents
+                .filter { type == null || it.type == type }
+                .map { c -> c.toDto(userSubcomponents) }
+        val subcomponents = userSubcomponents
                 .filter { components.map { it.id }.contains(it.componentId) }
-        val defects = getDefectsByIds(buildType, defectIds, conditions)
-                .filter { userSubcomponentDefects.map { it.defectId }.contains(it.id) }
+                .map { s -> s.toDto(userSubcomponentDefects, observationNames) }
+        val subcomponentDefects = userSubcomponentDefects
+                .filter { subcomponents.map { it.id }.contains(it.subcomponentId) }
+        val defects = userDefects
+                .filter { subcomponentDefects.map { it.defectId }.contains(it.id) }
+                .map { d -> d.toDto(userConditions) }
+        val conditions = userConditions
+                .filter { defects.map { it.id }.contains(it.defectId) }
 
         return DictionaryDto(conditions, defects, subcomponents, components, structures, locations, observationNames)
     }
@@ -264,8 +278,7 @@ class DictionaryService(
                 componentRepository.findAll().map { s -> s.toDto(subcomponents) }
     }
 
-    fun getStructuresByIds(buildType: BuildType, ids: List<String>?): List<StructureDto> {
-        val structureComponents = ids?.let { structureComponentRepository.findAllByStructureIdIn(it) } ?: listOf()
+    fun getStructuresByIds(buildType: BuildType, ids: List<String>?, structureComponents: List<StructureComponent>): List<StructureDto> {
         val idPart = buildType.toStructureTypePart()
         return if (ids != null)
             if (idPart != null)
