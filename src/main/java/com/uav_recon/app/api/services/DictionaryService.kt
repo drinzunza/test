@@ -159,17 +159,11 @@ class DictionaryService(
             dic.subComponents = dic.subComponents.filter { subcomponentIds?.contains(it.id) ?: false }
             dic.defects = dic.defects.filter { defectIds?.contains(it.id) ?: false }
             dic.conditions = dic.conditions.filter { conditionIds?.contains(it.id) ?: false }
-
-            dic.structures.forEach { it.structuralComponentIds = it.structuralComponentIds.filter { dic.structuralComponents.map { it.id }.contains(it) } }
-            dic.structuralComponents.forEach { it.subComponentIds = it.subComponentIds.filter { dic.subComponents.map { it.id }.contains(it) } }
-            dic.subComponents.forEach { it.defectIds = it.defectIds.filter { dic.defects.map { it.id }.contains(it) } }
-            dic.defects.forEach { it.conditionIds = it.conditionIds.filter { dic.conditions.map { it.id }.contains(it) } }
-
             dic.locationIds = dic.locationIds.filter { locationIds?.contains(it.id) ?: false }
             dic.observationNames = dic.observationNames.filter { observationNameIds?.contains(it.id) ?: false }
         }
 
-        checkDictionaryDto(dic)
+        //checkDictionaryDto(dic)
         logger.info("structures=${dic.structures.size}, components=${dic.structuralComponents.size}, " +
                 "subcomponents=${dic.subComponents.size}, defects=${dic.defects.size}, " +
                 "conditions=${dic.conditions.size}, locations=${dic.locationIds.size}, " +
