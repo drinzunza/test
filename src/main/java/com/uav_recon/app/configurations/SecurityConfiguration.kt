@@ -40,7 +40,7 @@ open class SecurityConfiguration {
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().authorizeRequests()
                     .antMatchers(AUTH_PATH).permitAll()
-                    .antMatchers(API_PATH_PATTERN).authenticated()
+                    .antMatchers(API_PATH_PATTERN).authenticated().and().cors()
                     .and().exceptionHandling().authenticationEntryPoint(CustomAuthenticationEntryPoint())
                     .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         }
