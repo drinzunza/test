@@ -6,11 +6,11 @@ import java.io.Serializable
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class DictionaryDto(
-        val conditions: List<Condition>,
-        val defects: List<DefectDto>,
-        val subComponents: List<SubcomponentDto>,
-        val structuralComponents: List<ComponentDto>,
-        val structures: List<StructureDto>,
-        val locationIds: List<LocationIdDto>,
-        val observationNames: List<ObservationName>
+        var conditions: List<Condition>,
+        var defects: List<DefectDto>,
+        var subComponents: List<SubcomponentDto>,
+        var structuralComponents: List<ComponentDto>,
+        var structures: List<StructureDto>,
+        var locationIds: List<LocationIdDto>,
+        var observationNames: List<ObservationName>
 ) : Serializable

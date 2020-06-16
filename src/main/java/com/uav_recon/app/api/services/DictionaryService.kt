@@ -122,7 +122,11 @@ class DictionaryService(
     fun getEtagChanges(user: User, etagHash: String, buildType: BuildType, clientStructureIds: List<String>): DictionaryDto {
         val etag = etagRepository.findFirstByHash(etagHash)
         val etags = if (etag != null) etagRepository.findAllSinceEtagId(etag.id) else listOf()
+        val allUserDictionaries = getAllUserDictionaries(user, buildType, clientStructureIds)
+        return filterUserDictionaries(allUserDictionaries, etags)
+    }
 
+    fun filterUserDictionaries(dic: DictionaryDto, etags: List<Etag>): DictionaryDto {
         val conditionIds = initIds(etags)
         val defectIds = initIds(etags)
         val subcomponentIds = initIds(etags)
@@ -149,23 +153,27 @@ class DictionaryService(
             }
         }
 
-        val allUserDictionaries = getAllUserDictionaries(user, buildType, clientStructureIds)
-        return filterUserDictionaries(allUserDictionaries, conditionIds, defectIds,
-                subcomponentIds, componentIds, structureIds, locationIds, observationNameIds
-        )
-    }
+        if (etags.isNotEmpty()) {
+            dic.structures = dic.structures.filter { structureIds?.contains(it.id) ?: false }
+            dic.structuralComponents = dic.structuralComponents.filter { componentIds?.contains(it.id) ?: false }
+            dic.subComponents = dic.subComponents.filter { subcomponentIds?.contains(it.id) ?: false }
+            dic.defects = dic.defects.filter { defectIds?.contains(it.id) ?: false }
+            dic.conditions = dic.conditions.filter { conditionIds?.contains(it.id) ?: false }
 
-    fun filterUserDictionaries(dic: DictionaryDto,
-            conditionIds: MutableList<String>?, defectIds: MutableList<String>?,
-            subcomponentIds: MutableList<String>?, componentIds: MutableList<String>?,
-            structureIds: MutableList<String>?, locationIds: MutableList<String>?,
-            observationNameIds: MutableList<String>?
-    ): DictionaryDto {
-        // TODO add
+            dic.structures.forEach { it.structuralComponentIds = it.structuralComponentIds.filter { dic.structuralComponents.map { it.id }.contains(it) } }
+            dic.structuralComponents.forEach { it.subComponentIds = it.subComponentIds.filter { dic.subComponents.map { it.id }.contains(it) } }
+            dic.subComponents.forEach { it.defectIds = it.defectIds.filter { dic.defects.map { it.id }.contains(it) } }
+            dic.defects.forEach { it.conditionIds = it.conditionIds.filter { dic.conditions.map { it.id }.contains(it) } }
+
+            dic.locationIds = dic.locationIds.filter { locationIds?.contains(it.id) ?: false }
+            dic.observationNames = dic.observationNames.filter { observationNameIds?.contains(it.id) ?: false }
+        }
+
         checkDictionaryDto(dic)
-        logger.info("structures=${dic.structures.size}, components=${dic.structuralComponents.size}, subcomponents=${dic.subComponents.size}, " +
-                "defects=${dic.defects.size}, conditions=${dic.conditions.size}, " +
-                "locations=${dic.locationIds.size}, observationNames=${dic.observationNames.size}")
+        logger.info("structures=${dic.structures.size}, components=${dic.structuralComponents.size}, " +
+                "subcomponents=${dic.subComponents.size}, defects=${dic.defects.size}, " +
+                "conditions=${dic.conditions.size}, locations=${dic.locationIds.size}, " +
+                "observationNames=${dic.observationNames.size}")
         return dic
     }
 

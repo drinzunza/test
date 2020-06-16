@@ -17,5 +17,5 @@ data class StructureDto(
         val endStationing: String? = null,
         val deleted: Boolean? = null,
         val companyId: Long? = null,
-        val structuralComponentIds: List<String>
+        var structuralComponentIds: List<String>
 ) : Serializable

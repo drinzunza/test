@@ -14,6 +14,6 @@ data class SubcomponentDto(
         val componentId: String,
         val groupName: String? = null,
         val deleted: Boolean? = null,
-        val defectIds: List<String>,
+        var defectIds: List<String>,
         var observationNameIds: List<String>
 ) : Serializable
