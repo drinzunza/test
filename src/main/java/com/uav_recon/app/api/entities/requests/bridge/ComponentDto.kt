@@ -11,5 +11,5 @@ data class ComponentDto(
         val type: StructureComponentType? = null,
         val companyId: Long? = null,
         val deleted: Boolean? = null,
-        val subComponentIds: List<String>
+        var subComponentIds: List<String>
 ) : Serializable
