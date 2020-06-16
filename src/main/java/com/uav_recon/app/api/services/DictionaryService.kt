@@ -37,19 +37,14 @@ class DictionaryService(
         val components = componentRepository.findAllByCompanyId(companyId)
         val subcomponents = subcomponentRepository.findAllByComponentIdIn(components.map { it.id })
         val subcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(subcomponents.map { it.id })
-        val minSubcomponentDefects = mutableListOf<SubcomponentDefect>()
-        // TODO check multiple subcomponent defects
-        subcomponentDefects.forEach { s ->
-            if (minSubcomponentDefects.none { it.subcomponentId == s.subcomponentId && it.defectId == s.defectId }) {
-                minSubcomponentDefects.add(s)
-            }
-        }
-        val defects = defectRepository.findAllByIdIn(minSubcomponentDefects.map { it.defectId }.toHashSet().toList())
+        val defects = defectRepository.findAllByIdIn(subcomponentDefects.map { it.defectId }.toHashSet().toList())
 
         return DictionariesDto(components.filter { it.companyId == companyId }
-                .map { c -> c.toDtoWithSubcomponents(subcomponents, defects, minSubcomponentDefects) }
+                .map { c -> c.toDtoWithSubcomponents(subcomponents, defects, subcomponentDefects) }
                 .filter { it.deleted == null || it.deleted == false })
     }
+
+    fun deleteNotUnique() = subcomponentDefectRepository.deleteNotUnique()
 
     @Transactional
     fun saveDictionaries(user: User, body: DictionariesDto) {

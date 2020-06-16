@@ -104,6 +104,7 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
     @PostMapping("$VERSION/dictionaries/save")
     fun saveDictionaries(@RequestHeader(X_TOKEN) token: String, @RequestBody body: DictionariesDto): ResponseEntity<DictionariesDto> {
         dictionaryService.saveDictionaries(getAuthenticatedUser(), body)
+        dictionaryService.deleteNotUnique()
         return ResponseEntity.ok(dictionaryService.getDictionaries(getAuthenticatedUser()))
     }
 }
