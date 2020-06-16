@@ -19,7 +19,6 @@ import java.time.Duration
 
 @Configuration
 @EnableSwagger2
-@EnableWebMvc
 class WebConfiguration(val configuration: UavConfiguration) : WebMvcConfigurer {
 
     @Autowired
