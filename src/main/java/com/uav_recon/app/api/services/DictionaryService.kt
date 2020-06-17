@@ -74,7 +74,7 @@ class DictionaryService(
                         subcomponent.defects?.forEach { defect ->
                             if (defect.id == null || defects.any { it.id == defect.id }) {
                                 val defectDto = defect.toDto()
-                                saveDefects.add(defect.toDto())
+                                saveDefects.add(defectDto)
                                 saveSubcomponentDefects.add(SubcomponentDefect(0, subcomponentDto.id, defectDto.id))
                             }
                         }
