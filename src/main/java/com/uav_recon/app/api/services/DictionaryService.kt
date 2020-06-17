@@ -123,10 +123,10 @@ class DictionaryService(
         val etag = etagRepository.findFirstByHash(etagHash)
         val etags = if (etag != null) etagRepository.findAllSinceEtagId(etag.id) else listOf()
         val allUserDictionaries = getAllUserDictionaries(user, buildType, clientStructureIds)
-        return filterUserDictionaries(allUserDictionaries, etags)
+        return filterUserDictionaries(allUserDictionaries, etags, clientStructureIds)
     }
 
-    fun filterUserDictionaries(dic: DictionaryDto, etags: List<Etag>): DictionaryDto {
+    fun filterUserDictionaries(dic: DictionaryDto, etags: List<Etag>, clientStructureIds: List<String>): DictionaryDto {
         val conditionIds = initIds(etags)
         val defectIds = initIds(etags)
         val subcomponentIds = initIds(etags)
@@ -154,7 +154,12 @@ class DictionaryService(
         }
 
         if (etags.isNotEmpty()) {
-            dic.structures = dic.structures.filter { structureIds?.contains(it.id) ?: false }
+            val newStructureIds = mutableListOf<String>()
+            dic.structures.map { it.id }.forEach {
+                if (!clientStructureIds.contains(it)) newStructureIds.add(it)
+            }
+
+            dic.structures = dic.structures.filter { (structureIds?.contains(it.id) ?: false) || newStructureIds.contains(it.id) }
             dic.structuralComponents = dic.structuralComponents.filter { componentIds?.contains(it.id) ?: false }
             dic.subComponents = dic.subComponents.filter { subcomponentIds?.contains(it.id) ?: false }
             dic.defects = dic.defects.filter { defectIds?.contains(it.id) ?: false }
