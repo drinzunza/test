@@ -7,7 +7,6 @@ import javax.persistence.*
 @Table(name = "defects")
 class Defect(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: String,
     val name: String,
     val number: Int? = null,

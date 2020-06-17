@@ -7,7 +7,6 @@ import javax.persistence.*
 @Table(name = "sub_components")
 class Subcomponent(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: String,
     var name: String,
     var number: Int? = null,

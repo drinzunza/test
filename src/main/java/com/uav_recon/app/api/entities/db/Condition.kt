@@ -8,7 +8,6 @@ import javax.persistence.*
 @Table(name = "conditions")
 class Condition(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: String,
     var description: String? = null,
     @Enumerated(EnumType.STRING)

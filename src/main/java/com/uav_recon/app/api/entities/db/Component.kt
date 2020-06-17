@@ -8,7 +8,6 @@ import javax.persistence.*
 @Table(name = "components")
 class Component(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: String,
     var name: String,
     @Enumerated(EnumType.STRING)
