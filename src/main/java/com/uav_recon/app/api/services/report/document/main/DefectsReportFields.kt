@@ -143,9 +143,9 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
             val inspectionId = inspection.uuid
             val observationId = inspection.observations?.firstOrNull {
                 it.defects?.any { d -> d.id == defect.id } ?: false
-            }?.id
+            }?.uuid
 
-            return "$server/datarecon/$inspectorId/$inspectionId/$observationId/${defect.id}"
+            return "$server/datarecon-links/$inspectorId/$inspectionId/$observationId/${defect.uuid}"
         }
 
         private val Observation.reportComponentName: String?

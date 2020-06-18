@@ -135,7 +135,8 @@ class MainDocumentFactory(
     }
 
     override fun generateDocument(report: Report): Document {
-        val inspection = report.getInspection().fillObjects()
+        val inspection = report.getInspection()
+        listOf(inspection).fillObjects()
         val structure = inspection.getStructure()
         val inspector = inspection.getInspector()
         val company = inspector.getCompany()
@@ -510,57 +511,7 @@ class MainDocumentFactory(
             } >= 0
         }
 
-        return "$server/datarecon/$inspectorId/${inspection.uuid}/${observation?.id}/${observationDefect?.id}/$name"
-    }
-
-    @Deprecated("Use List<Inspection>.fillObjects()")
-    private fun Inspection.fillObjects(): Inspection {
-        observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid)
-        observations?.forEach { observation ->
-            observation.fillObjects()
-            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).forEach { defect ->
-                defect.fillObjects()
-            }
-        }
-        return this
-    }
-
-    @Deprecated("Use List<Inspection>.fillObjects()")
-    private fun Observation.fillObjects(): Observation {
-        if (component == null) {
-            component = structuralComponentId?.let {
-                componentRepository.findFirstById(structuralComponentId!!)
-            }
-        }
-        if (subcomponent == null) {
-            subcomponent = subComponentId?.let {
-                subcomponentRepository.findFirstById(subComponentId!!)
-            }
-        }
-        if (defects == null) {
-            defects = observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(uuid)
-        }
-        return this
-    }
-
-    @Deprecated("Use List<Inspection>.fillObjects()")
-    private fun ObservationDefect.fillObjects(): ObservationDefect {
-        if (defect == null) {
-            defect = defectId?.let {
-                defectRepository.findFirstById(defectId!!)
-            }
-        }
-        if (condition == null) {
-            condition = conditionId?.let {
-                conditionRepository.findFirstById(conditionId!!)
-            }
-        }
-        if (observationName == null) {
-            observationName = observationNameId?.let {
-                observationNameRepository.findFirstById(observationNameId!!)
-            }
-        }
-        return this
+        return "$server/datarecon-links/$inspectorId/${inspection.uuid}/${observation?.uuid}/${observationDefect?.uuid}/$uuid.jpeg"
     }
 
     private fun Report.getInspection(): Inspection {
