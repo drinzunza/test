@@ -160,11 +160,32 @@ class DictionaryService(
                 if (!clientStructureIds.contains(it)) newStructureIds.add(it)
             }
 
-            dic.structures = dic.structures.filter { (structureIds?.contains(it.id) ?: false) || newStructureIds.contains(it.id) }
-            dic.structuralComponents = dic.structuralComponents.filter { componentIds?.contains(it.id) ?: false }
-            dic.subComponents = dic.subComponents.filter { subcomponentIds?.contains(it.id) ?: false }
-            dic.defects = dic.defects.filter { defectIds?.contains(it.id) ?: false }
-            dic.conditions = dic.conditions.filter { conditionIds?.contains(it.id) ?: false }
+            val clientComponentsIds = dic.structures.filter { it.id in clientStructureIds }
+                    .flatMap { it.structuralComponentIds }
+                    .distinct()
+
+            val newComponentsIds = dic.structures.filter { it.id in newStructureIds }
+                        .flatMap { it.structuralComponentIds }
+                        .distinct()
+            val addComponentsIds = newComponentsIds - clientComponentsIds
+
+            val addSubComponentsIds = dic.structuralComponents.filter { it.id in addComponentsIds }
+                    .flatMap { it.subComponentIds }
+                    .distinct()
+
+            val addDefectsIds = dic.subComponents.filter { it.id in addSubComponentsIds }
+                    .flatMap { it.defectIds }
+                    .distinct()
+
+            val addConditionIds = dic.defects.filter { it.id in addDefectsIds }
+                    .flatMap { it.conditionIds }
+                    .distinct()
+
+            dic.structures = dic.structures.filter { (structureIds?.contains(it.id) ?: false) || it.id in newStructureIds }
+            dic.structuralComponents = dic.structuralComponents.filter { componentIds?.contains(it.id) ?: false || it.id in addComponentsIds }
+            dic.subComponents = dic.subComponents.filter { subcomponentIds?.contains(it.id) ?: false || it.id in addSubComponentsIds }
+            dic.defects = dic.defects.filter { defectIds?.contains(it.id) ?: false || it.id in addDefectsIds }
+            dic.conditions = dic.conditions.filter { conditionIds?.contains(it.id) ?: false  || it.id in addConditionIds}
             dic.locationIds = dic.locationIds.filter { locationIds?.contains(it.id) ?: false }
             dic.observationNames = dic.observationNames.filter { observationNameIds?.contains(it.id) ?: false }
         }
