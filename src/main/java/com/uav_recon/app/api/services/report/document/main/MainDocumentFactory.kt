@@ -26,6 +26,8 @@ import com.uav_recon.app.api.utils.toDate
 import com.uav_recon.app.configurations.UavConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -72,7 +74,7 @@ class MainDocumentFactory(
         private val fileService: FileService,
         private val projectRepository: ProjectRepository
 ) : DocumentFactory {
-
+    private val fileStorageLocation: Path = Paths.get(configuration.files.root).toAbsolutePath().normalize()
     private val logger = LoggerFactory.getLogger(MainDocumentFactory::class.java)
 
     companion object {
@@ -186,7 +188,7 @@ class MainDocumentFactory(
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             picture(
                 company?.name ?: "Demo Company",
-                resources.getData(company?.logo ?: "logo_datarecon.png")!!.inputStream(),
+                fileStorageLocation.resolve(company?.logo?.split("/")?.last() ?: "logo_datarecon.png").toFile().inputStream(),
                 LOGO_WIDTH,
                 LOGO_HEIGHT
             )
