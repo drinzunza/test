@@ -74,7 +74,7 @@ class MainDocumentFactory(
         private val fileService: FileService,
         private val projectRepository: ProjectRepository
 ) : DocumentFactory {
-    private val fileStorageLocation: Path = Paths.get(configuration.files.upload_dir).toAbsolutePath().normalize()
+    private val fileStorageLocation: Path = Paths.get(configuration.files.uploadDir).toAbsolutePath().normalize()
     private val logger = LoggerFactory.getLogger(MainDocumentFactory::class.java)
 
     companion object {
