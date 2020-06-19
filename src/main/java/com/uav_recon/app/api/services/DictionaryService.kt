@@ -27,7 +27,8 @@ class DictionaryService(
         private val etagRepository: EtagRepository,
         private val projectStructureRepository: ProjectStructureRepository,
         private val inspectionRoleRepository: InspectionRoleRepository,
-        private val inspectionRepository: InspectionRepository
+        private val inspectionRepository: InspectionRepository,
+        private val inspectionService: InspectionService
 ) {
     private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
 
@@ -177,17 +178,10 @@ class DictionaryService(
     }
 
     fun getAllUserDictionaries(user: User, buildType: BuildType, clientStructureIds: List<String>): DictionaryDto {
-        // Get inspectors and PM
-        val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
-        val inspections = inspectionRepository.findAllByUuidInOrCreatedByIn(inspectionRoles.map { it.inspectionId }, listOf(user.id.toInt()))
-                .filter { it.deleted == false }
-        val projectIds = inspections.mapNotNull { it.projectId }.toHashSet().toList()
-        val projectStructureIds = projectStructureRepository.findAllByProjectIdIn(projectIds).map { it.structureId }
-
-        // Merge client, etag, project structures
-        val mergedStructureIds = mutableListOf<String>()
-        clientStructureIds.forEach { mergedStructureIds.add(it) }
-        projectStructureIds.forEach { if (!mergedStructureIds.contains(it)) mergedStructureIds.add(it) }
+        // Get inspections
+        val inspections = inspectionService.listNotDeleted(user, null, null, null)
+        val mergedStructureIds = inspections.mapNotNull { it.structureId }.toHashSet().toMutableList()
+        clientStructureIds.forEach { if (!mergedStructureIds.contains(it)) mergedStructureIds.add(it) }
 
         // Show user company components, subcomponents, defects
         val userStructures = structureRepository.findAllByIdIn(mergedStructureIds)
