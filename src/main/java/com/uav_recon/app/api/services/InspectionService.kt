@@ -37,6 +37,7 @@ class InspectionService(
         isEditable = isEditable,
         sgrRating = sgrRating,
         structureId = structureId,
+        structureCode = structureId?.let { structureRepository.findFirstById(it) }?.code,
         report = if (reportId != null) InspectionReport(reportId, reportLink, reportDate) else null,
         status = status,
         termRating = termRating,
