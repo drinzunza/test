@@ -35,13 +35,13 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
     ): ResponseEntity<DictionaryDto> {
         val fixETag = etag.removePrefix("\"").removeSuffix("\"")
         val lastEtagHash = dictionaryService.getLastEtagHash()
-        return if (lastEtagHash == fixETag) {
-            ResponseEntity.status(HttpStatus.NOT_MODIFIED).header(ETAG, lastEtagHash)
-                    .body(null)
+        val result = dictionaryService.getEtagChanges(getAuthenticatedUser(), fixETag, BuildType.parse(buildType), body.structureIds)
+
+        return if (lastEtagHash == fixETag && result.isEmpty()) {
+            ResponseEntity.status(HttpStatus.NOT_MODIFIED).header(ETAG, lastEtagHash).body(null)
         } else {
             val tempEtag = if (versionCode.isNotEmpty()) lastEtagHash else fixETag
-            ResponseEntity.ok().header(ETAG, tempEtag)
-                    .body(dictionaryService.getEtagChanges(getAuthenticatedUser(), fixETag, BuildType.parse(buildType), body.structureIds))
+            ResponseEntity.ok().header(ETAG, tempEtag).body(result)
         }
     }
 

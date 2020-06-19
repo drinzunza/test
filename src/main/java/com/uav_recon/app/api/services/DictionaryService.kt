@@ -153,7 +153,7 @@ class DictionaryService(
             }
         }
 
-        if (etags.isNotEmpty()) {
+        if (etags.isNotEmpty() || clientStructureIds.isNotEmpty()) {
             val newStructureIds = mutableListOf<String>()
             dic.structures.map { it.id }.forEach {
                 if (!clientStructureIds.contains(it)) newStructureIds.add(it)

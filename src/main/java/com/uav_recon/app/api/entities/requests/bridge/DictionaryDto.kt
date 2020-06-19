@@ -13,4 +13,11 @@ data class DictionaryDto(
         var structures: List<StructureDto>,
         var locationIds: List<LocationIdDto>,
         var observationNames: List<ObservationName>
-) : Serializable
+) : Serializable {
+
+    fun isEmpty(): Boolean {
+        return conditions.isEmpty() && defects.isEmpty() && subComponents.isEmpty() &&
+                structuralComponents.isEmpty() && structures.isEmpty() &&
+                locationIds.isEmpty() && observationNames.isEmpty()
+    }
+}
