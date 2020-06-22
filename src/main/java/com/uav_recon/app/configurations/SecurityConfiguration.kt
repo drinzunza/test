@@ -78,7 +78,7 @@ open class SecurityConfiguration {
             http.csrf().disable().antMatcher(API_FILES_PATTERN)
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().authorizeRequests()
-                    .antMatchers(API_FILES_PATTERN).authenticated()
+                    .antMatchers(API_FILES_PATTERN).authenticated().and().cors()
                     .and().exceptionHandling().authenticationEntryPoint(CustomAuthenticationEntryPoint())
                     .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         }
