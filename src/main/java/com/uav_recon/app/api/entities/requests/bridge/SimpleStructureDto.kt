@@ -6,5 +6,6 @@ import java.io.Serializable
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class SimpleStructureDto(
         val id: String,
-        val name: String
+        val name: String,
+        val code: String
 ) : Serializable

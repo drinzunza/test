@@ -38,7 +38,8 @@ class ProjectService(
 
     fun Structure.toDto() = SimpleStructureDto(
             id = id,
-            name = name
+            name = name,
+            code = code
     )
 
     fun User.toDto() = SimpleUserDto(
