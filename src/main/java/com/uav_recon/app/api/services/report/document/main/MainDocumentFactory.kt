@@ -617,6 +617,7 @@ class MainDocumentFactory(
                                     id = it.subComponentId,
                                     structureId = structure?.id,
                                     structureName = structure?.name,
+                                    structureCode = structure?.code,
                                     inspectionId = inspection.uuid,
                                     inspectionDate = inspection.startDate,
                                     componentName = component.name,
@@ -653,6 +654,7 @@ class MainDocumentFactory(
                     ?.forEach { observation ->
                         observation.defects?.forEach {
                             val inspector = users.firstOrNull { it.id == inspection.createdBy.toLong() }
+                            val structure = structures.firstOrNull { it.id == inspection.structureId }
                             results.add(ObservationDefectReportDto(
                                     uuid = it.uuid,
                                     id = it.id,
@@ -673,8 +675,9 @@ class MainDocumentFactory(
                                     pictureLinks = photos.filter { photo -> photo.observationDefectId == it.uuid }.map { it.link },
                                     inspectionId = inspection.uuid,
                                     inspectionDate = inspection.startDate,
-                                    structureId = inspection.structureId,
-                                    structureName = structures.firstOrNull { it.id == inspection.structureId }?.name,
+                                    structureId = structure?.id,
+                                    structureName = structure?.name,
+                                    structureCode = structure?.code,
                                     projectId = inspection.projectId,
                                     projectName = projects.firstOrNull { it.id == inspection.projectId }?.name,
                                     inspectorName = inspector?.let { "${inspector.firstName} ${inspector.lastName}" }
