@@ -31,6 +31,7 @@ data class ObservationDefectReportDto(
         val inspectionDate: OffsetDateTime?,
         val structureId: String?,
         val structureName: String?,
+        val structureCode: String?,
         val projectName: String?,
         val projectId: Long?,
         val inspectorName: String?

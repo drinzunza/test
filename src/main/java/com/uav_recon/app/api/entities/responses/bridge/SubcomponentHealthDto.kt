@@ -9,6 +9,7 @@ data class SubcomponentHealthDto(
         val id: String?,
         val structureId: String?,
         val structureName: String?,
+        val structureCode: String?,
         val subcomponentName: String?,
         val componentName: String?,
         val inspectionId: String?,
