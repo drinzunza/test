@@ -81,10 +81,10 @@ class InspectionService(
         val inspection = getInspection(dto.uuid)
         if (hasCreateDeleteRights(user, inspection, dto.projectId)) {
             // Admins and PMs can create/delete inspection
-            logger.info("New inspection ${inspection?.uuid}")
+            logger.info("Admin/PM inspection ${inspection?.uuid}")
         } else if (inspection != null && hasEditRights(user, inspection)) {
             // Inspectors can edit inspection
-            logger.info("Exists inspection ${inspection.uuid}")
+            logger.info("Inspector inspection ${inspection.uuid}")
         } else {
             throw AccessDeniedException()
         }
@@ -282,8 +282,8 @@ class InspectionService(
 
     fun hasCreateDeleteRights(user: User, inspection: Inspection?, projectId: Long?): Boolean {
         val project = getProject(inspection?.projectId ?: projectId)
-        val roles = getProjectRoles(user, inspection)
-        val isPM = inspection?.hasProjectRole(user, roles, Role.PM) ?: false
+        val roles = getProjectRoles(user, project)
+        val isPM = project?.hasProjectRole(user, roles, Role.PM) ?: false
         val isAdmin = user.admin && user.companyId != null && user.companyId == project?.companyId
         val isCreated = inspection?.createdBy?.toLong() == user.id
         logger.info("User ${user.id} (admin=${user.admin}) company admin=$isAdmin, PM=$isPM, isCreated=$isCreated")
@@ -301,9 +301,9 @@ class InspectionService(
         return projectId?.let { projectRepository.findFirstById(projectId) }
     }
 
-    fun getProjectRoles(user: User, inspection: Inspection?): List<ProjectRole> {
-        return inspection?.projectId?.let {
-            projectRoleRepository.findAllByProjectIdAndUserId(it, user.id)
+    fun getProjectRoles(user: User, project: Project?): List<ProjectRole> {
+        return project?.let {
+            projectRoleRepository.findAllByProjectIdAndUserId(it.id, user.id)
         } ?: listOf()
     }
 
