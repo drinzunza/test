@@ -22,4 +22,8 @@ abstract class BaseService {
     fun Project.hasAnyProjectRole(user: User, roles: List<ProjectRole>): Boolean {
         return roles.any { user.id == it.userId && id == it.projectId && !it.roles.isNullOrEmpty() }
     }
+
+    fun Project.hasProjectRole(user: User, roles: List<ProjectRole>, role: Role): Boolean {
+        return roles.any { user.id == it.userId && id == it.projectId && (it.roles?.contains(role) ?: false) }
+    }
 }
