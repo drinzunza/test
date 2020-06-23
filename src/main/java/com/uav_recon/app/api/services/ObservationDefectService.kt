@@ -5,10 +5,7 @@ import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.db.StructuralType
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
 import com.uav_recon.app.api.entities.requests.bridge.Weather
-import com.uav_recon.app.api.repositories.InspectionRepository
-import com.uav_recon.app.api.repositories.ObservationDefectRepository
-import com.uav_recon.app.api.repositories.ObservationRepository
-import com.uav_recon.app.api.repositories.PhotoRepository
+import com.uav_recon.app.api.repositories.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
@@ -19,6 +16,7 @@ class ObservationDefectService(
         private val observationDefectRepository: ObservationDefectRepository,
         private val observationRepository: ObservationRepository,
         private val inspectionRepository: InspectionRepository,
+        private val structureRepository: StructureRepository,
         private val photoRepository: PhotoRepository,
         private val photoService: PhotoService,
         private val weatherService: WeatherService
@@ -83,15 +81,11 @@ class ObservationDefectService(
              updatedBy: Int,
              passedStructureId: String? = null
     ): ObservationDefectDto {
-        var structureId = passedStructureId
         checkInspectionAndObservationRelationship(inspectionId, observationId)
         var createdBy = updatedBy
         val observationDefect = observationDefectRepository.findById(dto.uuid)
         if (observationDefect.isPresent) {
             createdBy = observationDefect.get().createdBy
-        }
-        if (structureId.isNullOrEmpty()) {
-            structureId = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId).get().structureId
         }
 
         try {
@@ -105,7 +99,9 @@ class ObservationDefectService(
             logger.error(e.message)
             if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
                 logger.info("Observation defect id (${dto.id}) incorrect")
-                dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structureId,
+                val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
+                val structure = inspection?.structureId?.let { structureRepository.findFirstById(it) }
+                dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structure?.code,
                         dto.type == StructuralType.STRUCTURAL
                 )
                 logger.info("New observation defect id (${dto.id})")
@@ -153,12 +149,12 @@ class ObservationDefectService(
     }
 
     @Throws(Error::class)
-    fun generateObservationDefectDisplayId(inspectorId: String, structureId: String?, structuralObservation: Boolean?): String {
+    fun generateObservationDefectDisplayId(inspectorId: String, structureCode: String?, structuralObservation: Boolean?): String {
         val date = SimpleDateFormat("MMddyyyy", Locale.US).format(Date())
         val observationLetter = if (structuralObservation != null && structuralObservation)
             OBSERVATION_LETTER_STRUCTURAL else OBSERVATION_LETTER_MAINTENANCE
 
-        val structure = (structureId ?: OBSERVATION_EMPTY_STRUCTURE).replace(" ", "_")
+        val structure = (structureCode ?: OBSERVATION_EMPTY_STRUCTURE).replace(" ", "_")
         val displayIdRegexp = "$structure-$observationLetter-%-$inspectorId-$date"
 
         val observationDefects = observationDefectRepository.findAllByIdLike(displayIdRegexp)
