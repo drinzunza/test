@@ -82,9 +82,6 @@ class InspectionService(
         if (hasCreateDeleteRights(user, inspection, dto.projectId)) {
             // Admins and PMs can create/delete inspection
             logger.info("Admin/PM inspection ${inspection?.uuid}")
-        } else if (inspection != null && hasEditRights(user, inspection)) {
-            // Inspectors can edit inspection
-            logger.info("Inspector inspection ${inspection.uuid}")
         } else {
             throw AccessDeniedException()
         }
