@@ -25,7 +25,8 @@ class DictionaryService(
         private val locationIdRepository: LocationIdRepository,
         private val observationNameRepository: ObservationNameRepository,
         private val etagRepository: EtagRepository,
-        private val inspectionService: InspectionService
+        private val inspectionService: InspectionService,
+        private val structureComponentService: StructureComponentService
 ) {
     private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
 
@@ -92,6 +93,7 @@ class DictionaryService(
         subcomponentRepository.saveAll(saveSubcomponents)
         defectRepository.saveAll(saveDefects)
         subcomponentDefectRepository.saveAll(saveSubcomponentDefects)
+        structureComponentService.refreshStructureComponents(user.companyId!!)
         etagRepository.save(getEtag(
                 components = saveComponents,
                 subcomponents = saveSubcomponents,
