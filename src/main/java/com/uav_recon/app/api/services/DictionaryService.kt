@@ -25,9 +25,6 @@ class DictionaryService(
         private val locationIdRepository: LocationIdRepository,
         private val observationNameRepository: ObservationNameRepository,
         private val etagRepository: EtagRepository,
-        private val projectStructureRepository: ProjectStructureRepository,
-        private val inspectionRoleRepository: InspectionRoleRepository,
-        private val inspectionRepository: InspectionRepository,
         private val inspectionService: InspectionService
 ) {
     private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
@@ -35,10 +32,10 @@ class DictionaryService(
     fun getDictionaries(user: User): DictionariesDto {
         // Show user company components, subcomponents, defects
         val companyId = user.companyId ?: 0
-        val components = componentRepository.findAllByCompanyId(companyId)
-        val subcomponents = subcomponentRepository.findAllByComponentIdIn(components.map { it.id })
+        val components = componentRepository.findAllByDeletedIsFalseAndCompanyId(companyId)
+        val subcomponents = subcomponentRepository.findAllByDeletedIsFalseAndComponentIdIn(components.map { it.id })
         val subcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(subcomponents.map { it.id })
-        val defects = defectRepository.findAllByIdIn(subcomponentDefects.map { it.defectId }.toHashSet().toList())
+        val defects = defectRepository.findAllByDeletedIsFalseAndIdIn(subcomponentDefects.map { it.defectId }.toHashSet().toList())
 
         return DictionariesDto(components.filter { it.companyId == companyId }
                 .map { c -> c.toDtoWithSubcomponents(subcomponents, defects, subcomponentDefects) }
@@ -53,10 +50,10 @@ class DictionaryService(
         if (!user.admin) throw AccessDeniedException()
 
         val companyId = user.companyId ?: 0
-        val components = componentRepository.findAllByCompanyId(companyId)
-        val subcomponents = subcomponentRepository.findAllByComponentIdIn(components.map { it.id })
+        val components = componentRepository.findAllByDeletedIsFalseAndCompanyId(companyId)
+        val subcomponents = subcomponentRepository.findAllByDeletedIsFalseAndComponentIdIn(components.map { it.id })
         val subcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(subcomponents.map { it.id })
-        val defects = defectRepository.findAllByIdIn(subcomponentDefects.map { it.defectId })
+        val defects = defectRepository.findAllByDeletedIsFalseAndIdIn(subcomponentDefects.map { it.defectId })
 
         val saveComponents = mutableListOf<Component>()
         val saveSubcomponents = mutableListOf<Subcomponent>()
@@ -205,18 +202,13 @@ class DictionaryService(
         clientStructureIds.forEach { if (!mergedStructureIds.contains(it)) mergedStructureIds.add(it) }
 
         // Show user company components, subcomponents, defects
-        val userStructures = structureRepository.findAllByIdIn(mergedStructureIds)
-                .filter { it.deleted != true }
+        val userStructures = structureRepository.findAllByDeletedIsFalseAndIdIn(mergedStructureIds)
         var userStructureComponents = structureComponentRepository.findAllByStructureIdIn(mergedStructureIds)
-        val userComponents = componentRepository.findAllByIdIn(userStructureComponents.map { it.componentId })
-                .filter { it.deleted != true }
-        val userSubcomponents = subcomponentRepository.findAllByComponentIdIn(userComponents.map { it.id })
-                .filter { it.deleted != true }
+        val userComponents = componentRepository.findAllByDeletedIsFalseAndIdIn(userStructureComponents.map { it.componentId })
+        val userSubcomponents = subcomponentRepository.findAllByDeletedIsFalseAndComponentIdIn(userComponents.map { it.id })
         var userSubcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(userSubcomponents.map { it.id })
-        val userDefects = defectRepository.findAllByIdIn(userSubcomponentDefects.map { it.defectId })
-                .filter { it.deleted != true }
-        val userConditions = conditionRepository.findAllByDefectIdIn(userDefects.map { it.id })
-                .filter { it.deleted != true }
+        val userDefects = defectRepository.findAllByDeletedIsFalseAndIdIn(userSubcomponentDefects.map { it.defectId })
+        val userConditions = conditionRepository.findAllByDeletedIsFalseAndDefectIdIn(userDefects.map { it.id })
         userStructureComponents = userStructureComponents
                 .filter { userComponents.map { it.id }.contains(it.componentId) }
         userSubcomponentDefects = userSubcomponentDefects
