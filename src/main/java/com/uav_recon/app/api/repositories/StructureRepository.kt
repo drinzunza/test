@@ -18,7 +18,7 @@ interface StructureRepository : CrudRepository<Structure, String> {
 
     @Query("select s from Structure s " +
             "inner join Company c on s.companyId = c.id " +
-            "where c.creatorCompanyId = ?1 and s.deleted = false")
+            "where c.creatorCompanyId = ?1 and s.deleted = false and c.deleted = false")
     fun listByParentCompanyId(companyId: Long): List<Structure>
 
     @Query("UPDATE Structure s SET s.deleted = true WHERE s.id = ?1")
