@@ -57,7 +57,7 @@ class StructureService(
         if (structureRepository.existsById(structure.id))
             throw Error(400, "Structure with this id already exist")
         createEtag(listOf(structure.id))
-        structureComponentService.refreshStructureComponents(structure.id, structure.type)
+        structureComponentService.refreshStructureComponents(actor.companyId!!, structure.id, structure.type)
         return structureRepository.save(structure)
     }
 
@@ -69,7 +69,7 @@ class StructureService(
             checkAllowForEditingStructure(it, actor)
             createEtag(listOf(it.id))
             regenerateObservationDefectIds(id, it.code)
-            structureComponentService.refreshStructureComponents(it.id, it.type)
+            structureComponentService.refreshStructureComponents(actor.companyId!!, it.id, it.type)
             return structureRepository.save(it)
         }
         throw Error(404, "Structure with this id not found")

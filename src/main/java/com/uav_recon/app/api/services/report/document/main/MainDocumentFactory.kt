@@ -672,7 +672,8 @@ class MainDocumentFactory(
                                     subcomponentName = observation.subcomponent?.name,
                                     dimensionNumber = observation.dimensionNumber,
                                     csRating = it.condition?.type?.title,
-                                    pictureLinks = photos.filter { photo -> photo.observationDefectId == it.uuid }.map { it.link },
+                                    pictureLinks = photos.filter { photo -> photo.observationDefectId == it.uuid }
+                                            .map { fileService.getImagePath(it.link, null, FileService.FileType.WITH_RECT) },
                                     inspectionId = inspection.uuid,
                                     inspectionDate = inspection.startDate,
                                     structureId = structure?.id,

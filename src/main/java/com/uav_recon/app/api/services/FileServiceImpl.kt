@@ -24,4 +24,8 @@ class FileServiceImpl(configuration: UavConfiguration) : FileService {
     override fun getPath(link: String, drawables: String?, type: FileService.FileType): String {
         return service.getPath(link, drawables, type)
     }
+
+    override fun getImagePath(link: String, format: String?, type: FileService.FileType): String {
+        return service.getImagePath(link, format, type)
+    }
 }

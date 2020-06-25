@@ -32,4 +32,9 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
         //        .getContent()
         //        .inputStream()
     }
+
+    override fun getImagePath(link: String, format: String?, type: FileService.FileType): String {
+        // TODO fix
+        return ""
+    }
 }

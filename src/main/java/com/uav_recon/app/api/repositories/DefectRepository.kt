@@ -5,6 +5,7 @@ import org.springframework.data.repository.CrudRepository
 
 interface DefectRepository : CrudRepository<Defect, String> {
     fun findAllByIdIn(ids: List<String>): List<Defect>
+    fun findAllByDeletedIsFalseAndIdIn(ids: List<String>): List<Defect>
     fun findAllByIdInAndIdContains(ids: List<String>, buildType: String): List<Defect>
     fun findAllByIdContains(buildType: String): List<Defect>
     fun findFirstById(id: String): Defect?
