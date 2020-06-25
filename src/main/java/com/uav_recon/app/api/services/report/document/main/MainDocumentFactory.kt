@@ -643,6 +643,10 @@ class MainDocumentFactory(
         val projects = projectRepository.findAllByIdIn(inspections.map { it.projectId ?: 0 })
         val users = userRepository.findAllByIdIn(inspections.map { it.createdBy.toLong() })
 
+        val defectUserIds = mutableListOf<Int>()
+        inspections.forEach { it.observations?.forEach { it.defects?.forEach { defectUserIds.add(it.createdBy) } } }
+        val defectUsers = userRepository.findAllByIdIn(defectUserIds.map { it.toLong() })
+
         val observationDefectIds = mutableListOf<String>()
         inspections.forEach { it.observations?.forEach { it.defects?.forEach { observationDefectIds.add(it.uuid) } } }
         val photos = photoRepository.findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefectIds)
@@ -653,7 +657,8 @@ class MainDocumentFactory(
                     ?.sortedBy { it.component?.name }
                     ?.forEach { observation ->
                         observation.defects?.forEach {
-                            val inspector = users.firstOrNull { it.id == inspection.createdBy.toLong() }
+                            val observationDefect = it
+                            val inspector = defectUsers.firstOrNull { it.id == observationDefect.createdBy.toLong() }
                             val structure = structures.firstOrNull { it.id == inspection.structureId }
                             results.add(ObservationDefectReportDto(
                                     uuid = it.uuid,
