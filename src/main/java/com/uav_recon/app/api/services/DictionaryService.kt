@@ -59,14 +59,21 @@ class DictionaryService(
         val saveSubcomponents = mutableListOf<Subcomponent>()
         val saveDefects = mutableListOf<Defect>()
         val saveSubcomponentDefects = mutableListOf<SubcomponentDefect>()
+
         body.components?.forEach { component ->
             if (component.id == null || components.any { it.id == component.id }) {
                 val componentDto = component.toDto(user)
                 saveComponents.add(componentDto)
 
                 component.subcomponents?.forEach { subcomponent ->
-                    if (subcomponent.id == null || subcomponents.any { it.id == subcomponent.id }) {
+                    val existsSubcomponent = subcomponents.firstOrNull { it.id == subcomponent.id }
+                    if (subcomponent.id == null || existsSubcomponent != null) {
                         val subcomponentDto = subcomponent.toDto(componentDto.id)
+                        subcomponentDto.number = subcomponent.number ?: existsSubcomponent?.number
+                        subcomponentDto.description = subcomponent.description ?: existsSubcomponent?.description
+                        subcomponentDto.fdotBhiValue = subcomponent.fdotBhiValue ?: existsSubcomponent?.fdotBhiValue
+                        subcomponentDto.groupName = subcomponent.groupName ?: existsSubcomponent?.groupName
+                        subcomponentDto.measureUnit = subcomponent.measureUnit ?: existsSubcomponent?.measureUnit
                         saveSubcomponents.add(subcomponentDto)
 
                         subcomponent.defects?.forEach { defect ->
@@ -313,7 +320,12 @@ class DictionaryService(
             id = id ?: UUID.randomUUID().toString(),
             name = name,
             componentId = componentId,
-            deleted = deleted
+            deleted = deleted,
+            description = description,
+            fdotBhiValue = fdotBhiValue,
+            groupName = groupName,
+            measureUnit = measureUnit,
+            number = number
     )
 
     private fun DefectSaveDto.toDto() = Defect(
