@@ -298,6 +298,11 @@ class DictionaryService(
             id = id,
             name = name,
             deleted = deleted,
+            number = number,
+            description = description,
+            fdotBhiValue = fdotBhiValue,
+            measureUnit = measureUnit,
+            groupName = groupName,
             defects = defects.filter { d -> subcomponentDefects.filter { it.subcomponentId == id }
                     .map { it.defectId }.contains(d.id) }
                     .map { d -> d.toSaveDto() }
