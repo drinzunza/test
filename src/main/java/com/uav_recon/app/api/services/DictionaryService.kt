@@ -60,6 +60,7 @@ class DictionaryService(
         val saveSubcomponents = mutableListOf<Subcomponent>()
         val saveDefects = mutableListOf<Defect>()
         val saveSubcomponentDefects = mutableListOf<SubcomponentDefect>()
+        val saveConditions = mutableListOf<Condition>()
 
         body.components?.forEach { component ->
             if (component.id == null || components.any { it.id == component.id }) {
@@ -82,6 +83,12 @@ class DictionaryService(
                                 val defectDto = defect.toDto()
                                 saveDefects.add(defectDto)
                                 saveSubcomponentDefects.add(SubcomponentDefect(0, subcomponentDto.id, defectDto.id))
+                                if (defect.id == null) {
+                                    saveConditions.add(Condition(UUID.randomUUID().toString(), "None", ConditionType.GOOD, defectDto.id, false))
+                                    saveConditions.add(Condition(UUID.randomUUID().toString(), "None", ConditionType.FAIR, defectDto.id, false))
+                                    saveConditions.add(Condition(UUID.randomUUID().toString(), "None", ConditionType.POOR, defectDto.id, false))
+                                    saveConditions.add(Condition(UUID.randomUUID().toString(), "None", ConditionType.SEVERE, defectDto.id, false))
+                                }
                             }
                         }
                     }
@@ -94,6 +101,7 @@ class DictionaryService(
         defectRepository.saveAll(saveDefects)
         subcomponentDefectRepository.saveAll(saveSubcomponentDefects)
         structureComponentService.refreshStructureComponents(user.companyId!!)
+        conditionRepository.saveAll(saveConditions)
         etagRepository.save(getEtag(
                 components = saveComponents,
                 subcomponents = saveSubcomponents,
