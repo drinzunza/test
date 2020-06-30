@@ -105,7 +105,8 @@ class DictionaryService(
         etagRepository.save(getEtag(
                 components = saveComponents,
                 subcomponents = saveSubcomponents,
-                defects = saveDefects
+                defects = saveDefects,
+                conditions = saveConditions
         ))
     }
 
