@@ -1,6 +1,8 @@
 package com.uav_recon.app.api.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.uav_recon.app.api.controllers.dto.admin.AdminStructureInDTO
+import com.uav_recon.app.api.controllers.dto.admin.AdminStructureOutDTO
 import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.repositories.CompanyRepository
 import com.uav_recon.app.api.repositories.EtagRepository
@@ -58,6 +60,7 @@ class StructureService(
             throw Error(400, "Structure with this id already exist")
         createEtag(listOf(structure.id))
         structureComponentService.refreshStructureComponents(actor.companyId!!, structure.id, structure.type)
+        structure.primaryOwner = structure.companyId?.let { companyRepository.findFirstById(it)?.name }
         return structureRepository.save(structure)
     }
 
@@ -70,6 +73,7 @@ class StructureService(
             createEtag(listOf(it.id))
             regenerateObservationDefectIds(id, it.code)
             structureComponentService.refreshStructureComponents(actor.companyId!!, it.id, it.type)
+            it.primaryOwner = it.companyId?.let { companyRepository.findFirstById(it)?.name }
             return structureRepository.save(it)
         }
         throw Error(404, "Structure with this id not found")
