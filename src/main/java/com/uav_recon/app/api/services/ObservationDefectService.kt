@@ -90,14 +90,12 @@ class ObservationDefectService(
 
         try {
             val entity = dto.toEntity(createdBy, updatedBy, observationId)
-            if (observationDefectRepository.countById(entity.id) > 0) {
-                throw Error(176, "Observation defect id already exists")
-            }
             val saved = observationDefectRepository.save(entity)
             return saveWeather(saved).toDto()
         } catch (e: Exception) {
             logger.error(e.message)
-            if (dto.id.isBlank() || observationDefectRepository.countById(dto.id) > 0) {
+            // Observation defect id now not unique
+            if (dto.id.isBlank()) {
                 logger.info("Observation defect id (${dto.id}) incorrect")
                 val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
                 val structure = inspection?.structureId?.let { structureRepository.findFirstById(it) }
