@@ -3,7 +3,9 @@ package com.uav_recon.app.api.services
 import com.uav_recon.app.api.entities.db.ObservationDefect
 import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.db.StructuralType
+import com.uav_recon.app.api.entities.db.User
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
+import com.uav_recon.app.api.entities.requests.bridge.SimpleUserDto
 import com.uav_recon.app.api.entities.requests.bridge.Weather
 import com.uav_recon.app.api.repositories.*
 import org.slf4j.LoggerFactory
@@ -19,7 +21,8 @@ class ObservationDefectService(
         private val structureRepository: StructureRepository,
         private val photoRepository: PhotoRepository,
         private val photoService: PhotoService,
-        private val weatherService: WeatherService
+        private val weatherService: WeatherService,
+        private val userService: UserService
 ) {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
@@ -30,48 +33,51 @@ class ObservationDefectService(
         private const val OBSERVATION_EMPTY_STRUCTURE = "STR"
     }
 
-    private fun ObservationDefect.toDto() = ObservationDefectDto(
-        id = id,
-        uuid = uuid,
-        criticalFindings = criticalFindings?.toList(),
-        conditionId = conditionId,
-        defectId = defectId,
-        description = description,
-        materialId = materialId,
-        photos = photoService.findAllByObservationDefectIdAndNotDeleted(uuid),
-        span = span,
-        stationMarker = stationMarker,
-        observationType = observationType,
-        size = size,
-        type = type,
-        weather = getWeather(this),
-        observationNameId = observationNameId,
-        clockPosition = clockPosition,
-        repairDate = repairDate,
-        repairMethod = repairMethod
+    private fun ObservationDefect.toDto(createdBy: SimpleUserDto?) = ObservationDefectDto(
+            id = id,
+            uuid = uuid,
+            createdBy = createdBy,
+            criticalFindings = criticalFindings?.toList(),
+            conditionId = conditionId,
+            defectId = defectId,
+            description = description,
+            materialId = materialId,
+            photos = photoService.findAllByObservationDefectIdAndNotDeleted(uuid),
+            span = span,
+            stationMarker = stationMarker,
+            observationType = observationType,
+            size = size,
+            type = type,
+            weather = getWeather(this),
+            observationNameId = observationNameId,
+            clockPosition = clockPosition,
+            repairDate = repairDate,
+            repairMethod = repairMethod
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
-        id = id,
-        uuid = uuid,
-        createdBy = createdBy,
-        updatedBy = updatedBy,
-        materialId = materialId,
-        description = description,
-        defectId = defectId,
-        conditionId = conditionId,
-        criticalFindings = criticalFindings?.toTypedArray(),
-        observationId = observationId,
-        span = span,
-        stationMarker = stationMarker,
-        observationType = observationType,
-        size = size,
-        type = type,
-        observationNameId = observationNameId,
-        clockPosition = clockPosition,
-        repairMethod = repairMethod,
-        repairDate = repairDate
+            id = id,
+            uuid = uuid,
+            createdBy = createdBy,
+            updatedBy = updatedBy,
+            materialId = materialId,
+            description = description,
+            defectId = defectId,
+            conditionId = conditionId,
+            criticalFindings = criticalFindings?.toTypedArray(),
+            observationId = observationId,
+            span = span,
+            stationMarker = stationMarker,
+            observationType = observationType,
+            size = size,
+            type = type,
+            observationNameId = observationNameId,
+            clockPosition = clockPosition,
+            repairMethod = repairMethod,
+            repairDate = repairDate
     )
+
+    fun User.toDto(): SimpleUserDto = SimpleUserDto(this)
 
     @Synchronized
     @Throws(Error::class)
@@ -87,11 +93,12 @@ class ObservationDefectService(
         if (observationDefect.isPresent) {
             createdBy = observationDefect.get().createdBy
         }
+        val createdByUser: SimpleUserDto = userService.get(createdBy).toDto()
 
         try {
             val entity = dto.toEntity(createdBy, updatedBy, observationId)
             val saved = observationDefectRepository.save(entity)
-            return saveWeather(saved).toDto()
+            return saveWeather(saved).toDto(createdByUser)
         } catch (e: Exception) {
             logger.error(e.message)
             // Observation defect id now not unique
@@ -106,7 +113,7 @@ class ObservationDefectService(
 
                 val entity = dto.toEntity(createdBy, updatedBy, observationId)
                 val saved = observationDefectRepository.save(entity)
-                return saveWeather(saved).toDto()
+                return saveWeather(saved).toDto(createdByUser)
             }
         }
         throw Error(242, "Error saving observation defect")
@@ -143,7 +150,16 @@ class ObservationDefectService(
     }
 
     fun findAllByObservationIdAndNotDeleted(id: String): List<ObservationDefectDto> {
-        return observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(id).map { o -> o.toDto() }
+        val ownersMap = mutableMapOf<Int, SimpleUserDto>()
+        return observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(id)
+                .map { o ->
+                    var createdBy = ownersMap[o.createdBy]
+                    if (createdBy == null) {
+                        createdBy = userService.get(o.createdBy).toDto()
+                        ownersMap[o.createdBy] = createdBy
+                    }
+                    o.toDto(createdBy)
+                }
     }
 
     @Throws(Error::class)

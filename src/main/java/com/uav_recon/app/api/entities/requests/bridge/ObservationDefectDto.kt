@@ -6,12 +6,12 @@ import com.uav_recon.app.api.entities.db.ObservationType
 import com.uav_recon.app.api.entities.db.StructuralType
 import java.io.Serializable
 import java.time.OffsetDateTime
-import javax.persistence.Column
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ObservationDefectDto(
         var id: String,
         val uuid: String,
+        val createdBy: SimpleUserDto?,
         val criticalFindings: List<CriticalFinding>?,
         val defectId: String?,
         val conditionId: String?,
