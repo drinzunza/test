@@ -150,9 +150,14 @@ class ObservationDefectService(
     }
 
     fun findAllByObservationIdAndNotDeleted(id: String): List<ObservationDefectDto> {
+        val ownersMap = mutableMapOf<Int, SimpleUserDto>()
         return observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(id)
                 .map { o ->
-                    val createdBy = userService.get(o.createdBy).toDto()
+                    var createdBy = ownersMap[o.createdBy]
+                    if (createdBy == null) {
+                        createdBy = userService.get(o.createdBy).toDto()
+                        ownersMap[o.createdBy] = createdBy
+                    }
                     o.toDto(createdBy)
                 }
     }
