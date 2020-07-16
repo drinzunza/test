@@ -93,7 +93,7 @@ class ObservationDefectService(
         if (observationDefect.isPresent) {
             createdBy = observationDefect.get().createdBy
         }
-        val createdByUser: SimpleUserDto = userService.get(createdBy.toLong()).toDto()
+        val createdByUser: SimpleUserDto = userService.get(createdBy).toDto()
 
         try {
             val entity = dto.toEntity(createdBy, updatedBy, observationId)
@@ -152,7 +152,7 @@ class ObservationDefectService(
     fun findAllByObservationIdAndNotDeleted(id: String): List<ObservationDefectDto> {
         return observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(id)
                 .map { o ->
-                    val createdBy = userService.get(o.createdBy.toLong()).toDto()
+                    val createdBy = userService.get(o.createdBy).toDto()
                     o.toDto(createdBy)
                 }
     }
