@@ -33,5 +33,7 @@ class Observation(
         @Transient
         var subcomponent: Subcomponent? = null,
         @Transient
-        var defects: List<ObservationDefect>? = null
+        var defects: List<ObservationDefect>? = null,
+        @Transient
+        var locationIds: List<LocationId>? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
