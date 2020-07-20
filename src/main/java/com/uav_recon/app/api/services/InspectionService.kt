@@ -9,21 +9,28 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.transaction.Transactional
+import kotlin.math.roundToInt
 
 @Service
 class InspectionService(
-        val inspectionRepository: InspectionRepository,
-        val photoRepository: PhotoRepository,
-        val observationRepository: ObservationRepository,
-        val observationDefectRepository: ObservationDefectRepository,
-        val observationService: ObservationService,
-        val weatherService: WeatherService,
-        val userRepository: UserRepository,
-        val inspectionRoleRepository: InspectionRoleRepository,
-        val projectRoleRepository: ProjectRoleRepository,
-        val projectRepository: ProjectRepository,
-        val companyRepository: CompanyRepository,
-        val structureRepository: StructureRepository
+        private val inspectionRepository: InspectionRepository,
+        private val photoRepository: PhotoRepository,
+        private val observationRepository: ObservationRepository,
+        private val observationDefectRepository: ObservationDefectRepository,
+        private val observationService: ObservationService,
+        private val weatherService: WeatherService,
+        private val userRepository: UserRepository,
+        private val inspectionRoleRepository: InspectionRoleRepository,
+        private val projectRoleRepository: ProjectRoleRepository,
+        private val projectRepository: ProjectRepository,
+        private val companyRepository: CompanyRepository,
+        private val structureRepository: StructureRepository,
+        private val componentRepository: ComponentRepository,
+        private val subcomponentRepository: SubcomponentRepository,
+        private val defectRepository: DefectRepository,
+        private val conditionRepository: ConditionRepository,
+        private val observationNameRepository: ObservationNameRepository,
+        private val locationIdRepository: LocationIdRepository
 ) : BaseService() {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
@@ -158,6 +165,23 @@ class InspectionService(
         results = results
                 .filter { it.canSeeProject(projectId) }
                 .filter { it.canSeeStructure(structureId) }
+
+        // TODO check memory usage, possible need optimization
+        fillObjects(results)
+
+        val sgrChangedInspections = mutableListOf<Inspection>()
+        results.forEach { inspection ->
+            calculateSgrRating(inspection)?.let { sgrRating ->
+                val roundedSgrRating = (sgrRating * 10).roundToInt() / 10.0
+                if (inspection.sgrRating?.toDoubleOrNull() != roundedSgrRating) {
+                    inspection.sgrRating = roundedSgrRating.toString()
+                    sgrChangedInspections.add(inspection)
+                }
+            }
+        }
+        inspectionRepository.saveAll(sgrChangedInspections)
+        logger.info("Saved ${sgrChangedInspections.size} inspections with new sgr rating")
+
         logger.info("User ${user.id} can see ${results.size} inspections")
         return results
     }
@@ -324,5 +348,45 @@ class InspectionService(
             }
         }
         return results
+    }
+
+    fun calculateSgrRating(inspection: Inspection): Double? {
+        var numerator = 0.0
+        var denominator = 0.0
+        inspection.observations?.forEach {
+            val number = it.subcomponent?.fdotBhiValue ?: return@forEach
+            val spansCount = observationService.getSpansCount(it, inspection.spansCount) ?: 0
+            val healthIndex = observationService.getHealthIndex(it, spansCount)
+            numerator += number * healthIndex
+            denominator += number
+        }
+        if (denominator == 0.0) return null
+        return (numerator / denominator) * 100
+    }
+
+    fun fillObjects(inspections: List<Inspection>) {
+        val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(inspections.map { it.uuid })
+        val components = componentRepository.findAllByIdIn(observations.map { it.structuralComponentId ?: "" })
+        val subcomponents = subcomponentRepository.findAllByIdIn(observations.map { it.subComponentId ?: "" })
+        val observationDefects = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observations.map { it.uuid })
+        val defects = defectRepository.findAllByIdIn(observationDefects.map { it.defectId ?: "" })
+        val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
+        val observationNames = observationNameRepository.findAllByIdIn(observationDefects.map { it.observationNameId ?: "" })
+        val locationIds = locationIdRepository.findAll()
+
+        observationDefects.forEach { observationDefect ->
+            observationDefect.defect = defects.firstOrNull { it.id == observationDefect.defectId }
+            observationDefect.condition = conditions.firstOrNull { it.id == observationDefect.conditionId }
+            observationDefect.observationName = observationNames.firstOrNull { it.id == observationDefect.observationNameId }
+        }
+        observations.forEach { observation ->
+            observation.component = components.firstOrNull { it.id == observation.structuralComponentId }
+            observation.subcomponent = subcomponents.firstOrNull { it.id == observation.subComponentId }
+            observation.defects = observationDefects.filter { it.observationId == observation.uuid }
+            observation.locationIds = locationIds.toList()
+        }
+        inspections.forEach { inspection ->
+            inspection.observations = observations.filter { it.inspectionId == inspection.uuid }
+        }
     }
 }

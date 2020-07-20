@@ -171,6 +171,8 @@ class UserService(private val userRepository: UserRepository,
         return userRepository.findFirstById(id) ?: throw Error(18, "User not found")
     }
 
+    fun get(id: Int): User = get(id.toLong())
+
     fun list(): List<User> {
         return userRepository.findAll()
     }
