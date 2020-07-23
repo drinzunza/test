@@ -101,10 +101,12 @@ open class SecurityConfiguration {
             http
                     .csrf().disable()
                     .authorizeRequests()
-                    .antMatchers("/login*").permitAll()
+                    .antMatchers("/signin*").permitAll()
                     .anyRequest().authenticated()
                     .and()
-                    .formLogin().and().httpBasic()
+                    .formLogin()
+                    .loginPage("/signin")
+                    .and().httpBasic()
         }
 
         override fun configure(web: WebSecurity) {

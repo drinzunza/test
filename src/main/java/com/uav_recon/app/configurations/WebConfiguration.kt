@@ -70,4 +70,8 @@ class WebConfiguration(val configuration: UavConfiguration) : WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true)
     }
+
+    override fun addViewControllers(registry: ViewControllerRegistry) {
+        registry.addViewController("/signin").setViewName("signin")
+    }
 }
