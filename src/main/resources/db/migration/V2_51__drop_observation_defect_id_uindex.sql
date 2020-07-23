@@ -1,0 +1,1 @@
+drop index observation_defects_id_uindex;

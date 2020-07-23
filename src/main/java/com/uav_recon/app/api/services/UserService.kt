@@ -1,11 +1,16 @@
 package com.uav_recon.app.api.services
 
+import com.uav_recon.app.api.controllers.dto.admin.UpdateUserInDTO
+import com.uav_recon.app.api.entities.db.Company
 import com.uav_recon.app.api.entities.db.PasswordResetAttempt
 import com.uav_recon.app.api.entities.db.User
+import com.uav_recon.app.api.repositories.CompanyRepository
 import com.uav_recon.app.api.repositories.PasswordResetAttemptRepository
 import com.uav_recon.app.api.repositories.UserRepository
+import com.uav_recon.app.api.services.mapper.AdminUserMapper
 import com.uav_recon.app.configurations.UavConfiguration
 import org.apache.commons.lang3.RandomStringUtils
+import org.mapstruct.factory.Mappers
 import org.springframework.security.core.userdetails.User.UserBuilder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -22,6 +27,7 @@ import javax.transaction.Transactional
 
 @Service
 class UserService(private val userRepository: UserRepository,
+                  private val companyRepository: CompanyRepository,
                   private val passwordResetAttemptRepository: PasswordResetAttemptRepository,
                   private val passwordEncoder: PasswordEncoder,
                   private val emailService: EmailService,
@@ -32,6 +38,7 @@ class UserService(private val userRepository: UserRepository,
     private val passwordPattern = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@\$%^&*-]).{8,16}$")
     private val resetPasswordTimeout = configuration.security.resetPasswordTimeout.toLong()
     private val resetPasswordCodeLength = configuration.security.resetPasswordCodeLength.toInt()
+    private val adminUserMapper = Mappers.getMapper(AdminUserMapper::class.java)
 
     @Throws(Error::class)
     fun register(user: User?): User {
@@ -58,6 +65,30 @@ class UserService(private val userRepository: UserRepository,
         }
         user.password = passwordEncoder.encode(user.password)
         return userRepository.save(user)
+    }
+
+    fun createUser(user: User, actor: User): User {
+
+        var userData = user
+        if (user.companyId == null) {
+            userData.companyId = actor.companyId;
+        }
+        this.checkAllowForEditingUser(user, actor)
+
+        return this.register(userData)
+    }
+
+    private fun checkAllowForEditingUser(user: User, actor: User) {
+        val companyId: Long? = user.companyId;
+
+        if (companyId != null) {
+            val company: Company = companyRepository.findFirstById(companyId)?: throw  Error(19, "company not found")
+            if (user.companyId != actor.companyId && actor.companyId != company.creatorCompanyId) {
+                throw  Error(21, "action not allowed")
+            }
+        } else {
+            throw  Error(22, "User has have company")
+        }
     }
 
     private fun validatePassword(password: String?) {
@@ -121,8 +152,39 @@ class UserService(private val userRepository: UserRepository,
         }
     }
 
+    @Throws(Error::class)
+    fun update(userId: Long, userData: UpdateUserInDTO, actor: User): User {
+
+        val user = userRepository.findFirstById(userId) ?: throw Error(18, "User not found");
+
+        adminUserMapper.update(userData, user)
+        this.checkAllowForEditingUser(user, actor);
+
+        return userRepository.save(user)
+    }
+
     fun findById(id: Long): Optional<User> {
         return userRepository.findById(id)
+    }
+
+    fun get(id: Long): User {
+        return userRepository.findFirstById(id) ?: throw Error(18, "User not found")
+    }
+
+    fun get(id: Int): User = get(id.toLong())
+
+    fun list(): List<User> {
+        return userRepository.findAll()
+    }
+
+    fun listByCompanyId(companyId: Long): List<User> {
+        return userRepository.findAllByCompanyId(companyId)
+    }
+
+    fun delete(id: Long, actor: User) {
+        val user = userRepository.findFirstById(id) ?: throw Error(18, "User not found");
+        this.checkAllowForEditingUser(user, actor);
+        return userRepository.deleteById(id)
     }
 
     override fun loadUserByUsername(username: String): UserDetails {

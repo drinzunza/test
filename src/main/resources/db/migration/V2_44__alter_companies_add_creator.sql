@@ -1,0 +1,1 @@
+ALTER TABLE companies ADD COLUMN creator_company_id INT;

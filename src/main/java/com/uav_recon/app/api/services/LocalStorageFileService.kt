@@ -60,7 +60,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         return Paths.get(configuration.files.root.replace("///", ""), newPath)
     }
 
-    fun getImagePath(link: String, format: String?, type: FileService.FileType): String {
+    override fun getImagePath(link: String, format: String?, type: FileService.FileType): String {
         val suffix = when (type) {
             FileService.FileType.NORMAL -> ""
             FileService.FileType.WITH_RECT -> "_rect"

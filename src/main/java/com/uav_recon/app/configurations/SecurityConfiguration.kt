@@ -40,7 +40,7 @@ open class SecurityConfiguration {
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().authorizeRequests()
                     .antMatchers(AUTH_PATH).permitAll()
-                    .antMatchers(API_PATH_PATTERN).authenticated()
+                    .antMatchers(API_PATH_PATTERN).authenticated().and().cors()
                     .and().exceptionHandling().authenticationEntryPoint(CustomAuthenticationEntryPoint())
                     .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         }
@@ -78,7 +78,7 @@ open class SecurityConfiguration {
             http.csrf().disable().antMatcher(API_FILES_PATTERN)
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().authorizeRequests()
-                    .antMatchers(API_FILES_PATTERN).authenticated()
+                    .antMatchers(API_FILES_PATTERN).authenticated().and().cors()
                     .and().exceptionHandling().authenticationEntryPoint(CustomAuthenticationEntryPoint())
                     .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         }
@@ -101,10 +101,17 @@ open class SecurityConfiguration {
             http
                     .csrf().disable()
                     .authorizeRequests()
-                    .antMatchers("/login*").permitAll()
+                    .antMatchers("/signin*").permitAll()
                     .anyRequest().authenticated()
                     .and()
-                    .formLogin().and().httpBasic()
+                    .formLogin()
+                    .loginPage("/signin")
+                    .and().httpBasic()
+        }
+
+        override fun configure(web: WebSecurity) {
+            web.ignoring().antMatchers("/datarecon-public/**")
+            //web.ignoring().antMatchers("/datarecon-public/**", "/v2/api-docs", "/configuration/ui", "/swagger-resources/**", "/configuration/**", "/swagger-ui.html", "/webjars/**")
         }
     }
 }

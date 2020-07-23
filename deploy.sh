@@ -11,7 +11,7 @@ HOST="34.70.68.149"
 
 SSH_HOST="cicd_man@$HOST"
 SSH_PORT="522"
-SSH_KEY_PATH="ssh/cicd_rsa"
+SSH_KEY_PATH=".ssh/cicd_rsa"
 SERVER_PATH="/opt/uav-recon/"
 BUILD_NAME="uav-recon-0.0.1.jar"
 ARTEFACT_PATH="build/libs/$BUILD_NAME"
@@ -49,7 +49,7 @@ autorestart=true
 user=root
 stdout_logfile=/var/log/uav_recon_sv_out.log
 stderr_logfile=/var/log/uav_recon_sv_error.log
-process_name=%%(program_name)s_%%(process_num)02d' > uav_recon_sv.conf
+process_name=uav_recon_sv_00' > uav_recon_sv.conf
 
 scp -P $SSH_PORT -i $SSH_KEY_PATH uav_recon_sv.conf $SSH_HOST:$SERVER_PATH
 scp -P $SSH_PORT -i $SSH_KEY_PATH uav_recon_sv.conf $SSH_HOST:/etc/supervisor/conf.d
@@ -60,4 +60,4 @@ scp -P $SSH_PORT -i $SSH_KEY_PATH $ARTEFACT_PATH $SSH_HOST:$SERVER_PATH
 
 
 # Run server
-ssh -i $SSH_KEY_PATH $SSH_HOST -p $SSH_PORT "supervisorctl stop all && supervisorctl reread && supervisorctl update && supervisorctl restart all && supervisorctl status"
+ssh -i $SSH_KEY_PATH $SSH_HOST -p $SSH_PORT "supervisorctl stop uav_recon_sv:uav_recon_sv_00 && supervisorctl reread && supervisorctl update && supervisorctl restart uav_recon_sv:uav_recon_sv_00 && supervisorctl status"

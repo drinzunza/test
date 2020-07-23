@@ -22,4 +22,5 @@ interface FileService {
     fun delete(link: String)
     fun get(link: String, drawables: String? = null, type: FileType = FileType.NORMAL): InputStream
     fun getPath(link: String, drawables: String? = null, type: FileType = FileType.NORMAL): String
+    fun getImagePath(link: String, format: String? = null, type: FileType = FileType.NORMAL): String
 }

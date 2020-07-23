@@ -4,11 +4,9 @@ import com.uav_recon.app.api.entities.db.Report
 import com.uav_recon.app.api.entities.requests.bridge.ReportDto
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ReportRepository
+import com.uav_recon.app.api.services.Error
 import com.uav_recon.app.api.services.FileService
 import com.uav_recon.app.api.services.report.document.DocumentFactory
-import com.uav_recon.app.api.services.Error
-import com.uav_recon.app.api.services.ObservationDefectService
-import org.hibernate.annotations.Synchronize
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.util.*

@@ -2,11 +2,10 @@ package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
-import com.uav_recon.app.api.repositories.ConditionRepository
 import com.uav_recon.app.api.repositories.InspectionRepository
+import com.uav_recon.app.api.repositories.LocationIdRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.utils.isEachMeasureUnit
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import javax.transaction.Transactional
 
@@ -14,7 +13,6 @@ import javax.transaction.Transactional
 class ObservationService(
         private val inspectionRepository: InspectionRepository,
         private val observationRepository: ObservationRepository,
-        private val conditionRepository: ConditionRepository,
         private val observationDefectService: ObservationDefectService
 ) {
     private val MEASURE_TYPE_EACH = "each"
@@ -138,5 +136,46 @@ class ObservationService(
         return ConditionType.values().sumByDouble {
             getCsValue(observation, it, spansCount) * it.csWeight / totalQuantity
         }
+    }
+
+    fun getSpansCount(observation: Observation, spansCount: Int?): Int? {
+        return observation.getSpansCountByObservation(spansCount)
+    }
+
+    fun Observation.getSpansCountByObservation(spansCount: Int?): Int? {
+        return getLocationId()?.getAvailableSpans(spansCount)?.size
+    }
+
+    private fun Observation.getLocationId(): LocationId? {
+        if (structuralComponentId == null && subComponentId == null) return null
+
+        return locationIds?.firstOrNull { locationId ->
+                    var matches = true
+                    structuralComponentId?.let { majorId ->
+                        locationId.majorIds?.let { possibleIds ->
+                            matches = matches and possibleIds.contains(majorId)
+                        }
+                    }
+                    subComponentId?.let { subId ->
+                        locationId.subComponentIds?.let { possibleIds ->
+                            matches = matches and possibleIds.contains(subId)
+                        }
+                    }
+                    matches
+                }
+    }
+
+    private fun LocationId.getAvailableSpans(spanNumber: Int?): List<String> {
+        val spans = mutableListOf<String>()
+        alwaysShownSpans?.let {
+            spans += it
+        }
+        spanNumber?.let { inspectionSpanNumber ->
+            iteratedSpanPatterns?.split(",")?.let { patterns ->
+                for (i in 1..inspectionSpanNumber)
+                    spans += patterns.map { it.format(i) }
+            }
+        }
+        return spans
     }
 }

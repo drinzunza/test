@@ -4,6 +4,8 @@ import com.vladmihalcea.hibernate.type.array.EnumArrayType
 import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.Type
 import org.hibernate.annotations.TypeDef
+import java.time.OffsetDateTime
+import java.util.*
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.EnumType
@@ -25,7 +27,7 @@ import javax.persistence.Transient
 )
 class ObservationDefect(
         uuid: String,
-        val id: String,
+        var id: String,
         createdBy: Int,
         updatedBy: Int,
         @Column(name = "observation_id")
@@ -58,6 +60,12 @@ class ObservationDefect(
         var wind: Double? = null,
         @Column(name = "observation_name_id")
         val observationNameId: String? = null,
+        @Column(name = "clock_position")
+        val clockPosition: Int? = null,
+        @Column(name = "repair_date")
+        val repairDate: OffsetDateTime? = null,
+        @Column(name = "repair_method")
+        val repairMethod: String? = null,
         @Transient
         var defect: Defect? = null,
         @Transient

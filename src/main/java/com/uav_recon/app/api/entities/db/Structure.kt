@@ -1,16 +1,20 @@
 package com.uav_recon.app.api.entities.db
 
+import org.hibernate.annotations.Type
 import java.io.Serializable
+import java.util.*
 import javax.persistence.*
 
 @Entity
 @Table(name = "structures")
 class Structure(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: String,
-    var name: String,
-    var type: String,
+    var id: String = UUID.randomUUID().toString(),
+    var code: String = "",
+    var name: String = "",
+    @Enumerated(EnumType.STRING)
+    @Type(type = "pgsql_enum")
+    var type: StructureComponentType = StructureComponentType.BRIDGES_AND_AERIAL_STRUCTURE,
     @Column(name = "primary_owner")
     var primaryOwner: String? = null,
     @Column(name = "caltrans_bridge_no")
@@ -21,5 +25,7 @@ class Structure(
     @Column(name = "end_stationing")
     var endStationing: String? = null,
     @Column(name = "is_deleted")
-    val deleted: Boolean? = null
+    var deleted: Boolean? = false,
+    @Column(name = "company_id")
+    var companyId: Long? = null
 ) : Serializable

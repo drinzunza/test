@@ -5,11 +5,13 @@ import com.uav_recon.app.api.entities.db.CriticalFinding
 import com.uav_recon.app.api.entities.db.ObservationType
 import com.uav_recon.app.api.entities.db.StructuralType
 import java.io.Serializable
+import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ObservationDefectDto(
         var id: String,
         val uuid: String,
+        val createdBy: SimpleUserDto?,
         val criticalFindings: List<CriticalFinding>?,
         val defectId: String?,
         val conditionId: String?,
@@ -22,5 +24,8 @@ data class ObservationDefectDto(
         val size: String?,
         val type: StructuralType?,
         val weather: Weather?,
-        val observationNameId: String?
+        val observationNameId: String?,
+        val clockPosition: Int?,
+        val repairDate: OffsetDateTime?,
+        val repairMethod: String?
 ) : Serializable

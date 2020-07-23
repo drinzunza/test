@@ -47,6 +47,13 @@ class ExceptionsHandler(@Value("\${spring.profiles.active}") val profile: String
         return Response<Any>(e.errorCode, e.message)
     }
 
+    @ResponseBody
+    @ExceptionHandler(AccessDeniedException::class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    fun handle(e: AccessDeniedException): Response<*> {
+        return Response<Any>(e.errorCode, e.message)
+    }
+
     private fun internalError(reason: String?): Response<*> = Response<Any>().apply {
         code = ERROR
         message = reason ?: "An internal error occurred. Please contact the support group."

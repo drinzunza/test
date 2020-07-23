@@ -1,9 +1,11 @@
 package com.uav_recon.app.api.services.report.document.main
 
-import com.uav_recon.app.api.beans.resources.Resources
 import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.entities.responses.bridge.ObservationDefectReportDto
+import com.uav_recon.app.api.entities.responses.bridge.SubcomponentHealthDto
 import com.uav_recon.app.api.repositories.*
 import com.uav_recon.app.api.services.FileService
+import com.uav_recon.app.api.services.InspectionService
 import com.uav_recon.app.api.services.ObservationService
 import com.uav_recon.app.api.services.report.MapLoaderService
 import com.uav_recon.app.api.services.report.ReportConstants
@@ -24,6 +26,8 @@ import com.uav_recon.app.api.utils.toDate
 import com.uav_recon.app.configurations.UavConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -51,6 +55,7 @@ private val LOGO_HEIGHT = (LOGO_WIDTH * 394.0 / 1773.0).roundToInt()
 @Service
 class MainDocumentFactory(
         private val mapLoaderService: MapLoaderService,
+        private val inspectionService: InspectionService,
         private val inspectionRepository: InspectionRepository,
         private val observationService: ObservationService,
         private val observationRepository: ObservationRepository,
@@ -58,17 +63,13 @@ class MainDocumentFactory(
         private val structureRepository: StructureRepository,
         private val userRepository: UserRepository,
         private val photoRepository: PhotoRepository,
-        private val componentRepository: ComponentRepository,
-        private val subcomponentRepository: SubcomponentRepository,
-        private val defectRepository: DefectRepository,
-        private val conditionRepository: ConditionRepository,
-        private val observationNameRepository: ObservationNameRepository,
-        private val locationIdRepository: LocationIdRepository,
-        private val resources: Resources,
+        private val companyRepository: CompanyRepository,
         private val configuration: UavConfiguration,
-        private val fileService: FileService
+        private val fileService: FileService,
+        private val projectRepository: ProjectRepository
 ) : DocumentFactory {
 
+    private val fileStorageLocation: Path = Paths.get(configuration.files.uploadDir).toAbsolutePath().normalize()
     private val logger = LoggerFactory.getLogger(MainDocumentFactory::class.java)
 
     companion object {
@@ -131,10 +132,11 @@ class MainDocumentFactory(
     }
 
     override fun generateDocument(report: Report): Document {
-        val inspection = report.getInspection().fillObjects()
+        val inspection = report.getInspection()
+        inspectionService.fillObjects(listOf(inspection))
         val structure = inspection.getStructure()
-        val company = Company(1, "Alta Vista Solutions")
         val inspector = inspection.getInspector()
+        val company = inspector.getCompany()
 
         return Document.create {
             border { BORDER }
@@ -157,9 +159,9 @@ class MainDocumentFactory(
         paragraph {
             createElements(
                 TRIPLE_LINE_FEED_ELEMENT,
-                STRUCTURE_TYPE_ELEMENT, structure?.type ?: ""
+                STRUCTURE_TYPE_ELEMENT, structure?.type?.name ?: ""
             )
-            createElements(prefix = STRUCTURE_ID_ELEMENT, text = structure?.id)
+            createElements(prefix = STRUCTURE_ID_ELEMENT, text = structure?.code)
             createElements(prefix = STRUCTURE_NAME_ELEMENT, text = structure?.name)
             createElements(prefix = PRIMARY_OWNER_ELEMENT, text = structure?.primaryOwner)
             lineFeed { LineFeedElement.Simple(1) }
@@ -180,8 +182,8 @@ class MainDocumentFactory(
             text { REPORT_PREPARED_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             picture(
-                company?.name ?: "",
-                resources.getData("logo_altavista.png")!!.inputStream(),
+                company?.name ?: "Demo Company",
+                fileStorageLocation.resolve(company?.logo?.split("/")?.last() ?: "logo_datarecon.png").toFile().inputStream(),
                 LOGO_WIDTH,
                 LOGO_HEIGHT
             )
@@ -269,7 +271,8 @@ class MainDocumentFactory(
                 }
                 cell {
                     paragraph {
-                        text(formatRating(SGR_RATING, inspection.sgrRating, PERCENT), styles = ITALIC_STYLE_LIST)
+                        val sqrRating = inspectionService.calculateSgrRating(inspection)
+                        text(formatRating(SGR_RATING, sqrRating, PERCENT), styles = ITALIC_STYLE_LIST)
                         lineFeed { SINGLE_LINE_FEED_ELEMENT }
                         text(formatRating(TERM_RATING, inspection.termRating), styles = ITALIC_STYLE_LIST)
                     }
@@ -329,7 +332,7 @@ class MainDocumentFactory(
                 ?.forEach {
                     val component = it.key ?: return@forEach
                     val list = it.value.map { observation ->
-                        val spansCount = observation.getSpansCount(inspection.spansCount) ?: 0
+                        val spansCount = observationService.getSpansCount(observation, inspection.spansCount) ?: 0
                         DefectSummaryFields.ObservationData(observation, spansCount, observationService)
                     }
                     val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
@@ -491,7 +494,7 @@ class MainDocumentFactory(
     }
 
     private fun Photo.getUrl(server: String, inspection: Inspection, inspector: User): String? {
-        val inspectorId = inspector?.id ?: return null
+        val inspectorId = inspector.id
         var observationDefect: ObservationDefect? = null
 
         val observation = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).firstOrNull {
@@ -506,54 +509,7 @@ class MainDocumentFactory(
             } >= 0
         }
 
-        return "$server/datarecon/$inspectorId/${inspection.uuid}/${observation?.id}/${observationDefect?.id}/$name"
-    }
-
-    private fun Inspection.fillObjects(): Inspection {
-        observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid)
-        observations?.forEach { observation ->
-            observation.fillObjects()
-            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).forEach { defect ->
-                defect.fillObjects()
-            }
-        }
-        return this
-    }
-
-    private fun Observation.fillObjects(): Observation {
-        if (component == null) {
-            component = structuralComponentId?.let {
-                componentRepository.findFirstById(structuralComponentId!!)
-            }
-        }
-        if (subcomponent == null) {
-            subcomponent = subComponentId?.let {
-                subcomponentRepository.findFirstById(subComponentId!!)
-            }
-        }
-        if (defects == null) {
-            defects = observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(uuid)
-        }
-        return this
-    }
-
-    private fun ObservationDefect.fillObjects(): ObservationDefect {
-        if (defect == null) {
-            defect = defectId?.let {
-                defectRepository.findFirstById(defectId!!)
-            }
-        }
-        if (condition == null) {
-            condition = conditionId?.let {
-                conditionRepository.findFirstById(conditionId!!)
-            }
-        }
-        if (observationName == null) {
-            observationName = observationNameId?.let {
-                observationNameRepository.findFirstById(observationNameId!!)
-            }
-        }
-        return this
+        return "$server/datarecon-links/$inspectorId/${inspection.uuid}/${observation?.uuid}/${observationDefect?.uuid}/$uuid.jpeg"
     }
 
     private fun Report.getInspection(): Inspection {
@@ -568,41 +524,108 @@ class MainDocumentFactory(
         return userRepository.findFirstById(updatedBy.toLong())!!
     }
 
-    private fun Observation.getSpansCount(spansCount: Int?): Int? {
-        return getLocationId()?.getAvailableSpans(spansCount)?.size
+    private fun User.getCompany(): Company {
+        return companyRepository.findFirstById(companyId!!)!!
     }
 
-    private fun Observation.getLocationId(): LocationId? {
-        if (structuralComponentId == null && subComponentId == null) return null
+    fun createObservationSummary(inspections: List<Inspection>): List<SubcomponentHealthDto> {
+        inspectionService.fillObjects(inspections)
 
-        return locationIdRepository.findAll()
-                .firstOrNull { locationId ->
-                    var matches = true
-                    structuralComponentId?.let { majorId ->
-                        locationId.majorIds?.let { possibleIds ->
-                            matches = matches and possibleIds.contains(majorId)
+        val structures = structureRepository.findAllByIdIn(inspections.map { it.structureId ?: "" })
+        val results = mutableListOf<SubcomponentHealthDto>()
+        for (inspection in inspections) {
+            inspection.observations
+                    ?.sortedBy { it.component?.name }
+                    ?.groupBy { it.component }
+                    ?.forEach {
+                        val component = it.key ?: return@forEach
+                        val list = it.value.map { observation ->
+                            val spansCount = observationService.getSpansCount(observation, inspection.spansCount) ?: 0
+                            DefectSummaryFields.ObservationData(observation, spansCount, observationService)
+                        }
+                        val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
+
+                        list.forEach {
+                            val structure = structures.firstOrNull { it.id == inspection.structureId }
+                            results.add(SubcomponentHealthDto(
+                                    id = it.subComponentId,
+                                    structureId = structure?.id,
+                                    structureName = structure?.name,
+                                    structureCode = structure?.code,
+                                    inspectionId = inspection.uuid,
+                                    inspectionDate = inspection.startDate,
+                                    componentName = component.name,
+                                    subcomponentName = it.subComponentName,
+                                    subcomponentHealthIndex = it.healthIndex,
+                                    componentHealthIndex = totalHealthIndex,
+                                    conditionRating1 = it.cs1,
+                                    conditionRating2 = it.cs2,
+                                    conditionRating3 = it.cs3,
+                                    conditionRating4 = it.cs4
+                            ))
                         }
                     }
-                    subComponentId?.let { subId ->
-                        locationId.subComponentIds?.let { possibleIds ->
-                            matches = matches and possibleIds.contains(subId)
-                        }
-                    }
-                    matches
-                }
+        }
+        logger.info("Get ${results.size} subcomponents")
+        return results
     }
 
-    private fun LocationId.getAvailableSpans(spanNumber: Int?): List<String> {
-        val spans = mutableListOf<String>()
-        alwaysShownSpans?.let {
-            spans += it
+    fun createObservationDefectSummary(inspections: List<Inspection>): List<ObservationDefectReportDto> {
+        inspectionService.fillObjects(inspections)
+
+        val structures = structureRepository.findAllByIdIn(inspections.map { it.structureId ?: "" })
+        val projects = projectRepository.findAllByIdIn(inspections.map { it.projectId ?: 0 })
+        val users = userRepository.findAllByIdIn(inspections.map { it.createdBy.toLong() })
+
+        val defectUserIds = mutableListOf<Int>()
+        inspections.forEach { it.observations?.forEach { it.defects?.forEach { defectUserIds.add(it.createdBy) } } }
+        val defectUsers = userRepository.findAllByIdIn(defectUserIds.map { it.toLong() })
+
+        val observationDefectIds = mutableListOf<String>()
+        inspections.forEach { it.observations?.forEach { it.defects?.forEach { observationDefectIds.add(it.uuid) } } }
+        val photos = photoRepository.findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefectIds)
+
+        val results = mutableListOf<ObservationDefectReportDto>()
+        for (inspection in inspections) {
+            inspection.observations
+                    ?.sortedBy { it.component?.name }
+                    ?.forEach { observation ->
+                        observation.defects?.forEach {
+                            val observationDefect = it
+                            val inspector = defectUsers.firstOrNull { it.id == observationDefect.createdBy.toLong() }
+                            val structure = structures.firstOrNull { it.id == inspection.structureId }
+                            results.add(ObservationDefectReportDto(
+                                    uuid = it.uuid,
+                                    id = it.id,
+                                    stationMarker = it.stationMarker,
+                                    clockPosition = it.clockPosition,
+                                    observationType = it.observationType,
+                                    classification = it.type,
+                                    locationId = it.span,
+                                    summary = it.description,
+                                    description = it.defect?.name,
+                                    repairMethod = it.repairMethod,
+                                    repairDate = it.repairDate,
+                                    size = it.size,
+                                    componentName = observation.component?.name,
+                                    subcomponentName = observation.subcomponent?.name,
+                                    dimensionNumber = observation.dimensionNumber,
+                                    csRating = it.condition?.type?.title,
+                                    pictureLinks = photos.filter { photo -> photo.observationDefectId == it.uuid }
+                                            .map { fileService.getImagePath(it.link, null, FileService.FileType.WITH_RECT) },
+                                    inspectionId = inspection.uuid,
+                                    inspectionDate = inspection.startDate,
+                                    structureId = structure?.id,
+                                    structureName = structure?.name,
+                                    structureCode = structure?.code,
+                                    projectId = inspection.projectId,
+                                    projectName = projects.firstOrNull { it.id == inspection.projectId }?.name,
+                                    inspectorName = inspector?.let { "${inspector.firstName} ${inspector.lastName}" }
+                            ))
+                        }
+                    }
         }
-        spanNumber?.let { inspectionSpanNumber ->
-            iteratedSpanPatterns?.split(",")?.let { patterns ->
-                for (i in 1..inspectionSpanNumber)
-                    spans += patterns.map { it.format(i) }
-            }
-        }
-        return spans
+        logger.info("Get ${results.size} defects")
+        return results
     }
 }

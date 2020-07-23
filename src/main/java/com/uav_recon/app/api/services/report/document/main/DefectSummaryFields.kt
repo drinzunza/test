@@ -135,6 +135,7 @@ internal enum class DefectSummaryFields(
     }
 
     data class ObservationData(
+        val subComponentId: String?,
         val subComponentName: String?,
         val totalQuantity: Int,
         val measureUnits: String?,
@@ -150,6 +151,7 @@ internal enum class DefectSummaryFields(
             spansCount: Int,
             observationService: ObservationService
         ) : this(
+                observation.subcomponent?.id,
                 observation.subcomponent?.name,
                 observationService.getTotalQuantity(observation, spansCount),
                 observation.subcomponent?.measureUnit,
