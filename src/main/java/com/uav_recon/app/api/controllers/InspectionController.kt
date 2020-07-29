@@ -17,7 +17,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
     fun get(@RequestHeader(X_TOKEN) token: String,
             @RequestParam(required = false) projectId: Long?,
             @RequestParam(required = false) structureId: String?,
-            @RequestParam(required = false) withObservations: Boolean
+            @RequestParam(required = false, defaultValue = "true") withObservations: Boolean
     ): ResponseEntity<List<InspectionDto>> {
         return ResponseEntity.ok(inspectionService.listNotDeletedDto(getAuthenticatedUser(), projectId, structureId, null, withObservations))
     }
