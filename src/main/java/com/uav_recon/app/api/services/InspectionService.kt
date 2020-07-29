@@ -35,7 +35,7 @@ class InspectionService(
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
 
-    fun Inspection.toDto(user: User?) = InspectionDto(
+    fun Inspection.toDto(user: User?, withObservations: Boolean = true) = InspectionDto(
         uuid = uuid,
         location = if (latitude != null) LocationDto(latitude, longitude, altitude) else null,
         endDate = endDate,
@@ -49,7 +49,7 @@ class InspectionService(
         status = status,
         termRating = termRating,
         weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
-        observations = observationService.findAllByInspectionUuidAndNotDeleted(uuid),
+        observations = if (withObservations) observationService.findAllByInspectionUuidAndNotDeleted(uuid) else listOf(),
         spansCount = spansCount,
         projectId = projectId,
         inspectors = user?.let { getUsers(it, uuid) }
@@ -106,8 +106,8 @@ class InspectionService(
         return saved.toDto(user)
     }
 
-    fun listNotDeletedDto(user: User, projectId: Long?, structureId: String?, companyId: Long?): List<InspectionDto> {
-        return listNotDeleted(user, projectId, structureId, companyId).map { i -> i.toDto(user) }
+    fun listNotDeletedDto(user: User, projectId: Long?, structureId: String?, companyId: Long?, withObservations: Boolean): List<InspectionDto> {
+        return listNotDeleted(user, projectId, structureId, companyId).map { i -> i.toDto(user, withObservations) }
     }
 
     fun getCompanyIds(user: User, companyId: Long?): List<Long> {
@@ -128,6 +128,13 @@ class InspectionService(
             userIds.add(it.id.toInt())
         }
         return userIds
+    }
+
+    fun getNotDeleted(user: User, uuid: String): InspectionDto {
+        val inspection = listNotDeleted(user, null, null, null)
+                .firstOrNull { uuid.isNotBlank() && it.uuid == uuid }
+                ?: throw Error(181, "Not found inspection")
+        return inspection.toDto(user, true)
     }
 
     fun listNotDeleted(user: User, projectId: Long?, structureId: String?, companyId: Long?): List<Inspection> {
