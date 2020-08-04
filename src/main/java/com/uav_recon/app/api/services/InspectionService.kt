@@ -314,7 +314,8 @@ class InspectionService(
         val isPM = project?.hasProjectRole(user, roles, Role.PM) ?: false
         val isAdmin = user.admin && user.companyId != null && user.companyId == project?.companyId
         val isCreated = inspection?.createdBy?.toLong() == user.id
-        logger.info("User ${user.id} (admin=${user.admin}) company admin=$isAdmin, PM=$isPM, isCreated=$isCreated")
+        logger.info("User ${user.id}, inspection ${inspection?.uuid}, project ${project?.id}")
+        logger.info("admin=${user.admin}, company admin=$isAdmin, PM=$isPM, isCreated=$isCreated")
         return isAdmin || isPM || isCreated
     }
 
