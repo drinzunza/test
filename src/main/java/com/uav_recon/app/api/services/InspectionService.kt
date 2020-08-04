@@ -85,6 +85,7 @@ class InspectionService(
 
     @Transactional
     fun save(user: User, dto: InspectionDto): InspectionDto {
+        logger.info("inspection uuid = ${dto.uuid}")
         val inspection = getInspection(dto.uuid)
         if (hasCreateDeleteRights(user, inspection, dto.projectId)) {
             // Admins and PMs can create/delete inspection
