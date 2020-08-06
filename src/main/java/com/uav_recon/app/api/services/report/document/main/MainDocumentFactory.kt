@@ -133,11 +133,14 @@ class MainDocumentFactory(
 
     override fun generateDocument(report: Report): Document {
         val inspection = report.getInspection()
+        logger.info("start fill objects")
         inspectionService.fillObjects(listOf(inspection))
+        logger.info("stop fill objects")
         val structure = inspection.getStructure()
         val inspector = inspection.getInspector()
         val company = inspector.getCompany()
 
+        logger.info("start create document")
         return Document.create {
             border { BORDER }
 
