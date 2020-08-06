@@ -69,7 +69,7 @@ class LinksController(
             if (observations != null && observations.size == 1) {
                 val defects = observations[0].observationDefects?.filter { d -> d.uuid == observationDefectId }
                 if (defects != null && defects.size == 1) {
-                    val photos = defects[0].photos?.filter { p -> p.uuid == photoId }
+                    val photos = defects[0].photos?.filter { p -> photoId.contains(p.uuid) }
                     if (photos != null && photos.size == 1) {
                         response.contentType = MediaType.IMAGE_JPEG_VALUE
                         IOUtils.copy(fileService.get(photos[0].link!!, photos[0].drawables, FileService.FileType.WITH_RECT), response.outputStream)
