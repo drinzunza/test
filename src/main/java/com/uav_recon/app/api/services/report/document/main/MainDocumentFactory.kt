@@ -156,7 +156,6 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createTitlePage(report: Report, inspection: Inspection?, inspector: User?, structure: Structure?, company: Company?) {
-        logger.info("start createTitlePage")
         paragraph {
             createElements(
                 TRIPLE_LINE_FEED_ELEMENT,
@@ -239,7 +238,6 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createGlobalPage(inspection: Inspection) {
-        logger.info("start createGlobalPage")
         mapLoaderService.loadImage(inspection)?.let {
             paragraph {
                 picture(inputStream = it, width = MAP_PICTURE_WIDTH, height = MAP_PICTURE_HEIGHT)
@@ -321,7 +319,6 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createObservationSummary(inspection: Inspection) {
-        logger.info("start createObservationSummary")
         paragraph {
             text { OBSERVATION_SUMMARY_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
@@ -356,7 +353,6 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createDefectReportPage(inspection: Inspection, inspector: User, structure: Structure?, observation: Observation, defect: ObservationDefect) {
-        logger.info("start createDefectReportPage")
         paragraph {
             text { OBSERVATION_REPORT_SUMMARY_ELEMENT }
         }
@@ -371,7 +367,7 @@ class MainDocumentFactory(
                         paragraph {
                             alignment { it.key }
                             it.value.forEach { field ->
-                                elementsKeyValue(field.title, field.getValue(inspection, structure, observation, defect, photoRepository), SMALL_TEXT_SIZE)
+                                elementsKeyValue(field.title, field.getValue(inspection, structure, observation, defect), SMALL_TEXT_SIZE)
                             }
                         }
                     }
@@ -402,7 +398,7 @@ class MainDocumentFactory(
     }
 
     private fun Table.Builder.rowsPictures(inspection: Inspection, inspector: User, defect: ObservationDefect) {
-        val photosSize = photoRepository.countByObservationDefectIdAndDeletedIsFalse(defect.uuid).toInt()
+        val photosSize = defect.photos?.size ?: 0
         for (i in 0..(photosSize - 1) / 2) {
             row {
                 cell {
@@ -426,7 +422,7 @@ class MainDocumentFactory(
         paragraphLeft {
             text { PHOTO_SPACE_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.uuid).getOrNull(index)?.let { photo ->
+            defect.photos?.getOrNull(index)?.let { photo ->
                 try {
                     fileService.get(photo.link, photo.drawables, FileService.FileType.WITH_RECT_THUMB).also {
                         picture(photo.name, it, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
@@ -450,12 +446,10 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User) {
-        logger.info("start createNonStructuralDefectsReport")
         createDefectsReport(inspection, inspector, NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.MAINTENANCE)
     }
 
     private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User) {
-        logger.info("start createStructuralDefectsReport")
         createDefectsReport(inspection, inspector, STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.STRUCTURAL)
     }
 
