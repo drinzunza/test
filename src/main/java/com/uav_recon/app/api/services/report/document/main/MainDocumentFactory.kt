@@ -133,14 +133,11 @@ class MainDocumentFactory(
 
     override fun generateDocument(report: Report): Document {
         val inspection = report.getInspection()
-        logger.info("start fill objects")
         inspectionService.fillObjects(listOf(inspection))
-        logger.info("stop fill objects")
         val structure = inspection.getStructure()
         val inspector = inspection.getInspector()
         val company = inspector.getCompany()
 
-        logger.info("start create document")
         return Document.create {
             border { BORDER }
 
@@ -159,6 +156,7 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createTitlePage(report: Report, inspection: Inspection?, inspector: User?, structure: Structure?, company: Company?) {
+        logger.info("start createTitlePage")
         paragraph {
             createElements(
                 TRIPLE_LINE_FEED_ELEMENT,
@@ -241,6 +239,7 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createGlobalPage(inspection: Inspection) {
+        logger.info("start createGlobalPage")
         mapLoaderService.loadImage(inspection)?.let {
             paragraph {
                 picture(inputStream = it, width = MAP_PICTURE_WIDTH, height = MAP_PICTURE_HEIGHT)
@@ -322,6 +321,7 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createObservationSummary(inspection: Inspection) {
+        logger.info("start createObservationSummary")
         paragraph {
             text { OBSERVATION_SUMMARY_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
@@ -356,6 +356,7 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createDefectReportPage(inspection: Inspection, inspector: User, structure: Structure?, observation: Observation, defect: ObservationDefect) {
+        logger.info("start createDefectReportPage")
         paragraph {
             text { OBSERVATION_REPORT_SUMMARY_ELEMENT }
         }
@@ -449,10 +450,12 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User) {
+        logger.info("start createNonStructuralDefectsReport")
         createDefectsReport(inspection, inspector, NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.MAINTENANCE)
     }
 
     private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User) {
+        logger.info("start createStructuralDefectsReport")
         createDefectsReport(inspection, inspector, STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.STRUCTURAL)
     }
 
