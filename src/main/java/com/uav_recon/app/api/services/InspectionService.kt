@@ -378,6 +378,7 @@ class InspectionService(
         val components = componentRepository.findAllByIdIn(observations.map { it.structuralComponentId ?: "" })
         val subcomponents = subcomponentRepository.findAllByIdIn(observations.map { it.subComponentId ?: "" })
         val observationDefects = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observations.map { it.uuid })
+        val photos = photoRepository.findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefects.map { it.uuid })
         val defects = defectRepository.findAllByIdIn(observationDefects.map { it.defectId ?: "" })
         val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
         val observationNames = observationNameRepository.findAllByIdIn(observationDefects.map { it.observationNameId ?: "" })
@@ -387,6 +388,7 @@ class InspectionService(
             observationDefect.defect = defects.firstOrNull { it.id == observationDefect.defectId }
             observationDefect.condition = conditions.firstOrNull { it.id == observationDefect.conditionId }
             observationDefect.observationName = observationNames.firstOrNull { it.id == observationDefect.observationNameId }
+            observationDefect.photos = photos.filter { it.observationDefectId == observationDefect.uuid }
         }
         observations.forEach { observation ->
             observation.component = components.firstOrNull { it.id == observation.structuralComponentId }

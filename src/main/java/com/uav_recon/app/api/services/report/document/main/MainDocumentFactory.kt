@@ -58,11 +58,8 @@ class MainDocumentFactory(
         private val inspectionService: InspectionService,
         private val inspectionRepository: InspectionRepository,
         private val observationService: ObservationService,
-        private val observationRepository: ObservationRepository,
-        private val observationDefectRepository: ObservationDefectRepository,
         private val structureRepository: StructureRepository,
         private val userRepository: UserRepository,
-        private val photoRepository: PhotoRepository,
         private val companyRepository: CompanyRepository,
         private val configuration: UavConfiguration,
         private val fileService: FileService,
@@ -370,7 +367,7 @@ class MainDocumentFactory(
                         paragraph {
                             alignment { it.key }
                             it.value.forEach { field ->
-                                elementsKeyValue(field.title, field.getValue(inspection, structure, observation, defect, photoRepository), SMALL_TEXT_SIZE)
+                                elementsKeyValue(field.title, field.getValue(inspection, structure, observation, defect), SMALL_TEXT_SIZE)
                             }
                         }
                     }
@@ -401,7 +398,7 @@ class MainDocumentFactory(
     }
 
     private fun Table.Builder.rowsPictures(inspection: Inspection, inspector: User, defect: ObservationDefect) {
-        val photosSize = photoRepository.countByObservationDefectIdAndDeletedIsFalse(defect.uuid).toInt()
+        val photosSize = defect.photos?.size ?: 0
         for (i in 0..(photosSize - 1) / 2) {
             row {
                 cell {
@@ -425,7 +422,7 @@ class MainDocumentFactory(
         paragraphLeft {
             text { PHOTO_SPACE_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.uuid).getOrNull(index)?.let { photo ->
+            defect.photos?.getOrNull(index)?.let { photo ->
                 try {
                     fileService.get(photo.link, photo.drawables, FileService.FileType.WITH_RECT_THUMB).also {
                         picture(photo.name, it, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
@@ -489,21 +486,20 @@ class MainDocumentFactory(
     private fun Double?.formatSgrRating() = this?.let { DecimalFormat("0.##").format(it) }
 
     private fun Inspection.getCriticalFindingCount(criticalFinding: CriticalFinding): Int {
-        return observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid).sumBy { observation: Observation ->
-            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).sumBy { defect: ObservationDefect ->
-                if (defect.criticalFindings != null && defect.criticalFindings!!.contains(criticalFinding)) 1 else 0
-            }
-        }
+        return observations?.sumBy { observation: Observation ->
+            observation.defects?.sumBy { defect: ObservationDefect ->
+                if (defect.criticalFindings?.contains(criticalFinding) == true) 1 else 0
+            } ?: 0
+        } ?: 0
     }
 
     private fun Photo.getUrl(server: String, inspection: Inspection, inspector: User): String? {
         val inspectorId = inspector.id
         var observationDefect: ObservationDefect? = null
 
-        val observation = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).firstOrNull {
-            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(it.uuid).indexOfFirst { defect ->
-                val photos = photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(defect.uuid)
-                photos.forEach { photo ->
+        val observation = inspection.observations?.firstOrNull {
+            it.defects!!.indexOfFirst { defect ->
+                defect.photos?.forEach { photo ->
                     if (photo.uuid == uuid) {
                         observationDefect = defect
                     }
@@ -584,10 +580,6 @@ class MainDocumentFactory(
         inspections.forEach { it.observations?.forEach { it.defects?.forEach { defectUserIds.add(it.createdBy) } } }
         val defectUsers = userRepository.findAllByIdIn(defectUserIds.map { it.toLong() })
 
-        val observationDefectIds = mutableListOf<String>()
-        inspections.forEach { it.observations?.forEach { it.defects?.forEach { observationDefectIds.add(it.uuid) } } }
-        val photos = photoRepository.findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefectIds)
-
         val results = mutableListOf<ObservationDefectReportDto>()
         for (inspection in inspections) {
             inspection.observations
@@ -614,8 +606,7 @@ class MainDocumentFactory(
                                     subcomponentName = observation.subcomponent?.name,
                                     dimensionNumber = observation.dimensionNumber,
                                     csRating = it.condition?.type?.title,
-                                    pictureLinks = photos.filter { photo -> photo.observationDefectId == it.uuid }
-                                            .map { fileService.getImagePath(it.link, null, FileService.FileType.WITH_RECT) },
+                                    pictureLinks = it.photos?.map { fileService.getImagePath(it.link, null, FileService.FileType.WITH_RECT) } ?: listOf(),
                                     inspectionId = inspection.uuid,
                                     inspectionDate = inspection.startDate,
                                     structureId = structure?.id,

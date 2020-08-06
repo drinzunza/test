@@ -1,7 +1,6 @@
 package com.uav_recon.app.api.services.report.document.main
 
 import com.uav_recon.app.api.entities.db.*
-import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory.Companion.DATE_FORMAT
 import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.utils.*
@@ -27,10 +26,7 @@ internal enum class DefectFields(val title: String) {
     LOCATION_ID("Location ID: "),
     SIZE("Size: ");
 
-    fun getValue(inspection: Inspection, structure: Structure?,
-                 observation: Observation, defect: ObservationDefect,
-                 photoRepository: PhotoRepository
-    ): String? {
+    fun getValue(inspection: Inspection, structure: Structure?, observation: Observation, defect: ObservationDefect): String? {
         return when (this) {
             COMPONENT -> observation.component?.name
             SPAN -> defect.span
@@ -46,7 +42,7 @@ internal enum class DefectFields(val title: String) {
             INSPECTION_DATE -> inspection.startDate?.formatDate(DATE_FORMAT)
             STATION_MARKER -> defect.stationMarker
             CRITICAL_FINDINGS -> if (defect.criticalFindings.isNullOrEmpty()) NONE else defect.criticalFindings?.size.toString()
-            PHOTO_QTY -> photoRepository.countByObservationDefectIdAndDeletedIsFalse(defect.uuid).toString()
+            PHOTO_QTY -> defect.photos?.size?.toString() ?: "0"
 
             LOCATION_ID -> defect.span
             SIZE -> {
