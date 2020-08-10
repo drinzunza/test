@@ -18,7 +18,7 @@ data class ObservationDefectReportDto(
         val clockPosition: Int?,
         val observationType: ObservationType?,
         val repairMethod: String?,
-        val repairDate: OffsetDateTime?,
+        val repairDate: String?,
         val description: String?,
         val summary: String?,
         val size: String?,

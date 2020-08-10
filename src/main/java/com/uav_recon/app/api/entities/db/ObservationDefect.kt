@@ -63,7 +63,7 @@ class ObservationDefect(
         @Column(name = "clock_position")
         val clockPosition: Int? = null,
         @Column(name = "repair_date")
-        val repairDate: OffsetDateTime? = null,
+        val repairDate: String? = null,
         @Column(name = "repair_method")
         val repairMethod: String? = null,
         @Transient
