@@ -26,6 +26,6 @@ data class ObservationDefectDto(
         val weather: Weather?,
         val observationNameId: String?,
         val clockPosition: Int?,
-        val repairDate: OffsetDateTime?,
+        val repairDate: String?,
         val repairMethod: String?
 ) : Serializable

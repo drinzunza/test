@@ -1,0 +1,1 @@
+ALTER TABLE observation_defects ALTER COLUMN repair_date type VARCHAR(100);
