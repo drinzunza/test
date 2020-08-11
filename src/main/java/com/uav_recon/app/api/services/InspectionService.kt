@@ -313,7 +313,11 @@ class InspectionService(
         val project = getProject(inspection?.projectId ?: projectId)
         val roles = getProjectRoles(user, project)
         val isPM = project?.hasProjectRole(user, roles, Role.PM) ?: false
-        val isAdmin = user.admin && user.companyId != null && user.companyId == project?.companyId
+
+        // Hack for old user inspections with project == null
+        val isCompanyProject = if (project?.companyId == null) true else user.companyId == project.companyId
+        
+        val isAdmin = user.admin && user.companyId != null && isCompanyProject
         val isCreated = inspection?.createdBy?.toLong() == user.id
         logger.info("User ${user.id}, inspection ${inspection?.uuid}, project ${project?.id}")
         logger.info("admin=${user.admin}, company admin=$isAdmin, PM=$isPM, isCreated=$isCreated")
