@@ -213,7 +213,7 @@ class DictionaryService(
         logger.info("structures=${dic.structures.size}, components=${dic.structuralComponents.size}, " +
                 "subcomponents=${dic.subComponents.size}, defects=${dic.defects.size}, " +
                 "conditions=${dic.conditions.size}, locations=${dic.locationIds.size}, " +
-                "observationNames=${dic.observationNames.size}")
+                "observationNames=${dic.observationNames.size}, structureTypes=${dic.structureTypes.size}")
         return dic
     }
 
@@ -260,7 +260,10 @@ class DictionaryService(
         val conditions = userConditions
                 .filter { defects.map { it.id }.contains(it.defectId) }
 
-        return DictionaryDto(conditions, defects, subcomponents, components, structures, locations, observationNames)
+        return DictionaryDto(conditions, defects, subcomponents,
+                components, structures, locations, observationNames,
+                structureTypes.map { t -> t.toDto() }
+        )
     }
 
     fun getLastEtagHash(): String {
@@ -411,6 +414,14 @@ class DictionaryService(
             subComponentIds = subComponentIds?.split(','),
             alwaysShownSpans = alwaysShownSpans?.split(','),
             iteratedSpanPatterns = iteratedSpanPatterns?.split(','),
+            deleted = deleted
+    )
+
+    private fun StructureType.toDto() = StructureTypeDto(
+            id = code,
+            name = name,
+            numOfSpansEnabled = numOfSpansEnabled,
+            clockPositionEnabled = clockPositionEnabled,
             deleted = deleted
     )
 }
