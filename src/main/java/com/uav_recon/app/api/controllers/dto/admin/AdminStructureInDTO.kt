@@ -11,7 +11,8 @@ data class AdminStructureInDTO(
         var code: String,
         @NotEmpty
         var name: String,
-        var structureTypeId: Long,
+        @NotEmpty
+        var type: String,
         @NotEmpty
         var clientId: Long? = null,
         var caltransBridgeNo: String = "",

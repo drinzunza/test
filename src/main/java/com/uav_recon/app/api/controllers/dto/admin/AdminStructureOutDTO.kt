@@ -9,7 +9,7 @@ data class AdminStructureOutDTO(
         var id: String = "",
         var code: String = "",
         var name: String = "",
-        var structureTypeId: Long = 0,
+        var type: String? = null,
         var clientId: Long? = null ,
         var caltransBridgeNo: String? = null,
         var postmile: Double? = null,

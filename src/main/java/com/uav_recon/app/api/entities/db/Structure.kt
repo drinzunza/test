@@ -15,7 +15,7 @@ class Structure(
     var code: String = "",
     var name: String = "",
     @Column(name = "structure_type_id")
-    var structureTypeId: Long = 1,
+    var structureTypeId: Long? = null,
     @Column(name = "primary_owner")
     var primaryOwner: String? = null,
     @Column(name = "caltrans_bridge_no")

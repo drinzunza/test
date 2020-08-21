@@ -17,9 +17,9 @@ class StructureComponentService(
 ) {
 
     @Transactional
-    fun refreshStructureComponents(companyId: Long, structureId: String, structureTypeId: Long) {
+    fun refreshStructureComponents(companyId: Long, structureId: String, structureTypeId: Long?) {
         structureComponentRepository.deleteByStructureId(structureId)
-        val components = componentRepository.findAllByCompanyIdAndStructureTypeId(companyId, structureTypeId)
+        val components = structureTypeId?.let { componentRepository.findAllByCompanyIdAndStructureTypeId(companyId, it) } ?: listOf()
         val structureComponents = components.map {
             StructureComponent(0, structureId, it.id)
         }
