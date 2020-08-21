@@ -9,7 +9,7 @@ data class StructureDto(
         val id: String,
         val code: String,
         val name: String,
-        val type: StructureComponentType,
+        val type: String,
         val primaryOwner: String? = null,
         val caltransBridgeNo: String? = null,
         val postmile: Double? = null,

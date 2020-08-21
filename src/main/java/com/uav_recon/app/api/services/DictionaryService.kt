@@ -26,7 +26,9 @@ class DictionaryService(
         private val observationNameRepository: ObservationNameRepository,
         private val etagRepository: EtagRepository,
         private val inspectionService: InspectionService,
-        private val structureComponentService: StructureComponentService
+        private val structureComponentService: StructureComponentService,
+        private val structureTypeRepository: StructureTypeRepository,
+        private val companyStructureTypeRepository: CompanyStructureTypeRepository
 ) {
     private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
 
@@ -37,9 +39,10 @@ class DictionaryService(
         val subcomponents = subcomponentRepository.findAllByDeletedIsFalseAndComponentIdIn(components.map { it.id })
         val subcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(subcomponents.map { it.id })
         val defects = defectRepository.findAllByDeletedIsFalseAndIdIn(subcomponentDefects.map { it.defectId }.toHashSet().toList())
+        val structureTypes = structureTypeRepository.findAll().toList()
 
         return DictionariesDto(components.filter { it.companyId == companyId }
-                .map { c -> c.toDtoWithSubcomponents(subcomponents, defects, subcomponentDefects) }
+                .map { c -> c.toDtoWithSubcomponents(subcomponents, defects, subcomponentDefects, structureTypes) }
                 .filter { it.deleted == null || it.deleted == false })
     }
 
@@ -55,6 +58,7 @@ class DictionaryService(
         val subcomponents = subcomponentRepository.findAllByDeletedIsFalseAndComponentIdIn(components.map { it.id })
         val subcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(subcomponents.map { it.id })
         val defects = defectRepository.findAllByDeletedIsFalseAndIdIn(subcomponentDefects.map { it.defectId })
+        val structureTypes = structureTypeRepository.findAll().toList()
 
         val saveComponents = mutableListOf<Component>()
         val saveSubcomponents = mutableListOf<Subcomponent>()
@@ -64,7 +68,7 @@ class DictionaryService(
 
         body.components?.forEach { component ->
             if (component.id == null || components.any { it.id == component.id }) {
-                val componentDto = component.toDto(user)
+                val componentDto = component.toDto(user, structureTypes)
                 saveComponents.add(componentDto)
 
                 component.subcomponents?.forEach { subcomponent ->
@@ -235,15 +239,16 @@ class DictionaryService(
         // Get all values
         val locations = locationIdRepository.findAll().map { s -> s.toDto() }
         val observationNames = observationNameRepository.findAll().toList()
+        val structureTypes = structureTypeRepository.findAll().toList()
 
         // Get dictionaries with ids
-        val type = buildType.toStructureTypePart()
+        val structureTypeId = buildType.toStructureTypePart()
         val structures = userStructures
-                .filter { type == null || it.type == type }
-                .map { s -> s.toDto(userStructureComponents) }
+                .filter { structureTypeId == null || it.structureTypeId == structureTypeId }
+                .map { s -> s.toDto(userStructureComponents, structureTypes) }
         val components = userComponents
-                .filter { type == null || it.type == type }
-                .map { c -> c.toDto(userSubcomponents) }
+                .filter { structureTypeId == null || it.structureTypeId == structureTypeId }
+                .map { c -> c.toDto(userSubcomponents, structureTypes) }
         val subcomponents = userSubcomponents
                 .filter { components.map { it.id }.contains(it.componentId) }
                 .map { s -> s.toDto(userSubcomponentDefects, observationNames) }
@@ -295,10 +300,12 @@ class DictionaryService(
         logger.error("Stop check dictionary relations")
     }
 
-    private fun Component.toDtoWithSubcomponents(subcomponents: List<Subcomponent>, defects: List<Defect>, subcomponentDefects: List<SubcomponentDefect>) = ComponentWithSubcomponentDto(
+    private fun Component.toDtoWithSubcomponents(
+            subcomponents: List<Subcomponent>, defects: List<Defect>, subcomponentDefects: List<SubcomponentDefect>, types: List<StructureType>
+    ) = ComponentWithSubcomponentDto(
             id = id,
             name = name,
-            type = type,
+            type = types.find { it.id == structureTypeId }?.code,
             deleted = deleted,
             subcomponents = subcomponents.filter { it.componentId == id }.map { s -> s.toDtoWithDefects(defects, subcomponentDefects) }
     )
@@ -324,10 +331,10 @@ class DictionaryService(
             deleted = deleted
     )
 
-    private fun ComponentWithSubcomponentDto.toDto(user: User) = Component(
+    private fun ComponentWithSubcomponentDto.toDto(user: User, types: List<StructureType>) = Component(
             id = id ?: UUID.randomUUID().toString(),
             name = name,
-            type = type,
+            structureTypeId = types.find { it.code == type }?.id ?: 0,
             companyId = user.companyId,
             deleted = deleted
     )
@@ -373,11 +380,11 @@ class DictionaryService(
             observationNameIds = observationNames.map { it.id }
     )
 
-    private fun Structure.toDto(structureComponents: List<StructureComponent>) = StructureDto(
+    private fun Structure.toDto(structureComponents: List<StructureComponent>, types: List<StructureType>) = StructureDto(
             id = id,
             code = code,
             name = name,
-            type = type,
+            type = types.find { it.id == structureTypeId }?.code ?: "",
             primaryOwner = primaryOwner,
             caltransBridgeNo = caltransBridgeNo,
             postmile = postmile,
@@ -388,10 +395,10 @@ class DictionaryService(
             structuralComponentIds = structureComponents.filter { it.structureId == id }.map { it.componentId }
     )
 
-    private fun Component.toDto(subcomponents: List<Subcomponent>) = ComponentDto(
+    private fun Component.toDto(subcomponents: List<Subcomponent>, types: List<StructureType>) = ComponentDto(
             id = id,
             name = name,
-            type = type,
+            type = types.find { it.id == structureTypeId }?.code,
             companyId = companyId,
             deleted = deleted,
             subComponentIds = subcomponents.filter { it.componentId == id }.map { it.id }

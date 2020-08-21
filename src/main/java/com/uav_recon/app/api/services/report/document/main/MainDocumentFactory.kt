@@ -63,7 +63,8 @@ class MainDocumentFactory(
         private val companyRepository: CompanyRepository,
         private val configuration: UavConfiguration,
         private val fileService: FileService,
-        private val projectRepository: ProjectRepository
+        private val projectRepository: ProjectRepository,
+        private val structureTypeRepository: StructureTypeRepository
 ) : DocumentFactory {
 
     private val fileStorageLocation: Path = Paths.get(configuration.files.uploadDir).toAbsolutePath().normalize()
@@ -156,7 +157,7 @@ class MainDocumentFactory(
         paragraph {
             createElements(
                 TRIPLE_LINE_FEED_ELEMENT,
-                STRUCTURE_TYPE_ELEMENT, structure?.type?.name ?: ""
+                STRUCTURE_TYPE_ELEMENT, structureTypeRepository.findAll().find { it.id == structure?.structureTypeId }?.code ?: ""
             )
             createElements(prefix = STRUCTURE_ID_ELEMENT, text = structure?.code)
             createElements(prefix = STRUCTURE_NAME_ELEMENT, text = structure?.name)

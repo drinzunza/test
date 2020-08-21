@@ -1,9 +1,10 @@
 package com.uav_recon.app.api.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.uav_recon.app.api.controllers.dto.admin.AdminStructureInDTO
-import com.uav_recon.app.api.controllers.dto.admin.AdminStructureOutDTO
-import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.entities.db.Etag
+import com.uav_recon.app.api.entities.db.EtagChange
+import com.uav_recon.app.api.entities.db.Structure
+import com.uav_recon.app.api.entities.db.User
 import com.uav_recon.app.api.repositories.CompanyRepository
 import com.uav_recon.app.api.repositories.EtagRepository
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
@@ -59,7 +60,7 @@ class StructureService(
         if (structureRepository.existsById(structure.id))
             throw Error(400, "Structure with this id already exist")
         createEtag(listOf(structure.id))
-        structureComponentService.refreshStructureComponents(actor.companyId!!, structure.id, structure.type)
+        structureComponentService.refreshStructureComponents(actor.companyId!!, structure.id, structure.structureTypeId)
         structure.primaryOwner = structure.companyId?.let { companyRepository.findFirstById(it)?.name }
         return structureRepository.save(structure)
     }
@@ -72,7 +73,7 @@ class StructureService(
             checkAllowForEditingStructure(it, actor)
             createEtag(listOf(it.id))
             regenerateObservationDefectIds(id, it.code)
-            structureComponentService.refreshStructureComponents(actor.companyId!!, it.id, it.type)
+            structureComponentService.refreshStructureComponents(actor.companyId!!, it.id, it.structureTypeId)
             it.primaryOwner = it.companyId?.let { companyRepository.findFirstById(it)?.name }
             return structureRepository.save(it)
         }

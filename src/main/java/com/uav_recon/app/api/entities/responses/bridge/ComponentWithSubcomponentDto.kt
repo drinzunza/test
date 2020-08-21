@@ -8,7 +8,7 @@ import java.io.Serializable
 data class ComponentWithSubcomponentDto(
         var id: String? = null,
         var name: String,
-        var type: StructureComponentType? = null,
+        var type: String? = null,
         var deleted: Boolean? = null,
         var subcomponents: List<SubcomponentWithDefectsDto>?
 ) : Serializable

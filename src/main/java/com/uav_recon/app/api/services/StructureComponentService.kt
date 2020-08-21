@@ -17,9 +17,9 @@ class StructureComponentService(
 ) {
 
     @Transactional
-    fun refreshStructureComponents(companyId: Long, structureId: String, type: StructureComponentType) {
+    fun refreshStructureComponents(companyId: Long, structureId: String, structureTypeId: Long) {
         structureComponentRepository.deleteByStructureId(structureId)
-        val components = componentRepository.findAllByCompanyIdAndType(companyId, type)
+        val components = componentRepository.findAllByCompanyIdAndStructureTypeId(companyId, structureTypeId)
         val structureComponents = components.map {
             StructureComponent(0, structureId, it.id)
         }
@@ -33,7 +33,7 @@ class StructureComponentService(
 
         val structureComponents = mutableListOf<StructureComponent>()
         structures.forEach { structure ->
-            components.filter { it.type == structure.type }.forEach { component ->
+            components.filter { it.structureTypeId == structure.structureTypeId }.forEach { component ->
                 structureComponents.add(StructureComponent(0, structure.id, component.id))
             }
         }

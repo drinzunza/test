@@ -11,10 +11,10 @@ enum class BuildType {
         }
     }
 
-    fun toStructureTypePart(): StructureComponentType? {
+    fun toStructureTypePart(): Long? {
         return when(this) {
-            BRIDGES -> StructureComponentType.BRIDGES_AND_AERIAL_STRUCTURE
-            TUNNELS -> StructureComponentType.SUBWAY_TUNNELS_USECTION
+            BRIDGES -> 1
+            TUNNELS -> 2
             else -> null
         }
     }
