@@ -21,6 +21,8 @@ INSERT INTO structure_types (id, code, name, clock_position_enabled) VALUES (4, 
 ALTER TABLE structures ADD COLUMN structure_type_id INT;
 ALTER TABLE components ADD COLUMN structure_type_id INT;
 UPDATE structures SET structure_type_id = 1 WHERE type = 'BRIDGES_AND_AERIAL_STRUCTURE';
+UPDATE structures SET structure_type_id = 4 WHERE type = 'SUBWAY_TUNNELS_USECTION';
+UPDATE components SET structure_type_id = 1 WHERE type = 'BRIDGES_AND_AERIAL_STRUCTURE';
 UPDATE components SET structure_type_id = 4 WHERE type = 'SUBWAY_TUNNELS_USECTION';
 ALTER TABLE structures DROP COLUMN type;
 ALTER TABLE components DROP COLUMN type;
