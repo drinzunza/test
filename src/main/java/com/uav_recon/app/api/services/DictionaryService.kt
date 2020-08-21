@@ -35,7 +35,9 @@ class DictionaryService(
     fun getDictionaries(user: User): DictionariesDto {
         // Show user company components, subcomponents, defects
         val companyId = user.companyId ?: 0
+        val companyStructureTypes = companyStructureTypeRepository.findAllByCompanyId(companyId)
         val components = componentRepository.findAllByDeletedIsFalseAndCompanyId(companyId)
+                .filter { companyStructureTypes.map { it.structureTypeId }.contains(it.structureTypeId) }
         val subcomponents = subcomponentRepository.findAllByDeletedIsFalseAndComponentIdIn(components.map { it.id })
         val subcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(subcomponents.map { it.id })
         val defects = defectRepository.findAllByDeletedIsFalseAndIdIn(subcomponentDefects.map { it.defectId }.toHashSet().toList())
@@ -54,7 +56,9 @@ class DictionaryService(
         if (!user.admin) throw AccessDeniedException()
 
         val companyId = user.companyId ?: 0
+        val companyStructureTypes = companyStructureTypeRepository.findAllByCompanyId(companyId)
         val components = componentRepository.findAllByDeletedIsFalseAndCompanyId(companyId)
+                .filter { companyStructureTypes.map { it.structureTypeId }.contains(it.structureTypeId) }
         val subcomponents = subcomponentRepository.findAllByDeletedIsFalseAndComponentIdIn(components.map { it.id })
         val subcomponentDefects = subcomponentDefectRepository.findAllBySubcomponentIdIn(subcomponents.map { it.id })
         val defects = defectRepository.findAllByDeletedIsFalseAndIdIn(subcomponentDefects.map { it.defectId })
@@ -235,6 +239,7 @@ class DictionaryService(
                 .filter { userComponents.map { it.id }.contains(it.componentId) }
         userSubcomponentDefects = userSubcomponentDefects
                 .filter { userDefects.map { it.id }.contains(it.defectId) }
+        val companyStructureTypes = user.companyId?.let { companyStructureTypeRepository.findAllByCompanyId(it) } ?: listOf()
 
         // Get all values
         val locations = locationIdRepository.findAll().map { s -> s.toDto() }
@@ -245,9 +250,11 @@ class DictionaryService(
         val structureTypeId = buildType.toStructureTypePart()
         val structures = userStructures
                 .filter { structureTypeId == null || it.structureTypeId == structureTypeId }
+                .filter { companyStructureTypes.map { it.structureTypeId }.contains(it.structureTypeId) }
                 .map { s -> s.toDto(userStructureComponents, structureTypes) }
         val components = userComponents
                 .filter { structureTypeId == null || it.structureTypeId == structureTypeId }
+                .filter { companyStructureTypes.map { it.structureTypeId }.contains(it.structureTypeId) }
                 .map { c -> c.toDto(userSubcomponents, structureTypes) }
         val subcomponents = userSubcomponents
                 .filter { components.map { it.id }.contains(it.componentId) }

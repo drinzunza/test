@@ -14,7 +14,7 @@ enum class BuildType {
     fun toStructureTypePart(): Long? {
         return when(this) {
             BRIDGES -> 1
-            TUNNELS -> 2
+            TUNNELS -> 4
             else -> null
         }
     }

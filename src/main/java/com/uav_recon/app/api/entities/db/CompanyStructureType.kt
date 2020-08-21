@@ -4,7 +4,7 @@ import java.io.Serializable
 import javax.persistence.*
 
 @Entity
-@Table(name = "structure_types")
+@Table(name = "company_structure_types")
 class CompanyStructureType(
         @Id
         var id: Long,
