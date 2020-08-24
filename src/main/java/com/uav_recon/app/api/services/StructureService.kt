@@ -4,15 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.uav_recon.app.api.controllers.dto.admin.AdminStructureInDTO
 import com.uav_recon.app.api.controllers.dto.admin.AdminStructureOutDTO
 import com.uav_recon.app.api.entities.db.*
-import com.uav_recon.app.api.repositories.CompanyRepository
-import com.uav_recon.app.api.repositories.EtagRepository
-import com.uav_recon.app.api.repositories.ObservationDefectRepository
-import com.uav_recon.app.api.repositories.StructureRepository
-import com.uav_recon.app.api.services.mapper.AdminStructureServiceMapper
-import org.mapstruct.factory.Mappers
+import com.uav_recon.app.api.repositories.*
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.transaction.Transactional
+import javax.validation.constraints.NotEmpty
 
 @Service
 class StructureService(
@@ -20,10 +16,9 @@ class StructureService(
         private val companyRepository: CompanyRepository,
         private val etagRepository: EtagRepository,
         private val structureComponentService: StructureComponentService,
-        private val observationDefectRepository: ObservationDefectRepository
+        private val observationDefectRepository: ObservationDefectRepository,
+        private val structureTypeRepository: StructureTypeRepository
 ) {
-
-    private val structureMapper = Mappers.getMapper(AdminStructureServiceMapper::class.java)
 
     fun regenerateObservationDefectIds(structureId: String, code: String) {
         val defects = observationDefectRepository.getByStructureId(structureId)
@@ -35,23 +30,27 @@ class StructureService(
         observationDefectRepository.saveAll(defects)
     }
 
-    fun listStructures(actor: User, companyId: Long?): List<Structure> {
+    fun listStructures(actor: User, companyId: Long?): List<AdminStructureOutDTO> {
+        val structureTypes = structureTypeRepository.findAll().toList()
         return if (companyId == null) {
-            structureRepository.listByParentCompanyId(actor.companyId!!)
+            structureRepository.listByParentCompanyId(actor.companyId!!).map { s -> s.toOutDto(structureTypes) }
         } else {
-            structureRepository.findAllByDeletedIsFalseAndCompanyId(companyId)
+            structureRepository.findAllByDeletedIsFalseAndCompanyId(companyId).map { s -> s.toOutDto(structureTypes) }
         }
     }
 
     @Throws(Error::class)
-    fun get(structureId: String): Structure {
-        structureRepository.findFirstById(structureId)?.let { return it }
+    fun get(structureId: String): AdminStructureOutDTO {
+        structureRepository.findFirstById(structureId)?.let { return it.toOutDto(structureTypeRepository.findAll().toList()) }
         throw Error(404, "Structure with this id not found")
     }
 
     @Throws(Error::class)
     @Transactional
-    fun create(structure: Structure, actor: User): Structure {
+    fun create(dto: AdminStructureInDTO, actor: User): AdminStructureOutDTO {
+        val structureTypes = structureTypeRepository.findAll().toList()
+        val companies = companyRepository.findAll().toList()
+        val structure = dto.toStructure(structureTypes, companies)
         if (structure.id.isBlank()) {
             structure.id = UUID.randomUUID().toString()
         }
@@ -59,22 +58,34 @@ class StructureService(
         if (structureRepository.existsById(structure.id))
             throw Error(400, "Structure with this id already exist")
         createEtag(listOf(structure.id))
-        structureComponentService.refreshStructureComponents(actor.companyId!!, structure.id, structure.type)
+        structureComponentService.refreshStructureComponents(actor.companyId!!, structure.id, structure.structureTypeId)
         structure.primaryOwner = structure.companyId?.let { companyRepository.findFirstById(it)?.name }
-        return structureRepository.save(structure)
+        return structureRepository.save(structure).toOutDto(structureTypes)
     }
 
     @Throws(Error::class)
     @Transactional
-    fun update(id: String, data: Structure, actor: User): Structure {
+    fun update(id: String, dto: AdminStructureInDTO, actor: User): AdminStructureOutDTO {
+        val structureTypes = structureTypeRepository.findAll().toList()
+        val companies = companyRepository.findAll().toList()
         structureRepository.findFirstById(id)?.let {
-            structureMapper.update(data, it)
+            val structure = dto.toStructure(structureTypes, companies)
+            it.id = dto.id
+            it.code = dto.code
+            it.name = dto.name
+            it.structureTypeId = structure.structureTypeId
+            it.companyId = structure.companyId
+            it.caltransBridgeNo = dto.caltransBridgeNo
+            it.postmile = dto.postmile
+            it.beginStationing = dto.beginStationing
+            it.endStationing = dto.endStationing
+
             checkAllowForEditingStructure(it, actor)
             createEtag(listOf(it.id))
             regenerateObservationDefectIds(id, it.code)
-            structureComponentService.refreshStructureComponents(actor.companyId!!, it.id, it.type)
+            structureComponentService.refreshStructureComponents(actor.companyId!!, it.id, it.structureTypeId)
             it.primaryOwner = it.companyId?.let { companyRepository.findFirstById(it)?.name }
-            return structureRepository.save(it)
+            return structureRepository.save(it).toOutDto(structureTypes)
         }
         throw Error(404, "Structure with this id not found")
     }
@@ -111,4 +122,30 @@ class StructureService(
                 change = ObjectMapper().writeValueAsString(change)
         ))
     }
+
+    private fun Structure.toOutDto(types: List<StructureType>) = AdminStructureOutDTO(
+            id = id,
+            code = code,
+            name = name,
+            type = types.find { it.id == structureTypeId }?.code,
+            clientId = companyId,
+            caltransBridgeNo = caltransBridgeNo,
+            postmile = postmile,
+            beginStationing = beginStationing,
+            endStationing = endStationing
+    )
+
+    private fun AdminStructureInDTO.toStructure(types: List<StructureType>, companies: List<Company>) = Structure(
+            id = id,
+            code = code,
+            name = name,
+            structureTypeId = types.find { it.code == type }?.id,
+            primaryOwner = companies.find { it.id == clientId }?.name,
+            caltransBridgeNo = caltransBridgeNo,
+            postmile = postmile,
+            beginStationing = beginStationing,
+            endStationing = endStationing,
+            deleted = false,
+            companyId = clientId
+    )
 }

@@ -8,7 +8,7 @@ import java.io.Serializable
 data class ComponentDto(
         val id: String,
         val name: String,
-        val type: StructureComponentType? = null,
+        val type: String? = null,
         val companyId: Long? = null,
         val deleted: Boolean? = null,
         var subComponentIds: List<String>

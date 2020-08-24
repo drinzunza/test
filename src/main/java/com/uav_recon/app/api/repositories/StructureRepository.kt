@@ -12,8 +12,6 @@ interface StructureRepository : CrudRepository<Structure, String> {
     fun findAllByIdIn(ids: List<String>): List<Structure>
     fun findAllByDeletedIsFalseAndIdIn(ids: List<String>): List<Structure>
     fun findAllByDeletedIsFalseAndCompanyId(companyId: Long): List<Structure>
-    fun findAllByIdInAndType(ids: List<String>, buildType: StructureComponentType): List<Structure>
-    fun findAllByType(buildType: StructureComponentType): List<Structure>
     fun findFirstById(structureId: String): Structure?
 
     @Query("select s from Structure s " +

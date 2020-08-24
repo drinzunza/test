@@ -1,9 +1,11 @@
 package com.uav_recon.app.api.entities.db
 
-import org.hibernate.annotations.Type
 import java.io.Serializable
 import java.util.*
-import javax.persistence.*
+import javax.persistence.Column
+import javax.persistence.Entity
+import javax.persistence.Id
+import javax.persistence.Table
 
 @Entity
 @Table(name = "structures")
@@ -12,9 +14,8 @@ class Structure(
     var id: String = UUID.randomUUID().toString(),
     var code: String = "",
     var name: String = "",
-    @Enumerated(EnumType.STRING)
-    @Type(type = "pgsql_enum")
-    var type: StructureComponentType = StructureComponentType.BRIDGES_AND_AERIAL_STRUCTURE,
+    @Column(name = "structure_type_id")
+    var structureTypeId: Long? = null,
     @Column(name = "primary_owner")
     var primaryOwner: String? = null,
     @Column(name = "caltrans_bridge_no")
