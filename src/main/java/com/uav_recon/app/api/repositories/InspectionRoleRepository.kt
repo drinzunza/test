@@ -6,5 +6,6 @@ import org.springframework.data.repository.CrudRepository
 interface InspectionRoleRepository : CrudRepository<InspectionRole, Int> {
     fun findAllByInspectionIdAndUserId(inspectionId: String, userId: Long) : List<InspectionRole>
     fun findAllByInspectionId(inspectionId: String) : List<InspectionRole>
+    fun findAllByInspectionIdIn(inspectionIds: List<String>) : List<InspectionRole>
     fun findAllByUserId(userId: Long) : List<InspectionRole>
 }

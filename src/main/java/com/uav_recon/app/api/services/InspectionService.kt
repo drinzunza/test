@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.transaction.Transactional
+import kotlin.collections.HashMap
 import kotlin.math.roundToInt
 
 @Service
@@ -35,7 +36,11 @@ class InspectionService(
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
 
-    fun Inspection.toDto(user: User?, withObservations: Boolean = true) = InspectionDto(
+    fun Inspection.toDto(withObservations: Boolean = true,
+                         inspectors: List<SimpleUserDto>? = null,
+                         structureCode: String? = null,
+                         observations: List<ObservationDto>? = null
+    ) = InspectionDto(
         uuid = uuid,
         location = if (latitude != null) LocationDto(latitude, longitude, altitude) else null,
         endDate = endDate,
@@ -44,15 +49,15 @@ class InspectionService(
         isEditable = isEditable,
         sgrRating = sgrRating,
         structureId = structureId,
-        structureCode = structureId?.let { structureRepository.findFirstById(it) }?.code,
+        structureCode = structureCode ?: structureId?.let { structureRepository.findFirstById(it) }?.code,
         report = if (reportId != null) InspectionReport(reportId, reportLink, reportDate) else null,
         status = status,
         termRating = termRating,
         weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
-        observations = if (withObservations) observationService.findAllByInspectionUuidAndNotDeleted(uuid) else listOf(),
+        observations = observations ?: if (withObservations) observationService.findAllByInspectionUuidAndNotDeleted(uuid) else listOf(),
         spansCount = spansCount,
         projectId = projectId,
-        inspectors = user?.let { getUsers(it, uuid) }
+        inspectors = inspectors ?: getUsers(uuid)
     )
 
     fun InspectionDto.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) = Inspection(
@@ -104,11 +109,16 @@ class InspectionService(
         if (dto.observations != null) {
             observationService.save(dto.observations, dto.uuid, updatedBy)
         }
-        return saved.toDto(user)
+        return saved.toDto()
     }
 
     fun listNotDeletedDto(user: User, projectId: Long?, structureId: String?, companyId: Long?, withObservations: Boolean): List<InspectionDto> {
-        return listNotDeleted(user, projectId, structureId, companyId).map { i -> i.toDto(user, withObservations) }
+        val inspections = listNotDeleted(user, projectId, structureId, companyId)
+        val inspectorsMap = getUsers(inspections.map { it.uuid })
+        val structures = structureRepository.findAllByIdIn(inspections.mapNotNull { it.structureId })
+        return inspections.map {
+            i -> i.toDto(withObservations, inspectorsMap[i.uuid], structures.find { it.id == i.structureId }?.code)
+        }
     }
 
     fun getCompanyIds(user: User, companyId: Long?): List<Long> {
@@ -135,7 +145,7 @@ class InspectionService(
         val inspection = listNotDeleted(user, null, null, null)
                 .firstOrNull { uuid.isNotBlank() && it.uuid == uuid }
                 ?: throw Error(181, "Not found inspection")
-        return inspection.toDto(user, true)
+        return inspection.toDto(true)
     }
 
     fun listNotDeleted(user: User, projectId: Long?, structureId: String?, companyId: Long?): List<Inspection> {
@@ -174,8 +184,18 @@ class InspectionService(
                 .filter { it.canSeeProject(projectId) }
                 .filter { it.canSeeStructure(structureId) }
 
-        // TODO check memory usage, possible need optimization
-        fillObjects(results)
+        updateSgrRating(results)
+
+        logger.info("User ${user.id} can see ${results.size} inspections")
+        return results
+    }
+
+    fun updateSgrRating(results: List<Inspection>) {
+        logger.info("Start update sgr rating")
+
+        fillObjectsForSgr(results)
+
+        logger.info("Filled data sgr rating")
 
         val sgrChangedInspections = mutableListOf<Inspection>()
         results.forEach { inspection ->
@@ -187,11 +207,9 @@ class InspectionService(
                 }
             }
         }
+
         inspectionRepository.saveAll(sgrChangedInspections)
         logger.info("Saved ${sgrChangedInspections.size} inspections with new sgr rating")
-
-        logger.info("User ${user.id} can see ${results.size} inspections")
-        return results
     }
 
     @Throws(Error::class)
@@ -213,7 +231,7 @@ class InspectionService(
     fun findById(id: String): Optional<InspectionDto> {
         val optional = inspectionRepository.findById(id)
         if (optional.isPresent) {
-            return Optional.of(optional.get().toDto(null))
+            return Optional.of(optional.get().toDto())
         }
         return Optional.empty()
     }
@@ -250,7 +268,7 @@ class InspectionService(
         return inspection
     }
 
-    fun getUsers(user: User, inspectionId: String): List<SimpleUserDto> {
+    fun getUsers(inspectionId: String): List<SimpleUserDto> {
         // All can see users on inspection
         val ids = inspectionRoleRepository.findAllByInspectionId(inspectionId)
                 .filter { it.roles?.contains(Role.INSPECTOR) ?: false }
@@ -258,8 +276,20 @@ class InspectionService(
         return userRepository.findAllByIdIn(ids).map { u -> u.toDto() }
     }
 
+    fun getUsers(inspectionIds: List<String>): Map<String, List<SimpleUserDto>> {
+        // All can see users on inspection
+        val map = mutableMapOf<String, List<SimpleUserDto>>()
+        val roles = inspectionRoleRepository.findAllByInspectionIdIn(inspectionIds)
+                .filter { it.roles?.contains(Role.INSPECTOR) ?: false }
+        val users = userRepository.findAllByIdIn(roles.map { it.userId }).map { u -> u.toDto() }
+        inspectionIds.forEach { id ->
+            map[id] = users.filter { roles.filter { it.inspectionId == id }.map { it.userId }.contains(it.id) }
+        }
+        return map
+    }
+
     fun getUserIds(user: User, inspectionId: String): InspectionUserIdsDto {
-        val users = getUsers(user, inspectionId)
+        val users = getUsers(inspectionId)
         return InspectionUserIdsDto(inspectionId = inspectionId, inspectors = users.map { it.id })
     }
 
@@ -396,6 +426,26 @@ class InspectionService(
         }
         observations.forEach { observation ->
             observation.component = components.firstOrNull { it.id == observation.structuralComponentId }
+            observation.subcomponent = subcomponents.firstOrNull { it.id == observation.subComponentId }
+            observation.defects = observationDefects.filter { it.observationId == observation.uuid }
+            observation.locationIds = locationIds.toList()
+        }
+        inspections.forEach { inspection ->
+            inspection.observations = observations.filter { it.inspectionId == inspection.uuid }
+        }
+    }
+
+    fun fillObjectsForSgr(inspections: List<Inspection>) {
+        val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(inspections.map { it.uuid })
+        val subcomponents = subcomponentRepository.findAllByIdIn(observations.map { it.subComponentId ?: "" })
+        val observationDefects = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observations.map { it.uuid })
+        val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
+        val locationIds = locationIdRepository.findAll()
+
+        observationDefects.forEach { observationDefect ->
+            observationDefect.condition = conditions.firstOrNull { it.id == observationDefect.conditionId }
+        }
+        observations.forEach { observation ->
             observation.subcomponent = subcomponents.firstOrNull { it.id == observation.subComponentId }
             observation.defects = observationDefects.filter { it.observationId == observation.uuid }
             observation.locationIds = locationIds.toList()
