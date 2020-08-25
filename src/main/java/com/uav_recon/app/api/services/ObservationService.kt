@@ -143,7 +143,7 @@ class ObservationService(
     }
 
     fun Observation.getSpansCountByObservation(spansCount: Int?): Int? {
-        return getLocationId()?.getAvailableSpans(spansCount)?.size
+        return getLocationId()?.getAvailableSpansSize(spansCount)
     }
 
     private fun Observation.getLocationId(): LocationId? {
@@ -177,5 +177,20 @@ class ObservationService(
             }
         }
         return spans
+    }
+
+    private fun LocationId.getAvailableSpansSize(spanNumber: Int?): Int {
+        var result = 0
+        alwaysShownSpans?.let {
+            result += 1
+        }
+        spanNumber?.let { inspectionSpanNumber ->
+            iteratedSpanPatterns
+                    ?.count { it == ',' }
+                    ?.let { size ->
+                        result += inspectionSpanNumber * (size + 1)
+                    }
+        }
+        return result
     }
 }
