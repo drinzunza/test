@@ -9,7 +9,6 @@ import javax.persistence.*
 @Entity
 @Table(name = "users")
 @SQLDelete(sql = "UPDATE \"users\" SET deleted_at = NOW() WHERE id = ?", check = ResultCheckStyle.COUNT)
-@Where(clause = "deleted_at IS NULL")
 class User(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +22,8 @@ class User(
         var position: String?,
         @Column(name = "created_at")
         val createdAt: OffsetDateTime = OffsetDateTime.now(),
+        @Column(name = "deleted_at")
+        val deletedAt: OffsetDateTime? = null,
         @Column(name = "company_id")
         var companyId: Long? = null,
         var admin: Boolean = false
