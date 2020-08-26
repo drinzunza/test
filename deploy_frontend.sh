@@ -20,6 +20,8 @@ SERVER_PATH="/opt/uav-recon-frontend/"
 FRONTEND_PORT="8080"
 
 # Build fontend
+npm ci
+#yarn install
 yarn build
 
 # Add ssh key
