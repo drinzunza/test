@@ -4,19 +4,19 @@ import com.uav_recon.app.api.controllers.handlers.AccessDeniedException
 import com.uav_recon.app.api.entities.db.Company
 import com.uav_recon.app.api.entities.db.CompanyType
 import com.uav_recon.app.api.entities.db.User
+import com.uav_recon.app.api.entities.db.toDto
 import com.uav_recon.app.api.entities.requests.bridge.CompanyDto
 import com.uav_recon.app.api.repositories.CompanyRepository
+import com.uav_recon.app.api.repositories.CompanyStructureTypeRepository
+import com.uav_recon.app.api.repositories.StructureTypeRepository
 import org.springframework.stereotype.Service
 
 @Service
-class CompanyService(private val companyRepository: CompanyRepository) {
-
-    fun Company.toDto() = CompanyDto(
-            id = id,
-            name = name,
-            logo = logo,
-            type = type
-    )
+class CompanyService(
+        private val companyRepository: CompanyRepository,
+        private val structureTypeRepository: StructureTypeRepository,
+        private val companyStructureTypeRepository: CompanyStructureTypeRepository
+) {
 
     fun listNotDeleted(user: User, type: CompanyType?): List<CompanyDto> {
         val companies = mutableListOf<Company>()
@@ -34,17 +34,31 @@ class CompanyService(private val companyRepository: CompanyRepository) {
             )
         }
 
-        return companies.map { c -> c.toDto() }
+        val types = structureTypeRepository.findAll().toList()
+        val companyTypes = companyStructureTypeRepository.findAllByCompanyIdIn(companies.map { it.id })
+        return companies.map { c -> c.toDto(types, companyTypes) }
+    }
+
+    fun getCompanyDto(user: User, companyId: Long): CompanyDto? {
+        companyRepository.findFirstById(companyId)?.let {
+            val types = structureTypeRepository.findAll().toList()
+            val companyTypes = companyStructureTypeRepository.findAllByCompanyId(companyId)
+            return it.toDto(types, companyTypes)
+        }
+        return null
     }
 
     fun getNotDeleted(user: User, companyId: Long): CompanyDto {
         companyRepository.findFirstByDeletedIsFalseAndId(companyId)?.let {
+            val types = structureTypeRepository.findAll().toList()
+            val companyTypes = companyStructureTypeRepository.findAllByCompanyId(companyId)
+
             if (it.id == user.companyId) {
                 // Users can see own company
-                return it.toDto()
+                return it.toDto(types, companyTypes)
             } else if (user.admin && user.companyId != null && user.companyId == it.creatorCompanyId) {
                 // Admins can see owner companies
-                return it.toDto()
+                return it.toDto(types, companyTypes)
             }
         }
 
@@ -52,13 +66,16 @@ class CompanyService(private val companyRepository: CompanyRepository) {
     }
 
     fun save(user: User, body: CompanyDto): CompanyDto {
+        val types = structureTypeRepository.findAll().toList()
+        val companyTypes = companyStructureTypeRepository.findAllByCompanyId(body.id)
+
         // Admin can edit own company
         if (user.admin && user.companyId == body.id) {
             companyRepository.findFirstById(body.id)?.let {
                 it.name = body.name
                 it.logo = body.logo
                 it.updatedBy = user.id
-                return companyRepository.save(it).toDto()
+                return companyRepository.save(it).toDto(types, companyTypes)
             }
         }
         // Admin can edit owner companies
@@ -76,7 +93,7 @@ class CompanyService(private val companyRepository: CompanyRepository) {
             company.logo = body.logo
             company.updatedBy = user.id
             company.type = CompanyType.OWNER
-            return companyRepository.save(company).toDto()
+            return companyRepository.save(company).toDto(types, companyTypes)
         }
 
         throw AccessDeniedException()

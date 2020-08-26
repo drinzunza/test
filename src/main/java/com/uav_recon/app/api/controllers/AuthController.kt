@@ -3,6 +3,7 @@ package com.uav_recon.app.api.controllers
 import com.google.common.collect.ImmutableMap
 import com.uav_recon.app.api.entities.db.Company
 import com.uav_recon.app.api.entities.db.User
+import com.uav_recon.app.api.entities.db.toDto
 import com.uav_recon.app.api.entities.requests.auth.AuthorizationRequest
 import com.uav_recon.app.api.entities.requests.auth.PasswordResetAttemptRequest
 import com.uav_recon.app.api.entities.requests.auth.RegistrationRequest
@@ -10,6 +11,7 @@ import com.uav_recon.app.api.entities.requests.bridge.CompanyDto
 import com.uav_recon.app.api.entities.responses.auth.Inspector
 import com.uav_recon.app.api.entities.responses.auth.UserResponse
 import com.uav_recon.app.api.repositories.CompanyRepository
+import com.uav_recon.app.api.services.CompanyService
 import com.uav_recon.app.api.services.UserService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.TokenManager
@@ -25,7 +27,7 @@ class AuthController(
         private val userService: UserService,
         private val tokenManager: TokenManager,
         private val configuration: UavConfiguration,
-        private val companyRepository: CompanyRepository
+        private val companyService: CompanyService
 ) : BaseController() {
 
     private val logger = LoggerFactory.getLogger(AuthController::class.java)
@@ -37,7 +39,7 @@ class AuthController(
             firstName = firstName,
             lastName = lastName,
             position = position,
-            company = companyId?.let { companyRepository.findFirstById(it)?.toDto() },
+            company = companyId?.let { companyService.getCompanyDto(this, it) },
             admin = admin
     )
 
@@ -47,13 +49,6 @@ class AuthController(
             lastName = lastName,
             position = position,
             password = password
-    )
-
-    fun Company.toDto() = CompanyDto(
-            id = id,
-            name = name,
-            logo = logo,
-            type = type
     )
 
     @PostMapping("$VERSION/auth")

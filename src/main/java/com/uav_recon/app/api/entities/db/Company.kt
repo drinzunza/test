@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.entities.db
 
+import com.uav_recon.app.api.entities.requests.bridge.CompanyDto
 import org.hibernate.annotations.Type
 import java.io.Serializable
 import java.time.OffsetDateTime
@@ -29,3 +30,13 @@ class Company(
         @Column(name = "updated_at")
         val updatedAt: OffsetDateTime? = OffsetDateTime.now()
 ) : Serializable
+
+fun Company.toDto(types: List<StructureType>, companyTypes: List<CompanyStructureType>) = CompanyDto(
+        id = id,
+        name = name,
+        logo = logo,
+        type = type,
+        structureTypes = types.filter {
+                companyTypes.filter { it.companyId == id }.map { it.structureTypeId }.contains(it.id)
+        }.map { t -> t.toDto() }
+)

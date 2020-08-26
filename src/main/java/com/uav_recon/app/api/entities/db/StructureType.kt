@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.entities.db
 
+import com.uav_recon.app.api.entities.requests.bridge.StructureTypeDto
 import java.io.Serializable
 import javax.persistence.*
 
@@ -16,3 +17,11 @@ class StructureType(
         var clockPositionEnabled: Boolean = false,
         var deleted: Boolean = false
 ) : Serializable
+
+fun StructureType.toDto() = StructureTypeDto(
+        id = code,
+        name = name,
+        numOfSpansEnabled = numOfSpansEnabled,
+        clockPositionEnabled = clockPositionEnabled,
+        deleted = deleted
+)

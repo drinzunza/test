@@ -5,4 +5,5 @@ import org.springframework.data.repository.CrudRepository
 
 interface CompanyStructureTypeRepository : CrudRepository<CompanyStructureType, Long> {
     fun findAllByCompanyId(companyId: Long): List<CompanyStructureType>
+    fun findAllByCompanyIdIn(companyIds: List<Long>): List<CompanyStructureType>
 }
