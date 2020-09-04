@@ -1,9 +1,6 @@
 package com.uav_recon.app.api.controllers
 
-import com.uav_recon.app.api.entities.db.StructureType
-import com.uav_recon.app.api.entities.requests.bridge.ProjectDto
-import com.uav_recon.app.api.entities.requests.bridge.ProjectIdsDto
-import com.uav_recon.app.api.entities.requests.bridge.StructureTypeDto
+/*import com.uav_recon.app.api.entities.requests.bridge.StructureTypeDto
 import com.uav_recon.app.api.entities.requests.bridge.StructureTypeIdsDto
 import com.uav_recon.app.api.services.StructureTypesService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
@@ -50,4 +47,4 @@ class StructureTypesController(private val structureTypesService: StructureTypes
     fun setCompanyTypes(@RequestHeader(X_TOKEN) token: String, @PathVariable companyId: Long, @RequestBody body: StructureTypeIdsDto): ResponseEntity<List<StructureTypeDto>> {
         return ResponseEntity.ok(structureTypesService.setCompanyTypes(getAuthenticatedUser(), companyId, body))
     }
-}
+}*/
