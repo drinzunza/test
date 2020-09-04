@@ -104,7 +104,7 @@ class DictionaryService(
             }
         }
 
-        var userStructureComponents = structureComponentRepository.findAllByComponentIdIn(saveComponents.map { it.id })
+        val userStructureComponents = structureComponentRepository.findAllByComponentIdIn(saveComponents.map { it.id })
         val userStructures = structureRepository.findAllByDeletedIsFalseAndIdIn(userStructureComponents.map { it.structureId })
 
         componentRepository.saveAll(saveComponents)

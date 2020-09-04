@@ -8,7 +8,8 @@ import javax.persistence.*
 @Table(name = "structure_types")
 class StructureType(
         @Id
-        var id: Long,
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        var id: Long = 0,
         var code: String,
         var name: String,
         @Column(name = "num_of_spans_enabled")
@@ -20,6 +21,15 @@ class StructureType(
 
 fun StructureType.toDto() = StructureTypeDto(
         id = code,
+        name = name,
+        numOfSpansEnabled = numOfSpansEnabled,
+        clockPositionEnabled = clockPositionEnabled,
+        deleted = deleted
+)
+
+fun StructureTypeDto.toEntity(typeId: Long) = StructureType(
+        id = typeId,
+        code = id,
         name = name,
         numOfSpansEnabled = numOfSpansEnabled,
         clockPositionEnabled = clockPositionEnabled,
