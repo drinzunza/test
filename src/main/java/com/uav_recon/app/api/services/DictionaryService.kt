@@ -104,6 +104,9 @@ class DictionaryService(
             }
         }
 
+        var userStructureComponents = structureComponentRepository.findAllByComponentIdIn(saveComponents.map { it.id })
+        val userStructures = structureRepository.findAllByDeletedIsFalseAndIdIn(userStructureComponents.map { it.structureId })
+
         componentRepository.saveAll(saveComponents)
         subcomponentRepository.saveAll(saveSubcomponents)
         defectRepository.saveAll(saveDefects)
@@ -111,6 +114,7 @@ class DictionaryService(
         structureComponentService.refreshStructureComponents(user.companyId!!)
         conditionRepository.saveAll(saveConditions)
         etagRepository.save(getEtag(
+                structures = userStructures,
                 components = saveComponents,
                 subcomponents = saveSubcomponents,
                 defects = saveDefects,
