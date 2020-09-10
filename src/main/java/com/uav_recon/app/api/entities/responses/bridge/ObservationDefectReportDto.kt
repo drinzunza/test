@@ -34,5 +34,6 @@ data class ObservationDefectReportDto(
         val structureCode: String?,
         val projectName: String?,
         val projectId: Long?,
-        val inspectorName: String?
+        val inspectorName: String?,
+        val previousDefectNumber: String?
 ) : Serializable

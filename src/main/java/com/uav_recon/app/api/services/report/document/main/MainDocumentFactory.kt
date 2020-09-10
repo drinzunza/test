@@ -615,7 +615,8 @@ class MainDocumentFactory(
                                     structureCode = structure?.code,
                                     projectId = inspection.projectId,
                                     projectName = projects.firstOrNull { it.id == inspection.projectId }?.name,
-                                    inspectorName = inspector?.let { "${inspector.firstName} ${inspector.lastName}" }
+                                    inspectorName = inspector?.let { "${inspector.firstName} ${inspector.lastName}" },
+                                    previousDefectNumber = observationDefect.previousDefectNumber
                             ))
                         }
                     }
