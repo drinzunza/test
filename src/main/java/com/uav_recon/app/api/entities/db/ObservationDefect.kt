@@ -66,6 +66,8 @@ class ObservationDefect(
         val repairDate: String? = null,
         @Column(name = "repair_method")
         val repairMethod: String? = null,
+        @Column(name = "previous_defect_number")
+        val previousDefectNumber: String? = null,
         @Transient
         var defect: Defect? = null,
         @Transient

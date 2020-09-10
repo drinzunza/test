@@ -16,6 +16,7 @@ data class InspectionDto(
         val endDate: OffsetDateTime?,
         val structureId: String?,
         val structureCode: String?,
+        val structureName: String?,
         val weather: Weather?,
         val location: LocationDto?,
         val status: InspectionStatus?,

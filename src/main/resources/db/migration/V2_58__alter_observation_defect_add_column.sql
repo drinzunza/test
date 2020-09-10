@@ -1,0 +1,1 @@
+ALTER TABLE companies ADD COLUMN previous_defect_number VARCHAR(50);

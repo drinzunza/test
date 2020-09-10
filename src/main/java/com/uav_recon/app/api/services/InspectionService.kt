@@ -38,7 +38,7 @@ class InspectionService(
 
     fun Inspection.toDto(withObservations: Boolean = true,
                          inspectors: List<SimpleUserDto>? = null,
-                         structureCode: String? = null,
+                         structure: Structure? = null,
                          observations: List<ObservationDto>? = null
     ) = InspectionDto(
         uuid = uuid,
@@ -49,7 +49,8 @@ class InspectionService(
         isEditable = isEditable,
         sgrRating = sgrRating,
         structureId = structureId,
-        structureCode = structureCode ?: structureId?.let { structureRepository.findFirstById(it) }?.code,
+        structureCode = structure?.code ?: structureId?.let { structureRepository.findFirstById(it) }?.code,
+        structureName = structure?.name ?: structureId?.let { structureRepository.findFirstById(it) }?.name,
         report = if (reportId != null) InspectionReport(reportId, reportLink, reportDate) else null,
         status = status,
         termRating = termRating,
@@ -117,7 +118,7 @@ class InspectionService(
         val inspectorsMap = getUsers(inspections.map { it.uuid })
         val structures = structureRepository.findAllByIdIn(inspections.mapNotNull { it.structureId })
         return inspections.map {
-            i -> i.toDto(withObservations, inspectorsMap[i.uuid], structures.find { it.id == i.structureId }?.code)
+            i -> i.toDto(withObservations, inspectorsMap[i.uuid], structures.find { it.id == i.structureId })
         }
     }
 
