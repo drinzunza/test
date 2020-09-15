@@ -335,7 +335,7 @@ class MainDocumentFactory(
                     val list = it.value.map { observation ->
                         val spansCount = observationService.getSpansCount(observation, inspection.spansCount) ?: 0
                         DefectSummaryFields.ObservationData(observation, spansCount, observationService)
-                    }
+                    }.filter { it.totalQuantity > 0 }
                     val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
 
                     table {
