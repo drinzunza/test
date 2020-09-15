@@ -336,7 +336,7 @@ class MainDocumentFactory(
                         val spansCount = observationService.getSpansCount(observation, inspection.spansCount) ?: 0
                         DefectSummaryFields.ObservationData(observation, spansCount, observationService)
                     }.filter { it.totalQuantity > 0 }
-                    val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
+                    val totalHealthIndex: Double = if (list.isEmpty()) 0.0 else (list.sumByDouble { it.healthIndex } / list.size)
 
                     table {
                         width { TABLE_WIDTH_PORTRAIT }
