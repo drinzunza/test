@@ -401,8 +401,10 @@ class InspectionService(
             val number = it.subcomponent?.fdotBhiValue ?: return@forEach
             val spansCount = observationService.getSpansCount(it, inspection.spansCount) ?: 0
             val healthIndex = observationService.getHealthIndex(it, spansCount)
-            numerator += number * healthIndex
-            denominator += number
+            if (observationService.getTotalQuantity(it, spansCount) > 0) {
+                numerator += number * healthIndex
+                denominator += number
+            }
         }
         if (denominator == 0.0) return null
         return (numerator / denominator) * 100
