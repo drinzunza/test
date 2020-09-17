@@ -11,5 +11,5 @@ data class CompanyDto(
         val name: String,
         val logo: String?,
         val type: CompanyType,
-        val structureTypes: List<StructureTypeDto>
+        val structureTypes: List<StructureTypeDto>?
 ) : Serializable
