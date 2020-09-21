@@ -336,19 +336,21 @@ class MainDocumentFactory(
                         val spansCount = observationService.getSpansCount(observation, inspection.spansCount) ?: 0
                         DefectSummaryFields.ObservationData(observation, spansCount, observationService)
                     }.filter { it.totalQuantity > 0 }
-                    val totalHealthIndex: Double = if (list.isEmpty()) 0.0 else (list.sumByDouble { it.healthIndex } / list.size)
 
-                    table {
-                        width { TABLE_WIDTH_PORTRAIT }
-                        DefectSummaryFields.buildHeaderRows(this, component.name, totalHealthIndex)
-                        list.forEach {
-                            row {
-                                DefectSummaryFields.buildCells(this, it)
+                    if (list.isNotEmpty()) {
+                        val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
+                        table {
+                            width { TABLE_WIDTH_PORTRAIT }
+                            DefectSummaryFields.buildHeaderRows(this, component.name, totalHealthIndex)
+                            list.forEach {
+                                row {
+                                    DefectSummaryFields.buildCells(this, it)
+                                }
                             }
                         }
-                    }
-                    paragraph {
-                        lineFeed { DOUBLE_LINE_FEED_ELEMENT }
+                        paragraph {
+                            lineFeed { DOUBLE_LINE_FEED_ELEMENT }
+                        }
                     }
                 }
     }
