@@ -7,6 +7,7 @@ import com.uav_recon.app.api.entities.db.Structure
 import java.io.Serializable
 import java.time.OffsetDateTime
 
+@Deprecated("Use InspectionDtoV2")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class InspectionDto(
         val uuid: String,

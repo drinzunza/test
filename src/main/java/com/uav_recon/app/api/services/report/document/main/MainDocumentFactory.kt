@@ -77,7 +77,7 @@ class MainDocumentFactory(
         private const val PERCENT = "%"
         private const val SGR_RATING = "SGR Rating"
         private const val TERM_RATING = "Term Rating"
-        private const val INSPECTED_BY_FORMAT = "Inspected by: %s (User id: %s)"
+        private const val INSPECTED_BY_FORMAT = "Inspected By: %s (User id: %s)"
 
         private const val ACTION_REPAIR_SCHEDULE = "Action & Repair Schedule: "
         private const val DEFECT_DESCRIPTION = "Defect description: "
@@ -102,7 +102,7 @@ class MainDocumentFactory(
             TextElement.Simple("Primary Owner: ", styles = BOLD_STYLE_LIST)
         private val STRUCTURE_NAME_ELEMENT =
             TextElement.Simple("Structure Name: ", styles = BOLD_STYLE_LIST)
-        private val REPORT_PREPARED_ELEMENT = TextElement.Simple("Inspection Report Prepared by:", styles = BOLD_STYLE_LIST)
+        private val REPORT_PREPARED_ELEMENT = TextElement.Simple("Inspection Report Prepared By:", styles = BOLD_STYLE_LIST)
         private val REPORT_NO_ELEMENT = TextElement.Simple("Inspection Report No.: ")
         private val REPORT_DATE_ELEMENT = TextElement.Simple("Report Date: ")
         private val INSPECTION_DATE_ELEMENT = TextElement.Simple("Inspection Date(s): ")
@@ -275,7 +275,7 @@ class MainDocumentFactory(
                         val sqrRating = inspectionService.calculateSgrRating(inspection)
                         text(formatRating(SGR_RATING, sqrRating, PERCENT), styles = ITALIC_STYLE_LIST)
                         lineFeed { SINGLE_LINE_FEED_ELEMENT }
-                        text(formatRating(TERM_RATING, inspection.termRating), styles = ITALIC_STYLE_LIST)
+                        text(formatRating(TERM_RATING, inspection.termRating ?: "0.0"), styles = ITALIC_STYLE_LIST)
                     }
                 }
             }

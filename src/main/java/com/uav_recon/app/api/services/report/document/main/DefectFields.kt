@@ -19,7 +19,7 @@ internal enum class DefectFields(val title: String) {
     DEFECT_NAME("Defect Name: "),
     OBSERVATION_NAME("Observation Name: "),
     DEFECT_CONDITION("Defect Condition State: "),
-    INSPECTION_DATE("Inspection date: "),
+    INSPECTION_DATE("Inspection Date: "),
     STATION_MARKER("Station Marker: "),
     CRITICAL_FINDINGS("Critical Findings: "),
     PHOTO_QTY("Photo QTY's: "),

@@ -15,3 +15,10 @@ data class SimpleUserDto(
     constructor(user: User) : this(user.id, user.email, user.firstName, user.lastName)
 
 }
+
+fun User.toDto() = SimpleUserDto(
+        id = id,
+        firstName = firstName,
+        lastName = lastName,
+        email = email
+)

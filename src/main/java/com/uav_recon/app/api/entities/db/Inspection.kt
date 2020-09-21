@@ -42,10 +42,8 @@ class Inspection(
         var generalSummary: String? = null,
         @Column(name = "sgr_rating")
         var sgrRating: String? = null,
-        @Enumerated(EnumType.STRING)
         @Column(name = "term_rating")
-        @Type(type = "pgsql_enum")
-        var termRating: InspectionTermRating? = null,
+        var termRating: Double? = null,
         @Column(name = "spans_count")
         var spansCount: Int? = 0,
         @Column(name = "is_deleted")

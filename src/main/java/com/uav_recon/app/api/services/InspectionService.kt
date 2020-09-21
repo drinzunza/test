@@ -40,7 +40,7 @@ class InspectionService(
                          inspectors: List<SimpleUserDto>? = null,
                          structure: Structure? = null,
                          observations: List<ObservationDto>? = null
-    ) = InspectionDto(
+    ) = InspectionDtoV2(
         uuid = uuid,
         location = if (latitude != null) LocationDto(latitude, longitude, altitude) else null,
         endDate = endDate,
@@ -61,36 +61,10 @@ class InspectionService(
         inspectors = inspectors ?: getUsers(uuid)
     )
 
-    fun InspectionDto.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) = Inspection(
-        uuid = uuid,
-        latitude = location?.latitude,
-        longitude = location?.longitude,
-        altitude = location?.altitude,
-        endDate = endDate,
-        startDate = startDate,
-        generalSummary = generalSummary,
-        sgrRating = sgrRating,
-        structureId = structureId,
-        status = status,
-        termRating = termRating,
-        spansCount = spansCount,
-        temperature = weather?.temperature,
-        humidity = weather?.humidity,
-        wind = weather?.wind,
-        projectId = projectId,
-        createdBy = createdBy,
-        updatedBy = updatedBy
-    )
-
-    fun User.toDto() = SimpleUserDto(
-            id = id,
-            firstName = firstName,
-            lastName = lastName,
-            email = email
-    )
+    fun saveV1(user: User, dto: InspectionDto) = save(user, dto.toDtoV2()).toDtoV1()
 
     @Transactional
-    fun save(user: User, dto: InspectionDto): InspectionDto {
+    fun save(user: User, dto: InspectionDtoV2): InspectionDtoV2 {
         logger.info("inspection uuid = ${dto.uuid}")
         val inspection = getInspection(dto.uuid)
         if (hasCreateDeleteRights(user, inspection, dto.projectId)) {
@@ -113,7 +87,10 @@ class InspectionService(
         return saved.toDto()
     }
 
-    fun listNotDeletedDto(user: User, projectId: Long?, structureId: String?, companyId: Long?, withObservations: Boolean): List<InspectionDto> {
+    fun listNotDeletedDtoV1(user: User, projectId: Long?, structureId: String?, companyId: Long?, withObservations: Boolean)
+            = listNotDeletedDto(user, projectId, structureId, companyId, withObservations).map { i -> i.toDtoV1() }
+
+    fun listNotDeletedDto(user: User, projectId: Long?, structureId: String?, companyId: Long?, withObservations: Boolean): List<InspectionDtoV2> {
         val inspections = listNotDeleted(user, projectId, structureId, companyId)
         val inspectorsMap = getUsers(inspections.map { it.uuid })
         val structures = structureRepository.findAllByIdIn(inspections.mapNotNull { it.structureId })
@@ -142,7 +119,9 @@ class InspectionService(
         return userIds
     }
 
-    fun getNotDeleted(user: User, uuid: String): InspectionDto {
+    fun getNotDeletedV1(user: User, uuid: String) = getNotDeleted(user, uuid).toDtoV1()
+
+    fun getNotDeleted(user: User, uuid: String): InspectionDtoV2 {
         val inspection = listNotDeleted(user, null, null, null)
                 .firstOrNull { uuid.isNotBlank() && it.uuid == uuid }
                 ?: throw Error(181, "Not found inspection")
@@ -232,7 +211,7 @@ class InspectionService(
     fun findById(id: String): Optional<InspectionDto> {
         val optional = inspectionRepository.findById(id)
         if (optional.isPresent) {
-            return Optional.of(optional.get().toDto())
+            return Optional.of(optional.get().toDto().toDtoV1())
         }
         return Optional.empty()
     }
