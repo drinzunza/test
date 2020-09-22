@@ -275,7 +275,7 @@ class MainDocumentFactory(
                         val sqrRating = inspectionService.calculateSgrRating(inspection)
                         text(formatRating(SGR_RATING, sqrRating, PERCENT), styles = ITALIC_STYLE_LIST)
                         lineFeed { SINGLE_LINE_FEED_ELEMENT }
-                        text(formatRating(TERM_RATING, inspection.termRating ?: "0.0"), styles = ITALIC_STYLE_LIST)
+                        text(formatRating(TERM_RATING, inspection.termRating?.formatTermRating() ?: "0.0"), styles = ITALIC_STYLE_LIST)
                     }
                 }
             }
@@ -487,6 +487,7 @@ class MainDocumentFactory(
     }
 
     private fun Double?.formatSgrRating() = this?.let { DecimalFormat("0.##").format(it) }
+    private fun Double?.formatTermRating() = this?.let { String.format("%.1f", it) }
 
     private fun Inspection.getCriticalFindingCount(criticalFinding: CriticalFinding): Int {
         return observations?.sumBy { observation: Observation ->
