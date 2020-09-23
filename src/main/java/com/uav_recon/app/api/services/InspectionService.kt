@@ -95,9 +95,11 @@ class InspectionService(
 
         // TODO fix for admin inspection android crash (Out Of Memory)
         if (withObservations) {
-            inspections = inspections.filter { it.createdBy.toLong() == user.id }
+            val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
+            val assignedInspectionIds = inspectionRoles.map { it.inspectionId }
+            inspections = inspections.filter { it.createdBy.toLong() == user.id || assignedInspectionIds.contains(it.uuid) }
         }
-
+        
         val inspectorsMap = getUsers(inspections.map { it.uuid })
         val structures = structureRepository.findAllByIdIn(inspections.mapNotNull { it.structureId })
         return inspections.map {
