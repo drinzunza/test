@@ -91,7 +91,13 @@ class InspectionService(
             = listNotDeletedDto(user, projectId, structureId, companyId, withObservations).map { i -> i.toDtoV1() }
 
     fun listNotDeletedDto(user: User, projectId: Long?, structureId: String?, companyId: Long?, withObservations: Boolean): List<InspectionDtoV2> {
-        val inspections = listNotDeleted(user, projectId, structureId, companyId)
+        var inspections = listNotDeleted(user, projectId, structureId, companyId)
+
+        // TODO fix for admin inspection android crash (Out Of Memory)
+        if (withObservations) {
+            inspections = inspections.filter { it.createdBy.toLong() == user.id }
+        }
+
         val inspectorsMap = getUsers(inspections.map { it.uuid })
         val structures = structureRepository.findAllByIdIn(inspections.mapNotNull { it.structureId })
         return inspections.map {
