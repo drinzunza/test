@@ -20,11 +20,16 @@ class InspectionController(private val inspectionService: InspectionService) : B
     fun getV2(@RequestHeader(X_TOKEN) token: String,
             @RequestParam(required = false) projectId: Long?,
             @RequestParam(required = false) structureId: String?,
-            @RequestParam(required = false) withObservations: Boolean?
+            @RequestParam(required = false) withObservations: Boolean?,
+            @RequestParam(required = false) page: Int?,
+            @RequestParam(required = false) count: Int?
     ): ResponseEntity<List<InspectionDtoV2>> {
-        return ResponseEntity.ok(inspectionService.listNotDeletedDto(
+        val inspections = inspectionService.listNotDeletedDto(
                 getAuthenticatedUser(), projectId, structureId, null, withObservations ?: true
-        ))
+        ).filterIndexed { index, inspectionDtoV2 ->
+            if (page != null && count != null) index >= page * count && index < page * count + count else true
+        }
+        return ResponseEntity.ok(inspections)
     }
 
     @GetMapping("$VERSION2/inspection/{uuid}")
