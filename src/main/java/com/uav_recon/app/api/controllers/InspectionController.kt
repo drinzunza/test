@@ -1,9 +1,6 @@
 package com.uav_recon.app.api.controllers
 
-import com.uav_recon.app.api.entities.requests.bridge.InspectionDto
-import com.uav_recon.app.api.entities.requests.bridge.InspectionDtoV2
-import com.uav_recon.app.api.entities.requests.bridge.InspectionSummaryDto
-import com.uav_recon.app.api.entities.requests.bridge.InspectionUserIdsDto
+import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.entities.responses.bridge.InspectionUsersDto
 import com.uav_recon.app.api.services.InspectionService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
@@ -22,12 +19,14 @@ class InspectionController(private val inspectionService: InspectionService) : B
             @RequestParam(required = false) projectId: Long?,
             @RequestParam(required = false) structureId: String?,
             @RequestParam(required = false) withObservations: Boolean?,
+            @RequestParam(required = false) archived: Boolean?,
             @RequestParam(required = false) page: Int?,
             @RequestParam(required = false) count: Int?
     ): ResponseEntity<List<InspectionDtoV2>> {
         val inspections = inspectionService.listNotDeletedDto(
                 getAuthenticatedUser(), projectId, structureId, null, withObservations ?: true
-        ).filterIndexed { index, inspectionDtoV2 ->
+        ).filter { archived == null || it.archived == archived }
+         .filterIndexed { index, inspectionDtoV2 ->
             if (page != null && count != null) index >= page * count && index < page * count + count else true
         }
         return ResponseEntity.ok(inspections)
@@ -51,6 +50,11 @@ class InspectionController(private val inspectionService: InspectionService) : B
     @PostMapping("$VERSION2/inspection/summary")
     fun updateSummary(@RequestHeader(X_TOKEN) token: String, @RequestBody body: InspectionSummaryDto): ResponseEntity<InspectionDtoV2> {
         return ResponseEntity.ok(inspectionService.updateSummary(body))
+    }
+
+    @PostMapping("$VERSION2/inspection/archive")
+    fun updateArchive(@RequestHeader(X_TOKEN) token: String, @RequestBody body: InspectionArchiveDto): ResponseEntity<InspectionDtoV2> {
+        return ResponseEntity.ok(inspectionService.updateArchive(body))
     }
 
     // V1
