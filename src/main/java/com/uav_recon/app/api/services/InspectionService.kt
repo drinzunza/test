@@ -310,6 +310,15 @@ class InspectionService(
         )
     }
 
+    fun updateSummary(dto: InspectionSummaryDto): InspectionDtoV2 {
+        logger.info("inspection uuid = ${dto.uuid}, summary = ${dto.summary}")
+        getInspection(dto.uuid)?.let {
+            it.generalSummary = dto.summary
+            return inspectionRepository.save(it).toDto()
+        }
+        throw Error(101, "Invalid inspection UUID")
+    }
+
     fun Inspection.canSeeProject(id: Long?): Boolean {
         return !(id != null && projectId != id)
     }
