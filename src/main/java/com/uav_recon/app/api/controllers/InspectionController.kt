@@ -2,6 +2,7 @@ package com.uav_recon.app.api.controllers
 
 import com.uav_recon.app.api.entities.requests.bridge.InspectionDto
 import com.uav_recon.app.api.entities.requests.bridge.InspectionDtoV2
+import com.uav_recon.app.api.entities.requests.bridge.InspectionSummaryDto
 import com.uav_recon.app.api.entities.requests.bridge.InspectionUserIdsDto
 import com.uav_recon.app.api.entities.responses.bridge.InspectionUsersDto
 import com.uav_recon.app.api.services.InspectionService
@@ -45,6 +46,11 @@ class InspectionController(private val inspectionService: InspectionService) : B
     @PostMapping("$VERSION2/inspection")
     fun createOrUpdateV2(@RequestHeader(X_TOKEN) token: String, @RequestBody body: InspectionDtoV2): ResponseEntity<InspectionDtoV2> {
         return ResponseEntity.ok(inspectionService.save(getAuthenticatedUser(), body))
+    }
+
+    @PostMapping("$VERSION2/inspection/summary")
+    fun updateSummary(@RequestHeader(X_TOKEN) token: String, @RequestBody body: InspectionSummaryDto): ResponseEntity<InspectionDtoV2> {
+        return ResponseEntity.ok(inspectionService.updateSummary(body))
     }
 
     // V1
