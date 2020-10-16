@@ -6,7 +6,7 @@ import javax.persistence.MappedSuperclass
 @MappedSuperclass
 abstract class MonitoredEntity(
         @Column(name = "created_by")
-        val createdBy: Int,
+        var createdBy: Int,
         @Column(name = "updated_by")
-        val updatedBy: Int
+        var updatedBy: Int
 ) : BaseEntity()

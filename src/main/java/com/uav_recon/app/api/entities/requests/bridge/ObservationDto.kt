@@ -13,5 +13,6 @@ data class ObservationDto(
         val drawingNumber: String?,
         val roomNumber: String?,
         val dimensionNumber: Int?,
-        val locationDescription: String?
+        val locationDescription: String?,
+        val inspected: Boolean?
 ) : Serializable
