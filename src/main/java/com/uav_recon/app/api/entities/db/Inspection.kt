@@ -52,6 +52,8 @@ class Inspection(
         var projectId: Long? = null,
         @Column(name = "is_archived")
         var archived: Boolean? = false,
+        @Column(name = "template_id")
+        var templateId: Long? = null,
         @Transient
         var observations: List<Observation>? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)

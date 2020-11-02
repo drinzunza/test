@@ -27,6 +27,7 @@ data class InspectionDtoV2(
         val spansCount: Int?,
         val projectId: Long?,
         val archived: Boolean?,
+        val templateId: Long?,
         val inspectors: List<SimpleUserDto>?
 ) : Serializable
 
@@ -48,6 +49,7 @@ fun InspectionDtoV2.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) 
         wind = weather?.wind,
         projectId = projectId,
         archived = archived,
+        templateId = templateId,
         createdBy = createdBy,
         updatedBy = updatedBy
 )
@@ -71,6 +73,7 @@ fun InspectionDtoV2.toDtoV1() = InspectionDto(
         spansCount = spansCount,
         projectId = projectId,
         archived = archived,
+        templateId = templateId,
         inspectors = inspectors
 )
 
@@ -93,5 +96,6 @@ fun InspectionDto.toDtoV2() = InspectionDtoV2(
         spansCount = spansCount,
         projectId = projectId,
         archived = archived,
+        templateId = templateId,
         inspectors = inspectors
 )
