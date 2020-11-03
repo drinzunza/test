@@ -4,15 +4,14 @@ import java.io.Serializable
 import javax.persistence.*
 
 @Entity
-@Table(name = "template_defects")
-class TemplateSubcomponent(
+@Table(name = "sub_component_and_structures")
+class SubcomponentAndStructure(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         var id: Long = 0,
-        @Column(name = "template_component_id")
-        var templateComponentId: Long,
         @Column(name = "sub_component_id")
         var subcomponentId: String,
-        @Column(name = "is_active")
-        var active: Boolean = true
+        @Column(name = "structure_id")
+        var structureId: String,
+        var size: Int
 ) : Serializable

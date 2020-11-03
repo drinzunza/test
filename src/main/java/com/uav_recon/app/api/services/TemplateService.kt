@@ -1,30 +1,43 @@
 package com.uav_recon.app.api.services
 
+import com.uav_recon.app.api.controllers.handlers.AccessDeniedException
 import com.uav_recon.app.api.entities.db.User
-import com.uav_recon.app.api.entities.requests.bridge.TemplateDto
-import com.uav_recon.app.api.repositories.templates.TemplateRepository
+import com.uav_recon.app.api.entities.db.templates.SubcomponentAndStructure
+import com.uav_recon.app.api.entities.db.templates.SubcomponentInspection
+import com.uav_recon.app.api.entities.requests.bridge.templates.SubcomponentAndStructuresDto
+import com.uav_recon.app.api.entities.requests.bridge.templates.SubcomponentInspectionDto
+import com.uav_recon.app.api.repositories.templates.SubcomponentAndStructureRepository
+import com.uav_recon.app.api.repositories.templates.SubcomponentInspectionRepository
 import org.springframework.stereotype.Service
+import javax.transaction.Transactional
 
 @Service
 class TemplateService(
-        private val templateRepository: TemplateRepository
+        private val subcomponentAndStructureRepository: SubcomponentAndStructureRepository,
+        private val subcomponentInspectionRepository: SubcomponentInspectionRepository
 ) {
 
-    fun listNotDeleted(authenticatedUser: User): List<TemplateDto> {
-        return listOf()
+    fun getSubcomponentAndStructures(authenticatedUser: User, structureId: String): List<SubcomponentAndStructure> {
+        return subcomponentAndStructureRepository.findAllByStructureId(structureId)
     }
 
-    fun getNotDeleted(authenticatedUser: User, id: Long): TemplateDto {
-        throw Error(161, "Not found")
+    @Transactional
+    fun saveSubcomponentAndStructures(authenticatedUser: User, body: SubcomponentAndStructuresDto) {
+        if (!authenticatedUser.admin) throw AccessDeniedException()
+        val structureIds = body.subcomponentAndStructures.map { it.structureId }
+        subcomponentAndStructureRepository.deleteByStructureIdIn(structureIds)
+        subcomponentAndStructureRepository.saveAll(body.subcomponentAndStructures)
     }
 
-    fun save(authenticatedUser: User, body: TemplateDto): TemplateDto {
-        throw Error(161, "Not found")
+    fun getSubcomponentInspection(authenticatedUser: User, inspectionId: String): List<SubcomponentInspection> {
+        return subcomponentInspectionRepository.findAllByInspectionId(inspectionId)
     }
 
-    fun delete(authenticatedUser: User, id: Long) {
-        val template = templateRepository.findFirstById(id) ?: throw Error(161, "Not found")
-        template.deleted = true
-        templateRepository.save(template)
+    @Transactional
+    fun saveSubcomponentInspection(authenticatedUser: User, body: SubcomponentInspectionDto) {
+        if (!authenticatedUser.admin) throw AccessDeniedException()
+        val inspectionIds = body.subcomponentInspections.map { it.inspectionId }
+        subcomponentInspectionRepository.deleteByInspectionIdIn(inspectionIds)
+        subcomponentInspectionRepository.saveAll(body.subcomponentInspections)
     }
 }
