@@ -28,6 +28,5 @@ data class InspectionDto(
         val spansCount: Int?,
         val projectId: Long?,
         val archived: Boolean?,
-        val templateId: Long?,
         val inspectors: List<SimpleUserDto>?
 ) : Serializable

@@ -58,7 +58,6 @@ class InspectionService(
         spansCount = spansCount,
         projectId = projectId,
         archived = archived,
-        templateId = templateId,
         inspectors = inspectors ?: getUsers(uuid)
     )
 
