@@ -21,7 +21,7 @@ data class InspectionDtoV2(
         val location: LocationDto?,
         val status: InspectionStatus?,
         val report: InspectionReport?,
-        val generalSummary: String?,
+        var generalSummary: String?,
         val sgrRating: String?,
         val termRating: Double?,
         val spansCount: Int?,
