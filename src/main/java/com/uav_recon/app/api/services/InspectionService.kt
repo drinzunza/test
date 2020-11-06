@@ -74,11 +74,6 @@ class InspectionService(
             throw AccessDeniedException()
         }
 
-        // TODO temporary fix
-        if (dto.generalSummary.isNullOrBlank() && user.companyId == 5L) {
-            dto.generalSummary = "Weather:\nTemp:\nUnit 1:\nUnit 2:\nUnit 3:\nHW:\nTW:\nProject Q:"
-        }
-
         val updatedBy = user.id.toInt()
         var createdBy = updatedBy
         if (inspection != null) {
