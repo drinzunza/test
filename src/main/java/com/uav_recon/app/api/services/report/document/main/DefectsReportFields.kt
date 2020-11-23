@@ -79,9 +79,13 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
             TextElement.Simple("Corr. Action", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
             widthPercent = 0.0458f
     ),
-    REPAIR_SCHEDULE(
-            TextElement.Simple("Repair Schedule", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.1514f
+    REPAIR_METHOD(
+            TextElement.Simple("Repair Method", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0757f
+    ),
+    REPAIR_DATE(
+            TextElement.Simple("Repair Date", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.0757f
     );
 
     fun getCellWidth(rowWidth: Int?): Int? = rowWidth?.toFloat()?.times(widthPercent)?.roundToInt()
@@ -103,7 +107,8 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                         CS_RATING,
                         STATUS,
                         CORR_ACTION,
-                        REPAIR_SCHEDULE
+                        REPAIR_METHOD,
+                        REPAIR_DATE
                 ),
                 StructuralType.MAINTENANCE to listOf(
                         INDEX,
@@ -119,7 +124,8 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                         CS_RATING,
                         STATUS,
                         CORR_ACTION,
-                        REPAIR_SCHEDULE
+                        REPAIR_METHOD,
+                        REPAIR_DATE
                 )
         )
 
@@ -240,6 +246,14 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                             StructuralType.MAINTENANCE -> addCellText(TEXT_NOT_APPLICABLE)
                             StructuralType.STRUCTURAL -> addCellText(convertCsRating(defect.toStructural()?.condition?.type))
                         }
+                    }
+                    REPAIR_METHOD -> {
+                        alignment = Alignment.CENTER
+                        addCellText(defect.repairMethod)
+                    }
+                    REPAIR_DATE -> {
+                        alignment = Alignment.CENTER
+                        addCellText(defect.repairDate)
                     }
                     else -> addCellText()
                 }
