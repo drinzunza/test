@@ -379,7 +379,9 @@ class MainDocumentFactory(
         }
 
         paragraphLeft {
-            elementsKeyValue(ACTION_REPAIR_SCHEDULE, null, SMALL_TEXT_SIZE)
+            val schedule = if (defect.repairMethod == null && defect.repairDate == null)
+                    null else "${defect.repairMethod ?: ""} prior to ${defect.repairDate ?: ""}"
+            elementsKeyValue(ACTION_REPAIR_SCHEDULE, schedule, SMALL_TEXT_SIZE)
             val title = when (defect.type) {
                 StructuralType.STRUCTURAL -> DEFECT_DESCRIPTION
                 StructuralType.MAINTENANCE -> OBSERVATION_DESCRIPTION
