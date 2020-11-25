@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.services
 
+import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.db.Rect
 import com.uav_recon.app.api.utils.saveWithRect
 import com.uav_recon.app.configurations.UavConfiguration
@@ -49,6 +50,17 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         Files.delete(Paths.get(configuration.files.root, path))
         Files.delete(Paths.get(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT)))
         Files.delete(Paths.get(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB)))
+    }
+
+    override fun regenerateRectImages(photo: Photo) {
+        val path = photo.link.replace(linkPrefix, "")
+        val clearPath = File(configuration.files.root, path)
+        val rectPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT))
+        val rectThumbPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB))
+        if (clearPath.exists()) {
+            val format = if (path.endsWith(".png", true)) "png" else "jpg"
+            generateRectImages(clearPath.readBytes(), getRect(photo.drawables), rectPath, rectThumbPath, format)
+        }
     }
 
     fun getAbsolutePath(path: String, format: String, type: FileService.FileType): Path {
