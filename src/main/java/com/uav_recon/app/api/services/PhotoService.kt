@@ -76,6 +76,7 @@ class PhotoService(
         }
         val photo = optional.get()
         photo.drawables = updateDto.drawables
+        fileService.regenerateRectImages(photo)
         photoRepository.save(photo)
         saveWeather(photo)
     }

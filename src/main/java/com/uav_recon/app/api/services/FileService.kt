@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.services
 
+import com.uav_recon.app.api.entities.db.Photo
 import java.io.InputStream
 
 interface FileService {
@@ -23,4 +24,5 @@ interface FileService {
     fun get(link: String, drawables: String? = null, type: FileType = FileType.NORMAL): InputStream
     fun getPath(link: String, drawables: String? = null, type: FileType = FileType.NORMAL): String
     fun getImagePath(link: String, format: String? = null, type: FileType = FileType.NORMAL): String
+    fun regenerateRectImages(photo: Photo)
 }

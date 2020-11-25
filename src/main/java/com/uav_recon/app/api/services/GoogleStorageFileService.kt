@@ -3,6 +3,7 @@ package com.uav_recon.app.api.services
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.StorageOptions
+import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.configurations.UavConfiguration
 import java.io.InputStream
 
@@ -36,5 +37,9 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
     override fun getImagePath(link: String, format: String?, type: FileService.FileType): String {
         // TODO fix
         return ""
+    }
+
+    override fun regenerateRectImages(photo: Photo) {
+        TODO("Not yet implemented")
     }
 }
