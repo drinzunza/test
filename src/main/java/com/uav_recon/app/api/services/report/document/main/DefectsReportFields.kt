@@ -255,6 +255,14 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                         alignment = Alignment.CENTER
                         addCellText(defect.repairDate)
                     }
+                    PREV_DEF_NO -> {
+                        alignment = Alignment.CENTER
+                        addCellText(defect.previousDefectNumber)
+                    }
+                    PREV_NO -> {
+                        alignment = Alignment.CENTER
+                        addCellText(defect.previousDefectNumber)
+                    }
                     else -> addCellText()
                 }
             }
