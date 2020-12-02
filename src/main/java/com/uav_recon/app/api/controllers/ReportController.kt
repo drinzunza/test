@@ -1,9 +1,18 @@
 package com.uav_recon.app.api.controllers
 
+import com.uav_recon.app.api.entities.db.StructuralType
+import com.uav_recon.app.api.entities.db.StructureType
+import com.uav_recon.app.api.entities.db.toDto
 import com.uav_recon.app.api.entities.requests.bridge.ReportDto
+import com.uav_recon.app.api.entities.responses.bridge.ComponentTypesUsageDto
+import com.uav_recon.app.api.entities.responses.bridge.ComponentUsageDto
 import com.uav_recon.app.api.entities.responses.bridge.ObservationDefectReportDto
 import com.uav_recon.app.api.entities.responses.bridge.SubcomponentHealthDto
+import com.uav_recon.app.api.repositories.ComponentRepository
+import com.uav_recon.app.api.repositories.ObservationDefectRepository
+import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.services.InspectionService
+import com.uav_recon.app.api.services.ObservationService
 import com.uav_recon.app.api.services.report.ReportService
 import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
@@ -16,6 +25,9 @@ import org.springframework.web.bind.annotation.*
 class ReportController(
         private val reportService: ReportService,
         private val inspectionService: InspectionService,
+        private val observationRepository: ObservationRepository,
+        private val observationDefectRepository: ObservationDefectRepository,
+        private val componentRepository: ComponentRepository,
         private val mainDocumentFactory: MainDocumentFactory
 ) : BaseController() {
 
@@ -63,5 +75,24 @@ class ReportController(
         val inspections = inspectionService.listNotDeleted(getAuthenticatedUser(), null, structureId, null)
                 .filter { !(inspectionId != null && it.uuid != inspectionId) }
         return ResponseEntity.ok(mainDocumentFactory.createObservationDefectSummary(inspections))
+    }
+
+    @GetMapping("/components-usage")
+    fun getComponentsUsage(
+            @RequestHeader(X_TOKEN) token: String,
+            @RequestParam(required = false) structureId: String?,
+            @RequestParam(required = false) projectId: Long?,
+            @RequestParam(required = false) type: StructuralType?
+    ): ResponseEntity<List<ComponentUsageDto>> {
+        return ResponseEntity.ok(inspectionService.getComponentUsage(getAuthenticatedUser(), projectId, structureId, type))
+    }
+
+    @GetMapping("/component-types-usage")
+    fun getComponentTypesUsage(
+            @RequestHeader(X_TOKEN) token: String,
+            @RequestParam(required = false) structureId: String?,
+            @RequestParam(required = false) projectId: Long?
+    ): ResponseEntity<ComponentTypesUsageDto> {
+        return ResponseEntity.ok(inspectionService.getComponentTypesUsage(getAuthenticatedUser(), projectId, structureId))
     }
 }
