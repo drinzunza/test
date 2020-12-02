@@ -3,9 +3,12 @@ package com.uav_recon.app.api.services
 import com.uav_recon.app.api.controllers.handlers.AccessDeniedException
 import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.*
+import com.uav_recon.app.api.entities.responses.bridge.ComponentTypesUsageDto
+import com.uav_recon.app.api.entities.responses.bridge.ComponentUsageDto
 import com.uav_recon.app.api.entities.responses.bridge.InspectionUsersDto
 import com.uav_recon.app.api.repositories.*
 import org.slf4j.LoggerFactory
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.transaction.Transactional
@@ -466,5 +469,36 @@ class InspectionService(
         inspections.forEach { inspection ->
             inspection.observations = observations.filter { it.inspectionId == inspection.uuid }
         }
+    }
+
+    fun getComponentUsage(user: User, projectId: Long?, structureId: String?, type: StructuralType?): List<ComponentUsageDto> {
+        val inspectionIds = listNotDeleted(user, projectId, structureId, null).map { it.uuid }
+        val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(inspectionIds)
+        val observationIds = observations.map { it.uuid }
+        val componentIds = observations.mapNotNull { it.structuralComponentId }
+        val components = componentRepository.findAllByIdIn(componentIds)
+        val observationDefects = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observationIds)
+                .filter { type == null || it.type == type }
+
+        val componentsUsage = mutableListOf<ComponentUsageDto>()
+        components.forEach { component ->
+            val componentObservationIds = observations.filter { it.structuralComponentId == component.id }.map { it.uuid }
+            val count = observationDefects.count { componentObservationIds.contains(it.observationId) }
+            componentsUsage.add(ComponentUsageDto(component.id, component.name, count))
+        }
+        return componentsUsage
+    }
+
+    fun getComponentTypesUsage(user: User, projectId: Long?, structureId: String?): ComponentTypesUsageDto {
+        val inspectionIds = listNotDeleted(user, projectId, structureId, null).map { it.uuid }
+        val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(inspectionIds)
+        val observationIds = observations.map { it.uuid }
+        val observationDefectsTypes = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observationIds)
+                .map { it.type }
+
+        return ComponentTypesUsageDto(
+                observationDefectsTypes.count { it == StructuralType.STRUCTURAL },
+                observationDefectsTypes.count { it == StructuralType.MAINTENANCE }
+        )
     }
 }

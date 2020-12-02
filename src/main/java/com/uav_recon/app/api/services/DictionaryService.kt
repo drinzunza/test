@@ -409,15 +409,6 @@ class DictionaryService(
             structuralComponentIds = structureComponents.filter { it.structureId == id }.map { it.componentId }
     )
 
-    private fun Component.toDto(subcomponents: List<Subcomponent>, types: List<StructureType>) = ComponentDto(
-            id = id,
-            name = name,
-            type = types.find { it.id == structureTypeId }?.code,
-            companyId = companyId,
-            deleted = deleted,
-            subComponentIds = subcomponents.filter { it.componentId == id }.map { it.id }
-    )
-
     private fun LocationId.toDto() = LocationIdDto(
             id = id,
             structureType = structureType,
