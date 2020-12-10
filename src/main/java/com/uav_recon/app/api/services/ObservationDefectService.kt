@@ -131,6 +131,26 @@ class ObservationDefectService(
     }
 
     @Throws(Error::class)
+    fun update(updatedBy: Int, id: String, observationId: String): ObservationDefectDto {
+        val defect = observationDefectRepository.findFirstByUuidAndDeletedIsFalse(id)
+        val oldObservation = defect?.observationId?.let { observationRepository.findFirstByUuid(it) }
+        val newObservation = observationRepository.findFirstByUuid(observationId)
+        if (defect == null) {
+            throw Error(103, "Invalid observation defect UUID")
+        }
+        if (oldObservation == null || newObservation == null) {
+            throw Error(102, "Invalid observation UUID")
+        }
+        if (oldObservation.inspectionId != newObservation.inspectionId) {
+            throw Error(105, "Need same inspection")
+        }
+        val createdByUser = userService.get(defect.createdBy).toDto()
+        defect.observationId = observationId
+        defect.updatedBy = updatedBy
+        return observationDefectRepository.save(defect).toDto(createdByUser)
+    }
+
+    @Throws(Error::class)
     fun delete(id: String, inspectionId: String, observationId: String) {
         checkInspectionAndObservationRelationship(inspectionId, observationId)
         val optional = observationDefectRepository.findByUuidAndDeletedIsFalse(id)

@@ -31,7 +31,7 @@ class ObservationDefect(
         createdBy: Int,
         updatedBy: Int,
         @Column(name = "observation_id")
-        val observationId: String,
+        var observationId: String,
         @Column(name = "defect_id")
         var defectId: String? = null,
         @Column(name = "condition_id")
