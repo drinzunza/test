@@ -369,7 +369,10 @@ class MainDocumentFactory(
                         width { TABLE_WIDTH_PORTRAIT / 2 }
                         paragraph {
                             alignment { it.key }
-                            it.value.forEach { field ->
+                            it.value.sortedWith(compareBy(
+                                    {observation.component?.name}, {observation.subcomponent?.name}, {defect.stationMarker}
+                            ))
+                                    .forEach { field ->
                                 elementsKeyValue(field.title, field.getValue(inspection, structure, observation, defect), SMALL_TEXT_SIZE)
                             }
                         }
