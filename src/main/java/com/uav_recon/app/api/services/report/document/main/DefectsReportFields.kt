@@ -177,7 +177,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
         ) {
             var coloredCell = true
             inspection.observations
-                    ?.sortedWith(compareBy({it.component?.name}, {it.subcomponent?.name}))
+                    ?.sortedBy { it.subcomponent?.name }
                     ?.forEach { observation ->
                 observation.defects
                         ?.filter { type == it.type }
