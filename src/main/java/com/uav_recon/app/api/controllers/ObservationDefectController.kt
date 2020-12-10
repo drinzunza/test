@@ -6,34 +6,37 @@ import com.uav_recon.app.configurations.ControllerConfiguration
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect")
 class ObservationDefectController(private val observationDefectService: ObservationDefectService) : BaseController() {
 
-    @PostMapping
+    @PostMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect")
     fun createOrUpdate(@RequestHeader(X_TOKEN) token: String,
                        @RequestBody observationDefectDto: ObservationDefectDto,
                        @PathVariable inspectionId: String,
                        @PathVariable observationId: String
     ): ResponseEntity<ObservationDefectDto> {
-        return ResponseEntity.ok(observationDefectService.save(observationDefectDto, inspectionId, observationId,
-                                                               getAuthenticatedUserId()))
+        return ResponseEntity.ok(observationDefectService.save(
+                observationDefectDto, inspectionId, observationId, getAuthenticatedUserId()
+        ))
     }
 
-    @DeleteMapping("/{defectId}")
-    fun delete(@RequestHeader(X_TOKEN) token: String, @PathVariable defectId: String,
-               @PathVariable inspectionId: String, @PathVariable observationId: String): ResponseEntity<*> {
+    @DeleteMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect/{defectId}")
+    fun delete(@RequestHeader(X_TOKEN) token: String,
+               @PathVariable defectId: String,
+               @PathVariable inspectionId: String,
+               @PathVariable observationId: String
+    ): ResponseEntity<*> {
         observationDefectService.delete(defectId, inspectionId, observationId)
         return ResponseEntity.ok(success)
     }
 
-
+    @PutMapping("${VERSION}/observation-defect/{defectId}/new-observation/{observationId}")
+    fun updateObservation(@RequestHeader(X_TOKEN) token: String,
+                          @PathVariable defectId: String,
+                          @PathVariable observationId: String
+    ): ResponseEntity<ObservationDefectDto> {
+        return ResponseEntity.ok(observationDefectService.update(getAuthenticatedUserId(), defectId, observationId))
+    }
 }
