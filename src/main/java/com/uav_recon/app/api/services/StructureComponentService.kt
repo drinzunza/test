@@ -1,8 +1,6 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.StructureComponent
-import com.uav_recon.app.api.entities.db.StructureComponentType
-import com.uav_recon.app.api.repositories.CompanyRepository
 import com.uav_recon.app.api.repositories.ComponentRepository
 import com.uav_recon.app.api.repositories.StructureComponentRepository
 import com.uav_recon.app.api.repositories.StructureRepository

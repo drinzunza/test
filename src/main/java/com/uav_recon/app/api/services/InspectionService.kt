@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.transaction.Transactional
-import kotlin.collections.HashMap
 import kotlin.math.roundToInt
 
 @Service
@@ -61,6 +60,7 @@ class InspectionService(
         observations = observations ?: if (withObservations) observationService.findAllByInspectionUuidAndNotDeleted(uuid) else listOf(),
         spansCount = spansCount,
         projectId = projectId,
+        archived = archived,
         inspectors = inspectors ?: getUsers(uuid)
     )
 
@@ -317,6 +317,15 @@ class InspectionService(
         logger.info("inspection uuid = ${dto.uuid}, summary = ${dto.summary}")
         getInspection(dto.uuid)?.let {
             it.generalSummary = dto.summary
+            return inspectionRepository.save(it).toDto()
+        }
+        throw Error(101, "Invalid inspection UUID")
+    }
+
+    fun updateArchive(dto: InspectionArchiveDto): InspectionDtoV2 {
+        logger.info("inspection uuid = ${dto.uuid}, archived = ${dto.archived}")
+        getInspection(dto.uuid)?.let {
+            it.archived = dto.archived
             return inspectionRepository.save(it).toDto()
         }
         throw Error(101, "Invalid inspection UUID")

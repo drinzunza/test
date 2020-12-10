@@ -2,8 +2,8 @@ package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
+import com.uav_recon.app.api.entities.requests.bridge.ObservationInspectDto
 import com.uav_recon.app.api.repositories.InspectionRepository
-import com.uav_recon.app.api.repositories.LocationIdRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.utils.isEachMeasureUnit
 import org.springframework.stereotype.Service
@@ -27,7 +27,8 @@ class ObservationService(
         dimensionNumber = dimensionNumber,
         structuralComponentId = structuralComponentId,
         subComponentId = subComponentId,
-        observationDefects = observationDefectService.findAllByObservationIdAndNotDeleted(uuid)
+        observationDefects = observationDefectService.findAllByObservationIdAndNotDeleted(uuid),
+        inspected = inspected
     )
 
     fun ObservationDto.toEntity(createdBy: Int, updatedBy: Int, inspectionId: String) = Observation(
@@ -70,6 +71,16 @@ class ObservationService(
     @Transactional
     fun save(list: List<ObservationDto>, inspectionId: String, updatedBy: Int): List<ObservationDto> {
         return list.map { dto -> save(dto, inspectionId, updatedBy) }
+    }
+
+    fun updateInspected(dto: ObservationInspectDto, inspectionId: String, updatedBy: Int): ObservationDto {
+        val inspection = inspectionRepository.findFirstByUuid(inspectionId)
+                ?: throw Error(101, "Invalid inspection UUID")
+        val observation = observationRepository.findFirstByUuid(dto.uuid)
+                ?: throw Error(102, "Invalid observation uuid")
+        observation.updatedBy = updatedBy
+        observation.inspected = dto.inspected
+        return observationRepository.save(observation).toDto()
     }
 
     fun findAllByInspectionUuidAndNotDeleted(uuid: String): List<ObservationDto> {

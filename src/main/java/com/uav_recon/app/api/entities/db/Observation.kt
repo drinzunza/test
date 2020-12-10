@@ -28,6 +28,8 @@ class Observation(
         var dimensionNumber: Int? = 0,
         @Column(name = "is_deleted")
         var deleted: Boolean? = false,
+        @Column(name = "is_inspected")
+        var inspected: Boolean? = false,
         @Transient
         var component: Component? = null,
         @Transient
