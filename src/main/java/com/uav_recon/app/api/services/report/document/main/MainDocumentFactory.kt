@@ -138,6 +138,12 @@ class MainDocumentFactory(
         val inspector = inspection.getInspector()
         val company = inspector.getCompany()
 
+        inspection.observations = inspection.observations
+                ?.sortedWith(compareBy({it.component?.name}, {it.subcomponent?.name}))
+        inspection.observations?.forEach { observation ->
+            observation.defects = observation.defects?.sortedWith(compareBy { it.stationMarker })
+        }
+
         logger.info("start create document")
         return Document.create {
             border { BORDER }
@@ -369,10 +375,7 @@ class MainDocumentFactory(
                         width { TABLE_WIDTH_PORTRAIT / 2 }
                         paragraph {
                             alignment { it.key }
-                            it.value.sortedWith(compareBy(
-                                    {observation.component?.name}, {observation.subcomponent?.name}, {defect.stationMarker}
-                            ))
-                                    .forEach { field ->
+                            it.value.forEach { field ->
                                 elementsKeyValue(field.title, field.getValue(inspection, structure, observation, defect), SMALL_TEXT_SIZE)
                             }
                         }
@@ -620,6 +623,7 @@ class MainDocumentFactory(
                                     size = it.size,
                                     componentName = observation.component?.name,
                                     subcomponentName = observation.subcomponent?.name,
+                                    subcomponentMeasureUnit = observation.subcomponent?.measureUnit,
                                     dimensionNumber = observation.dimensionNumber,
                                     csRating = it.condition?.type?.title,
                                     pictureLinks = it.photos?.map { fileService.getImagePath(it.link, null, FileService.FileType.WITH_RECT) } ?: listOf(),

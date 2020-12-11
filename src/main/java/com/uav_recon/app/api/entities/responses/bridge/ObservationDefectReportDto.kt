@@ -24,6 +24,7 @@ data class ObservationDefectReportDto(
         val size: String?,
         val componentName: String?,
         val subcomponentName: String?,
+        val subcomponentMeasureUnit: String?,
         val dimensionNumber: Int?,
         val csRating: String?,
         val pictureLinks: List<String>,
