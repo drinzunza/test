@@ -71,9 +71,9 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
             TextElement.Simple("CS", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
             widthPercent = 0.0361f
     ),
-    STATUS(
-            TextElement.Simple("Status", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.05f
+    CRITICAL_FINDINGS(
+            TextElement.Simple("Critical Findings", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+            widthPercent = 0.06f
     ),
     CORR_ACTION(
             TextElement.Simple("Corr. Action", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
@@ -85,7 +85,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
     ),
     REPAIR_DATE(
             TextElement.Simple("Repair Date", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0757f
+            widthPercent = 0.0657f
     );
 
     fun getCellWidth(rowWidth: Int?): Int? = rowWidth?.toFloat()?.times(widthPercent)?.roundToInt()
@@ -105,7 +105,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                         SIZE,
                         IMAGE,
                         CS_RATING,
-                        STATUS,
+                        CRITICAL_FINDINGS,
                         CORR_ACTION,
                         REPAIR_METHOD,
                         REPAIR_DATE
@@ -122,7 +122,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                         SIZE,
                         IMAGE,
                         CS_RATING,
-                        STATUS,
+                        CRITICAL_FINDINGS,
                         CORR_ACTION,
                         REPAIR_METHOD,
                         REPAIR_DATE
@@ -254,6 +254,10 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                     REPAIR_DATE -> {
                         alignment = Alignment.CENTER
                         addCellText(defect.repairDate)
+                    }
+                    CRITICAL_FINDINGS -> {
+                        alignment = Alignment.CENTER
+                        addCellText(defect.criticalFindings?.joinToString(",\n") { it.name.toLowerCase().capitalize() })
                     }
                     PREV_DEF_NO -> {
                         alignment = Alignment.CENTER
