@@ -58,13 +58,14 @@ class ObservationService(
             createdBy = observation.get().createdBy
         }
         val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId))
-        if (dto.observationDefects != null) {
-            observationDefectService.save(dto.observationDefects,
-                                          inspectionId,
-                                          dto.uuid,
-                                          updatedBy,
-                                          inspection.get().structureId)
-        }
+        // TODO lost new data fix
+//        if (dto.observationDefects != null) {
+//            observationDefectService.save(dto.observationDefects,
+//                                          inspectionId,
+//                                          dto.uuid,
+//                                          updatedBy,
+//                                          inspection.get().structureId)
+//        }
         return saved.toDto()
     }
 
@@ -102,10 +103,12 @@ class ObservationService(
     }
 
     fun getTotalQuantity(observation: Observation, spansCount: Int): Int {
-        return when {
-            observation.subcomponent?.isEachMeasureUnit() ?: false -> spansCount
-            else -> observation.dimensionNumber ?: 0
-        }
+        // TODO new logic fix
+//        return when {
+//            observation.subcomponent?.isEachMeasureUnit() ?: false -> spansCount
+//            else -> observation.dimensionNumber ?: 0
+//        }
+        return observation.dimensionNumber ?: 0
     }
 
     fun getCsValue(observation: Observation, conditionType: ConditionType, spansCount: Int): Int {
