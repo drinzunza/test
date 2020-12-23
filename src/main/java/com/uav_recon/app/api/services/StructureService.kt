@@ -8,7 +8,6 @@ import com.uav_recon.app.api.repositories.*
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.transaction.Transactional
-import javax.validation.constraints.NotEmpty
 
 @Service
 class StructureService(
@@ -16,19 +15,9 @@ class StructureService(
         private val companyRepository: CompanyRepository,
         private val etagRepository: EtagRepository,
         private val structureComponentService: StructureComponentService,
-        private val observationDefectRepository: ObservationDefectRepository,
+        private val observationDefectService: ObservationDefectService,
         private val structureTypeRepository: StructureTypeRepository
 ) {
-
-    fun regenerateObservationDefectIds(structureId: String, code: String) {
-        val defects = observationDefectRepository.getByStructureId(structureId)
-        defects.forEach {
-            val oldStructureId = it.id.replace("-\\w-[\\d]{3}-[\\d]+-[\\d]{8}".toRegex(), "")
-            val newId = it.id.replace(oldStructureId, code)
-            it.id = newId
-        }
-        observationDefectRepository.saveAll(defects)
-    }
 
     fun listStructures(actor: User, companyId: Long?): List<AdminStructureOutDTO> {
         val structureTypes = structureTypeRepository.findAll().toList()
@@ -82,7 +71,7 @@ class StructureService(
 
             checkAllowForEditingStructure(it, actor)
             createEtag(listOf(it.id))
-            regenerateObservationDefectIds(id, it.code)
+            observationDefectService.regenerateIdsByCode(id, it.code)
             structureComponentService.refreshStructureComponents(actor.companyId!!, it.id, it.structureTypeId)
             it.primaryOwner = it.companyId?.let { companyRepository.findFirstById(it)?.name }
             return structureRepository.save(it).toOutDto(structureTypes)
