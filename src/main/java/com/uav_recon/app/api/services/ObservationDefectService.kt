@@ -1,15 +1,13 @@
 package com.uav_recon.app.api.services
 
-import com.uav_recon.app.api.entities.db.ObservationDefect
-import com.uav_recon.app.api.entities.db.Photo
-import com.uav_recon.app.api.entities.db.StructuralType
-import com.uav_recon.app.api.entities.db.User
+import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
 import com.uav_recon.app.api.entities.requests.bridge.SimpleUserDto
 import com.uav_recon.app.api.entities.requests.bridge.Weather
 import com.uav_recon.app.api.repositories.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -81,8 +79,8 @@ class ObservationDefectService(
 
     fun User.toDto(): SimpleUserDto = SimpleUserDto(this)
 
-    @Synchronized
     @Throws(Error::class)
+    @Transactional
     fun save(dto: ObservationDefectDto,
              inspectionId: String,
              observationId: String,
@@ -99,24 +97,14 @@ class ObservationDefectService(
 
         try {
             val entity = dto.toEntity(createdBy, updatedBy, observationId)
+            if (entity.type != observationDefect.get().type) {
+                entity.id = changeObservationDefectIdType(entity.id, entity.type)
+                logger.info("Changed observation defect id by type ${entity.type}")
+            }
             val saved = observationDefectRepository.save(entity)
             return saveWeather(saved).toDto(createdByUser)
         } catch (e: Exception) {
             logger.error(e.message)
-            // Observation defect id now not unique
-            if (dto.id.isBlank()) {
-                logger.info("Observation defect id (${dto.id}) incorrect")
-                val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
-                val structure = inspection?.structureId?.let { structureRepository.findFirstById(it) }
-                dto.id = generateObservationDefectDisplayId(updatedBy.toString(), structure?.code,
-                        dto.type == StructuralType.STRUCTURAL
-                )
-                logger.info("New observation defect id (${dto.id})")
-
-                val entity = dto.toEntity(createdBy, updatedBy, observationId)
-                val saved = observationDefectRepository.save(entity)
-                return saveWeather(saved).toDto(createdByUser)
-            }
         }
         throw Error(242, "Error saving observation defect")
     }
@@ -144,9 +132,13 @@ class ObservationDefectService(
         if (oldObservation.inspectionId != newObservation.inspectionId) {
             throw Error(105, "Need same inspection")
         }
+        val structure = inspectionRepository.findFirstByUuid(newObservation.inspectionId)?.let {
+            it.structureId?.let { structureRepository.findFirstById(it) }
+        }
         val createdByUser = userService.get(defect.createdBy).toDto()
         defect.observationId = observationId
         defect.updatedBy = updatedBy
+        defect.id = changeObservationDefectIdStructure(defect.id, structure)
         return observationDefectRepository.save(defect).toDto(createdByUser)
     }
 
@@ -182,6 +174,20 @@ class ObservationDefectService(
                     }
                     o.toDto(createdBy)
                 }
+    }
+
+    fun changeObservationDefectIdType(id: String, type: StructuralType?): String {
+        val letter = when (type) {
+            StructuralType.STRUCTURAL -> OBSERVATION_LETTER_STRUCTURAL
+            else -> OBSERVATION_LETTER_MAINTENANCE
+        }
+        return id.replace("-[DM]-".toRegex(), "-$letter-")
+    }
+
+    fun changeObservationDefectIdStructure(id: String, structure: Structure?): String {
+        val code = (structure?.code ?: OBSERVATION_EMPTY_STRUCTURE).replace(" ", "_")
+        val oldCode = id.replace("-\\w-[\\d]{3}-[\\d]+-[\\d]{8}".toRegex(), "")
+        return id.replace(oldCode, code)
     }
 
     @Throws(Error::class)
@@ -244,5 +250,15 @@ class ObservationDefectService(
             logger.info("Defect weather already set")
         }
         return observationDefect
+    }
+
+    fun regenerateIdsByCode(structureId: String, code: String) {
+        val defects = observationDefectRepository.getByStructureId(structureId)
+        defects.forEach {
+            val oldStructureId = it.id.replace("-\\w-[\\d]{3}-[\\d]+-[\\d]{8}".toRegex(), "")
+            val newId = it.id.replace(oldStructureId, code)
+            it.id = newId
+        }
+        observationDefectRepository.saveAll(defects)
     }
 }
