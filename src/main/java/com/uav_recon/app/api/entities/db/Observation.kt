@@ -30,6 +30,8 @@ class Observation(
         var deleted: Boolean? = false,
         @Column(name = "is_inspected")
         var inspected: Boolean? = false,
+        @Column(name = "health_index")
+        var healthIndex: Double? = null,
         @Transient
         var component: Component? = null,
         @Transient

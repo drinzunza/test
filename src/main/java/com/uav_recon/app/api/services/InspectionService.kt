@@ -8,7 +8,6 @@ import com.uav_recon.app.api.entities.responses.bridge.ComponentUsageDto
 import com.uav_recon.app.api.entities.responses.bridge.InspectionUsersDto
 import com.uav_recon.app.api.repositories.*
 import org.slf4j.LoggerFactory
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.transaction.Transactional
@@ -180,19 +179,17 @@ class InspectionService(
                 .filter { it.canSeeProject(projectId) }
                 .filter { it.canSeeStructure(structureId) }
 
-        updateSgrRating(results)
+        fillObjectsForSgrAndHealthIndex(results)
+        val countSgr = updateSgrRating(results)
+        logger.info("Saved $countSgr inspections with new sgr rating")
+        val countHi = updateHealthIndex(results)
+        logger.info("Saved $countHi observations with new health index")
 
         logger.info("User ${user.id} can see ${results.size} inspections")
         return results
     }
 
-    fun updateSgrRating(results: List<Inspection>) {
-        logger.info("Start update sgr rating")
-
-        fillObjectsForSgr(results)
-
-        logger.info("Filled data sgr rating")
-
+    fun updateSgrRating(results: List<Inspection>): Int {
         val sgrChangedInspections = mutableListOf<Inspection>()
         results.forEach { inspection ->
             calculateSgrRating(inspection)?.let { sgrRating ->
@@ -203,9 +200,25 @@ class InspectionService(
                 }
             }
         }
-
         inspectionRepository.saveAll(sgrChangedInspections)
-        logger.info("Saved ${sgrChangedInspections.size} inspections with new sgr rating")
+        return sgrChangedInspections.size
+    }
+
+    fun updateHealthIndex(results: List<Inspection>): Int {
+        val healthIndexChangedObservations = mutableListOf<Observation>()
+        results.forEach { inspection ->
+            inspection.observations?.forEach {
+                val spansCount = observationService.getSpansCount(it, inspection.spansCount) ?: 0
+                var healthIndex = observationService.getHealthIndex(it, spansCount)
+                healthIndex = (healthIndex * 1000).toInt().toDouble() / 1000
+                if (it.healthIndex != healthIndex) {
+                    it.healthIndex = healthIndex
+                    healthIndexChangedObservations.add(it)
+                }
+            }
+        }
+        observationRepository.saveAll(healthIndexChangedObservations)
+        return healthIndexChangedObservations.size
     }
 
     @Throws(Error::class)
@@ -230,19 +243,6 @@ class InspectionService(
             return Optional.of(optional.get().toDto().toDtoV1())
         }
         return Optional.empty()
-    }
-
-    fun getPhotoWithCoordinates(inspection: Inspection): Photo? {
-        observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.uuid).forEach { observation ->
-            observationDefectRepository.findAllByObservationIdAndDeletedIsFalse(observation.uuid).forEach { observationDefect ->
-                photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(observationDefect.uuid).forEach {
-                    if (it.latitude != null && it.longitude != null) {
-                        return it
-                    }
-                }
-            }
-        }
-        return null
     }
 
     fun saveWeather(inspection: Inspection): Inspection {
@@ -451,7 +451,7 @@ class InspectionService(
         }
     }
 
-    fun fillObjectsForSgr(inspections: List<Inspection>) {
+    fun fillObjectsForSgrAndHealthIndex(inspections: List<Inspection>) {
         val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(inspections.map { it.uuid })
         val subcomponents = subcomponentRepository.findAllByIdIn(observations.map { it.subComponentId ?: "" })
         val observationDefects = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observations.map { it.uuid })
