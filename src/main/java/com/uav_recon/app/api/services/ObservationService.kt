@@ -28,10 +28,11 @@ class ObservationService(
         structuralComponentId = structuralComponentId,
         subComponentId = subComponentId,
         observationDefects = observationDefectService.findAllByObservationIdAndNotDeleted(uuid),
-        inspected = inspected
+        inspected = inspected,
+        healthIndex = healthIndex
     )
 
-    fun ObservationDto.toEntity(createdBy: Int, updatedBy: Int, inspectionId: String) = Observation(
+    fun ObservationDto.toEntity(createdBy: Int, updatedBy: Int, inspectionId: String, hIndex: Double?) = Observation(
         id = id,
         uuid = uuid,
         createdBy = createdBy,
@@ -42,22 +43,19 @@ class ObservationService(
         roomNumber = roomNumber,
         locationDescription = locationDescription,
         drawingNumber = drawingNumber,
-        inspectionId = inspectionId
+        inspectionId = inspectionId,
+        healthIndex = hIndex
     )
 
     @Throws(Error::class)
     @Transactional
     fun save(dto: ObservationDto, inspectionId: String, updatedBy: Int): ObservationDto {
-        val inspection = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId)
-        if (!inspection.isPresent) {
-            throw invalidInspectionUuid
-        }
-        var createdBy = updatedBy
-        val observation = observationRepository.findById(dto.uuid)
-        if (observation.isPresent) {
-            createdBy = observation.get().createdBy
-        }
-        val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId))
+        val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
+                ?: throw Error(101, "Invalid inspection UUID")
+        val observation = observationRepository.findFirstByUuid(dto.uuid)
+        val createdBy = observation?.createdBy ?: updatedBy
+        val healthIndex = observation?.healthIndex
+        val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId, healthIndex))
         return saved.toDto()
     }
 

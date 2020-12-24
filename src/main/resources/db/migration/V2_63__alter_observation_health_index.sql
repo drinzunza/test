@@ -1,0 +1,1 @@
+ALTER TABLE observations ADD COLUMN health_index DOUBLE PRECISION;
