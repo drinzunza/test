@@ -22,14 +22,13 @@ class InspectionScheduler(
         val inspections = mutableListOf<Inspection>()
         var countSgr = 0
         var countHi = 0
-        inspectionRepository.findAll().forEachIndexed { index, inspection ->
-            if ((index > 0 && index % 50 == 0) || index >= inspections.size - 1) {
+        inspectionRepository.findAll().forEach { inspection ->
+            inspections.add(inspection)
+            if (inspections.size > 50) {
                 inspectionService.fillObjectsForSgrAndHealthIndex(inspections)
                 countSgr += inspectionService.updateSgrRating(inspections)
                 countHi += inspectionService.updateHealthIndex(inspections)
                 inspections.clear()
-            } else {
-                inspections.add(inspection)
             }
         }
         logger.info("Saved $countSgr inspections with new sgr rating")
