@@ -94,19 +94,13 @@ class ObservationDefectService(
             createdBy = observationDefect.get().createdBy
         }
         val createdByUser: SimpleUserDto = userService.get(createdBy).toDto()
-
-        try {
-            val entity = dto.toEntity(createdBy, updatedBy, observationId)
-            if (entity.type != observationDefect.get().type) {
-                entity.id = changeObservationDefectIdType(entity.id, entity.type)
-                logger.info("Changed observation defect id by type ${entity.type}")
-            }
-            val saved = observationDefectRepository.save(entity)
-            return saveWeather(saved).toDto(createdByUser)
-        } catch (e: Exception) {
-            logger.error(e.message)
+        val entity = dto.toEntity(createdBy, updatedBy, observationId)
+        if (entity.type != observationDefect.get().type) {
+            entity.id = changeObservationDefectIdType(entity.id, entity.type)
+            logger.info("Changed observation defect id by type ${entity.type}")
         }
-        throw Error(242, "Error saving observation defect")
+        val saved = observationDefectRepository.save(entity)
+        return saveWeather(saved).toDto(createdByUser)
     }
 
     private fun checkInspectionAndObservationRelationship(inspectionId: String, observationId: String) {
