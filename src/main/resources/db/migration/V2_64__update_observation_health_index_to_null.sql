@@ -1,0 +1,1 @@
+UPDATE observations SET health_index = null;
