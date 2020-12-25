@@ -54,7 +54,10 @@ class ObservationService(
                 ?: throw Error(101, "Invalid inspection UUID")
         val observation = observationRepository.findFirstByUuid(dto.uuid)
         val createdBy = observation?.createdBy ?: updatedBy
-        val healthIndex = observation?.healthIndex
+
+        // Disabled set null value. Need to support old app and frontend versions. It can overwrite value to null.
+        val healthIndex = dto.healthIndex ?: observation?.healthIndex
+
         val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId, healthIndex))
         return saved.toDto()
     }
@@ -129,6 +132,7 @@ class ObservationService(
     }
 
     fun getHealthIndex(observation: Observation, spansCount: Int): Double {
+        observation.healthIndex?.let { return it }
         val totalQuantity = getTotalQuantity(observation, spansCount)
         if (totalQuantity <= 0) return 0.0
 

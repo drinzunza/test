@@ -182,8 +182,6 @@ class InspectionService(
         fillObjectsForSgrAndHealthIndex(results)
         val countSgr = updateSgrRating(results)
         logger.info("Saved $countSgr inspections with new sgr rating")
-        val countHi = updateHealthIndex(results)
-        logger.info("Saved $countHi observations with new health index")
 
         logger.info("User ${user.id} can see ${results.size} inspections")
         return results
