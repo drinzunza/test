@@ -89,13 +89,14 @@ class ObservationDefectService(
     ): ObservationDefectDto {
         checkInspectionAndObservationRelationship(inspectionId, observationId)
         var createdBy = updatedBy
-        val observationDefect = observationDefectRepository.findById(dto.uuid)
-        if (observationDefect.isPresent) {
-            createdBy = observationDefect.get().createdBy
+        val observationDefect = observationDefectRepository.findFirstByUuid(dto.uuid)
+        observationDefect?.let {
+            createdBy = it.createdBy
         }
+
         val createdByUser: SimpleUserDto = userService.get(createdBy).toDto()
         val entity = dto.toEntity(createdBy, updatedBy, observationId)
-        if (entity.type != observationDefect.get().type) {
+        if (entity.type != observationDefect?.type) {
             entity.id = changeObservationDefectIdType(entity.id, entity.type)
             logger.info("Changed observation defect id by type ${entity.type}")
         }
