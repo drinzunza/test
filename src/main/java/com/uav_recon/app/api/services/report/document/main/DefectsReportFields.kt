@@ -8,6 +8,7 @@ import com.uav_recon.app.api.services.report.document.models.body.Table
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement
 import com.uav_recon.app.api.utils.*
 import java.text.SimpleDateFormat
+import java.time.OffsetDateTime
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -219,8 +220,18 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                     DEFECT_ID, OBSERVATION_ID -> addCellText(defect.id)
                     SUB_COMPONENT -> addCellText(if (defectIndex == 0) observation.reportComponentName else null)
                     LOCATION_ID -> addCellText(defect.span, TEXT_NOT_APPLICABLE)
-                    DATE -> addCellText(inspection.endDate?.let { SimpleDateFormat("MM/dd/yy", Locale.US).format(it.toDate()) }
-                            ?: EMPTY_CELL_VALUE)
+                    DATE -> {
+                        val dates = mutableListOf<OffsetDateTime>()
+                        inspection.observations?.forEach { observation ->
+                            observation.defects?.sortedBy { it.createdAt }?.firstOrNull()?.createdAt?.let {
+                                dates.add(it)
+                            }
+                        }
+                        val startDate = dates.minBy { it.toEpochSecond() } ?: inspection.startDate
+                        addCellText(startDate?.let {
+                            SimpleDateFormat("MM/dd/yy", Locale.US).format(it.toDate())
+                        } ?: EMPTY_CELL_VALUE)
+                    }
                     STATION -> addCellText(defect.stationMarker)
                     OBSERVATION_NAME -> addCellText(defect.toMaintenance()?.observationName?.name)
                     DEFECT_DESCRIPTION -> addCellText(defect.toStructural()?.defect?.name)

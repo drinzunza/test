@@ -393,7 +393,7 @@ class MainDocumentFactory(
                 else -> null
             }
             val schedule = if (defect.repairMethod == null && defect.repairDate == null && type == null)
-                    null else "$type - ${defect.repairMethod ?: ""} prior to ${defect.repairDate ?: ""}"
+                    null else "${type ?: ""} - ${defect.repairMethod ?: ""} prior to ${defect.repairDate ?: ""}"
             elementsKeyValue(ACTION_REPAIR_SCHEDULE, schedule, SMALL_TEXT_SIZE)
             val title = when (defect.type) {
                 StructuralType.STRUCTURAL -> DEFECT_DESCRIPTION
