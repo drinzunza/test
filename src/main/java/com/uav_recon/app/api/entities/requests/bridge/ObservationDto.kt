@@ -15,5 +15,6 @@ data class ObservationDto(
         val dimensionNumber: Int?,
         val locationDescription: String?,
         val inspected: Boolean?,
+        val useHealthIndex: Boolean?,
         val healthIndex: Double?
 ) : Serializable
