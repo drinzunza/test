@@ -221,14 +221,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                     SUB_COMPONENT -> addCellText(if (defectIndex == 0) observation.reportComponentName else null)
                     LOCATION_ID -> addCellText(defect.span, TEXT_NOT_APPLICABLE)
                     DATE -> {
-                        val dates = mutableListOf<OffsetDateTime>()
-                        inspection.observations?.forEach { observation ->
-                            observation.defects?.sortedBy { it.createdAt }?.firstOrNull()?.createdAt?.let {
-                                dates.add(it)
-                            }
-                        }
-                        val startDate = dates.minBy { it.toEpochSecond() } ?: inspection.startDate
-                        addCellText(startDate?.let {
+                        addCellText(defect.createdAt?.let {
                             SimpleDateFormat("MM/dd/yy", Locale.US).format(it.toDate())
                         } ?: EMPTY_CELL_VALUE)
                     }
