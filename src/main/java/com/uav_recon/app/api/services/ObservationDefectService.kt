@@ -96,6 +96,10 @@ class ObservationDefectService(
 
         val createdByUser: SimpleUserDto = userService.get(createdBy).toDto()
         val entity = dto.toEntity(createdBy, updatedBy, observationId)
+        if (!isCorrectObservationDefectId(dto.id)) {
+            logger.info("Incorrect observation defect id ${dto.id} set to ${entity.id}")
+            dto.id = entity.id
+        }
         if (entity.type != observationDefect?.type) {
             entity.id = changeObservationDefectIdType(entity.id, entity.type)
             logger.info("Changed observation defect id by type ${entity.type}")
@@ -111,6 +115,10 @@ class ObservationDefectService(
         if (!observationRepository.findByUuidAndInspectionIdAndDeletedIsFalse(observationId, inspectionId).isPresent) {
             throw Error(102, "Invalid observation UUID")
         }
+    }
+
+    private fun isCorrectObservationDefectId(id: String): Boolean {
+        return id.matches("[\\w\\d_]+-\\w-[\\d]{3}-[\\d]+-[\\d]{8}".toRegex())
     }
 
     @Throws(Error::class)
