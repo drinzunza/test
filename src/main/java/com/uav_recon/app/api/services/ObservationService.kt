@@ -29,10 +29,11 @@ class ObservationService(
         subComponentId = subComponentId,
         observationDefects = observationDefectService.findAllByObservationIdAndNotDeleted(uuid),
         inspected = inspected,
-        healthIndex = healthIndex
+        healthIndex = healthIndex,
+        useHealthIndex = null
     )
 
-    fun ObservationDto.toEntity(createdBy: Int, updatedBy: Int, inspectionId: String, hIndex: Double?) = Observation(
+    fun ObservationDto.toEntity(createdBy: Int, updatedBy: Int, inspectionId: String, currentHealthIndex: Double?) = Observation(
         id = id,
         uuid = uuid,
         createdBy = createdBy,
@@ -44,7 +45,7 @@ class ObservationService(
         locationDescription = locationDescription,
         drawingNumber = drawingNumber,
         inspectionId = inspectionId,
-        healthIndex = hIndex
+        healthIndex = if (useHealthIndex == true) healthIndex else currentHealthIndex
     )
 
     @Throws(Error::class)
@@ -55,10 +56,8 @@ class ObservationService(
         val observation = observationRepository.findFirstByUuid(dto.uuid)
         val createdBy = observation?.createdBy ?: updatedBy
 
-        // Disabled set null value. Need to support old app and frontend versions. It can overwrite value to null.
-        val healthIndex = dto.healthIndex ?: observation?.healthIndex
-
-        val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId, healthIndex))
+        // Disabled set value without useHealthIndex = true. Need to support old app and frontend versions.
+        val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId, observation?.healthIndex))
         return saved.toDto()
     }
 
