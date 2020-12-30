@@ -51,7 +51,8 @@ class ObservationDefectService(
             clockPosition = clockPosition,
             repairDate = repairDate,
             repairMethod = repairMethod,
-            previousDefectNumber = previousDefectNumber
+            previousDefectNumber = previousDefectNumber,
+            createdAt = createdAt
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
