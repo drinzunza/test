@@ -6,6 +6,8 @@ import net.coobird.thumbnailator.Thumbnails
 import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.File
+import java.lang.Double.max
+import java.lang.Double.min
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -27,14 +29,18 @@ fun ByteArray.saveWithRect(rect: Rect?, file: File, thumbFile: File, format: Str
 
 fun BufferedImage.drawRect(rect: Rect?) {
     rect?.let {
+        val startX = min(rect.startX, rect.endX)
+        val startY = min(rect.startY, rect.endY)
+        val endX = max(rect.startX, rect.endX)
+        val endY = max(rect.startY, rect.endY)
         val g = graphics as Graphics2D
         g.stroke = BasicStroke(8.0f)
         g.color = Color.GREEN
         g.drawRect(
-                (width * rect.startX).toInt(),
-                (height * rect.startY).toInt(),
-                (width * abs(rect.endX - rect.startX)).toInt(),
-                (height * abs(rect.endY - rect.startY)).toInt())
+                (width * startX).toInt(),
+                (height * startY).toInt(),
+                (width * abs(endX - startX)).toInt(),
+                (height * abs(endY - startY)).toInt())
         g.dispose()
     }
 }
