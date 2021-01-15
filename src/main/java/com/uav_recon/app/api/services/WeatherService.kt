@@ -57,7 +57,7 @@ class WeatherService {
             logger.info("Got weather ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
             return weather
         } catch (e: Exception) {
-            logger.error("Cannot get weather", e)
+            logger.error("Cannot get weather {}", e.message)
         }
         return null
     }

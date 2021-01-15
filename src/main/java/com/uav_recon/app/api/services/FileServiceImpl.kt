@@ -1,6 +1,7 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.Photo
+import com.uav_recon.app.api.entities.db.Rect
 import com.uav_recon.app.configurations.UavConfiguration
 import org.springframework.stereotype.Service
 import java.io.InputStream
@@ -28,6 +29,10 @@ class FileServiceImpl(configuration: UavConfiguration) : FileService {
 
     override fun getImagePath(link: String, format: String?, type: FileService.FileType): String {
         return service.getImagePath(link, format, type)
+    }
+
+    override fun getRect(drawables: String?): Rect? {
+        return null
     }
 
     override fun regenerateRectImages(photo: Photo) {

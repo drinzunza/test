@@ -87,7 +87,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         }
     }
 
-    fun getRect(drawables: String?): Rect? {
+    override fun getRect(drawables: String?): Rect? {
         try {
             val coords = drawables
                     ?.replace("Rect(", "")
