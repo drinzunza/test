@@ -52,7 +52,8 @@ class ObservationDefectService(
             repairDate = repairDate,
             repairMethod = repairMethod,
             previousDefectNumber = previousDefectNumber,
-            createdAt = createdAt
+            createdAt = createdAt,
+            createdAtClient = createdAtClient
     )
 
     fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
@@ -75,7 +76,8 @@ class ObservationDefectService(
             clockPosition = clockPosition,
             repairMethod = repairMethod,
             repairDate = repairDate,
-            previousDefectNumber = previousDefectNumber
+            previousDefectNumber = previousDefectNumber,
+            createdAtClient = createdAt
     )
 
     fun User.toDto(): SimpleUserDto = SimpleUserDto(this)

@@ -68,6 +68,8 @@ class ObservationDefect(
         val repairMethod: String? = null,
         @Column(name = "previous_defect_number")
         val previousDefectNumber: String? = null,
+        @Column(name = "created_at_client")
+        var createdAtClient: OffsetDateTime? = null,
         @Transient
         var defect: Defect? = null,
         @Transient

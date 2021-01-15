@@ -29,5 +29,6 @@ data class ObservationDefectDto(
         val repairDate: String?,
         val repairMethod: String?,
         val previousDefectNumber: String?,
-        var createdAt: OffsetDateTime?
+        var createdAt: OffsetDateTime?,
+        var createdAtClient: OffsetDateTime?
 ) : Serializable
