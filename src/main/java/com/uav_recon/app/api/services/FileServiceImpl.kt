@@ -32,7 +32,7 @@ class FileServiceImpl(configuration: UavConfiguration) : FileService {
     }
 
     override fun getRect(drawables: String?): Rect? {
-        return null
+        return service.getRect(drawables)
     }
 
     override fun regenerateRectImages(photo: Photo) {
