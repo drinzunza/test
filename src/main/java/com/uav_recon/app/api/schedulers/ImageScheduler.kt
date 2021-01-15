@@ -20,6 +20,10 @@ class ImageScheduler(
         logger.info("scheduler started: runGenerateThumbnails")
         photoRepository.findAll().forEach { photo ->
             fileService.getPath(photo.link, photo.drawables, FileService.FileType.WITH_RECT_THUMB)
+            val rect = fileService.getRect(photo.drawables)
+            if (rect != null && (rect.startX > rect.endX || rect.startY > rect.endY)) {
+                fileService.regenerateRectImages(photo)
+            }
         }
         logger.info("scheduler stopped: runGenerateThumbnails ({} ms)", Date().time - timestamp)
     }
