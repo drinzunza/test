@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.text.SimpleDateFormat
+import java.time.OffsetDateTime
 import java.util.*
 
 @Service
@@ -56,7 +57,9 @@ class ObservationDefectService(
             createdAtClient = createdAtClient
     )
 
-    fun ObservationDefectDto.toEntity(createdBy: Int, updatedBy: Int, observationId: String) = ObservationDefect(
+    fun ObservationDefectDto.toEntity(
+            createdBy: Int, updatedBy: Int, observationId: String, createdAtClient: OffsetDateTime?
+    ) = ObservationDefect(
             id = id,
             uuid = uuid,
             createdBy = createdBy,
@@ -77,7 +80,7 @@ class ObservationDefectService(
             repairMethod = repairMethod,
             repairDate = repairDate,
             previousDefectNumber = previousDefectNumber,
-            createdAtClient = createdAt
+            createdAtClient = createdAtClient
     )
 
     fun User.toDto(): SimpleUserDto = SimpleUserDto(this)
@@ -91,14 +94,12 @@ class ObservationDefectService(
              passedStructureId: String? = null
     ): ObservationDefectDto {
         checkInspectionAndObservationRelationship(inspectionId, observationId)
-        var createdBy = updatedBy
         val observationDefect = observationDefectRepository.findFirstByUuid(dto.uuid)
-        observationDefect?.let {
-            createdBy = it.createdBy
-        }
-
+        val createdBy = observationDefect?.createdBy ?: updatedBy
+        val createdAtClient = observationDefect?.createdAtClient ?: dto.createdAt
         val createdByUser: SimpleUserDto = userService.get(createdBy).toDto()
-        val entity = dto.toEntity(createdBy, updatedBy, observationId)
+
+        val entity = dto.toEntity(createdBy, updatedBy, observationId, createdAtClient)
         if (!isCorrectObservationDefectId(dto.id)) {
             logger.info("Incorrect observation defect id ${dto.id} set to ${entity.id}")
             dto.id = entity.id
