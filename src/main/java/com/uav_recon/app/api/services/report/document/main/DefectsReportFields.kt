@@ -221,7 +221,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                     SUB_COMPONENT -> addCellText(if (defectIndex == 0) observation.reportComponentName else null)
                     LOCATION_ID -> addCellText(defect.span, TEXT_NOT_APPLICABLE)
                     DATE -> {
-                        addCellText(inspection.inspectionDate()?.let {
+                        addCellText(defect.createdAtClient?.let {
                             SimpleDateFormat("MM/dd/yy", Locale.US).format(it.toDate())
                         } ?: EMPTY_CELL_VALUE)
                     }
