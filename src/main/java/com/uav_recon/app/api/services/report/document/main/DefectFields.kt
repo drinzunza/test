@@ -39,7 +39,7 @@ internal enum class DefectFields(val title: String) {
             DEFECT_CONDITION -> defect.toStructural()?.condition?.let {
                 "${it.type.ordinal + 1} - ${it.type.normalName}"
             }
-            INSPECTION_DATE -> inspection.startDate?.formatDate(DATE_FORMAT)
+            INSPECTION_DATE -> defect.createdAtClient?.formatDate(DATE_FORMAT)
             STATION_MARKER -> defect.stationMarker
             CRITICAL_FINDINGS -> if (defect.criticalFindings.isNullOrEmpty()) NONE else defect.criticalFindings?.size.toString()
             PHOTO_QTY -> defect.photos?.size?.toString() ?: "0"

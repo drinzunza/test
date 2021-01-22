@@ -55,3 +55,14 @@ class Inspection(
         @Transient
         var observations: List<Observation>? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
+
+fun Inspection.inspectionDate(): OffsetDateTime? {
+    var minDate: OffsetDateTime? = null
+    observations?.forEach {
+        val date = it.defects?.mapNotNull { it.createdAtClient }?.minBy { it.toEpochSecond() }
+        if (minDate?.toEpochSecond() ?: 0 > date?.toEpochSecond() ?: 0) {
+            minDate = date
+        }
+    }
+    return minDate ?: startDate
+}
