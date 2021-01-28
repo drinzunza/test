@@ -8,6 +8,7 @@ import java.io.IOException
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 
@@ -65,3 +66,5 @@ fun OffsetDateTime?.formatDate(formatter: DateFormat = DEFAULT_FORMAT): String? 
     }
     return null
 }
+
+fun Date.toOffsetDateTime() = toInstant().atOffset(ZoneOffset.UTC)
