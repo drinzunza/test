@@ -9,7 +9,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Service
@@ -96,7 +98,7 @@ class ObservationDefectService(
         checkInspectionAndObservationRelationship(inspectionId, observationId)
         val observationDefect = observationDefectRepository.findFirstByUuid(dto.uuid)
         val createdBy = observationDefect?.createdBy ?: updatedBy
-        val createdAtClient = observationDefect?.createdAtClient ?: dto.createdAt
+        val createdAtClient = observationDefect?.createdAtClient ?: dto.createdAt ?: getDateById(observationDefect?.id)
         val createdByUser: SimpleUserDto = userService.get(createdBy).toDto()
 
         val entity = dto.toEntity(createdBy, updatedBy, observationId, createdAtClient)
@@ -110,6 +112,29 @@ class ObservationDefectService(
         }
         val saved = observationDefectRepository.save(entity)
         return saveWeather(saved).toDto(createdByUser)
+    }
+
+    private fun getDateById(observationDefectId: String?): OffsetDateTime? {
+        observationDefectId?.let {
+            if (it.length > 10
+                    && it.substring(it.length - 8, 1) == "-"
+                    && it.substring(it.length - 3, 4) > "2015"
+                    && it.substring(it.length - 3, 4) < "2050"
+                    && it.substring(it.length - 7, 2) > "00"
+                    && it.substring(it.length - 7, 2) < "13"
+                    && it.substring(it.length - 5, 2) > "00"
+                    && it.substring(it.length - 5, 2) < "31"
+            ) {
+                try {
+                    return OffsetDateTime.parse(it.substring(it.length - 7),
+                            DateTimeFormatter.ofPattern("MMddyyyy")
+                    )
+                } catch (e: Exception) {
+                    logger.error("Incorrect parse date", e)
+                }
+            }
+        }
+        return null
     }
 
     private fun checkInspectionAndObservationRelationship(inspectionId: String, observationId: String) {
