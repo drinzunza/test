@@ -1,8 +1,10 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.entities.requests.bridge.InspectionUpdateDto
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
 import com.uav_recon.app.api.entities.requests.bridge.ObservationInspectDto
+import com.uav_recon.app.api.entities.requests.bridge.ObservationUpdateDto
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.utils.isEachMeasureUnit
@@ -73,6 +75,13 @@ class ObservationService(
                 ?: throw Error(102, "Invalid observation uuid")
         observation.updatedBy = updatedBy
         observation.inspected = dto.inspected
+        return observationRepository.save(observation).toDto()
+    }
+
+    fun updateObservation(user: User, uuid: String, dto: ObservationUpdateDto): ObservationDto {
+        val observation = observationRepository.findFirstByUuid(uuid)
+            ?: throw Error(102, "Invalid observation uuid")
+        observation.update(dto)
         return observationRepository.save(observation).toDto()
     }
 

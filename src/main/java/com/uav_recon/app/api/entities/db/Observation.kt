@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.entities.db
 
+import com.uav_recon.app.api.entities.requests.bridge.ObservationUpdateDto
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.Table
@@ -9,7 +10,7 @@ import javax.persistence.Transient
 @Table(name = "observations")
 class Observation(
         uuid: String,
-        val id: String,
+        var id: String,
         createdBy: Int,
         updatedBy: Int,
         @Column(name = "inspection_id")
@@ -41,3 +42,16 @@ class Observation(
         @Transient
         var locationIds: List<LocationId>? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
+
+fun Observation.update(dto: ObservationUpdateDto): Observation {
+        if (dto.fields.contains(::id.name)) id = dto.id
+        if (dto.fields.contains(::structuralComponentId.name)) structuralComponentId = dto.structuralComponentId
+        if (dto.fields.contains(::subComponentId.name)) subComponentId = dto.subComponentId
+        if (dto.fields.contains(::drawingNumber.name)) drawingNumber = dto.drawingNumber
+        if (dto.fields.contains(::roomNumber.name)) roomNumber = dto.roomNumber
+        if (dto.fields.contains(::dimensionNumber.name)) dimensionNumber = dto.dimensionNumber
+        if (dto.fields.contains(::locationDescription.name)) locationDescription = dto.locationDescription
+        if (dto.fields.contains(::inspected.name)) inspected = dto.inspected
+        if (dto.fields.contains(::healthIndex.name)) healthIndex = dto.healthIndex
+        return this
+}
