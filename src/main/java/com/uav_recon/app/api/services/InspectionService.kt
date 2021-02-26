@@ -329,6 +329,15 @@ class InspectionService(
         throw Error(101, "Invalid inspection UUID")
     }
 
+    fun updateInspection(user: User, uuid: String, dto: InspectionUpdateDto): InspectionDtoV2 {
+        logger.info("inspection uuid = $uuid")
+        getInspection(uuid)?.let {
+            it.update(dto)
+            return inspectionRepository.save(it).toDto(false)
+        }
+        throw Error(101, "Invalid inspection UUID")
+    }
+
     fun Inspection.canSeeProject(id: Long?): Boolean {
         return !(id != null && projectId != id)
     }
