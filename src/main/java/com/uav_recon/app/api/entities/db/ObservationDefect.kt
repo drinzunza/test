@@ -77,7 +77,7 @@ class ObservationDefect(
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
 
 fun ObservationDefect.update(dto: ObservationDefectUpdateDto): ObservationDefect {
-        if (dto.fields.contains(::id.name)) id = dto.id
+        if (dto.fields.contains(::id.name)) dto.id?.let { id = it }
         if (dto.fields.contains(::criticalFindings.name)) criticalFindings = dto.criticalFindings?.toTypedArray()
         if (dto.fields.contains(::defectId.name)) defectId = dto.defectId
         if (dto.fields.contains(::conditionId.name)) conditionId = dto.conditionId

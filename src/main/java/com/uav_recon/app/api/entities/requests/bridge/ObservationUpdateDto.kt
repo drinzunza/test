@@ -7,7 +7,7 @@ import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ObservationUpdateDto(
-        val id: String,
+        val id: String?,
         val structuralComponentId: String?,
         val subComponentId: String?,
         val drawingNumber: String?,

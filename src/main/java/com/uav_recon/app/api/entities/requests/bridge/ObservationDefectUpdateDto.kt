@@ -10,7 +10,7 @@ import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ObservationDefectUpdateDto(
-        var id: String,
+        var id: String?,
         val criticalFindings: List<CriticalFinding>?,
         val defectId: String?,
         val conditionId: String?,

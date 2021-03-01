@@ -44,7 +44,7 @@ class Observation(
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
 
 fun Observation.update(dto: ObservationUpdateDto): Observation {
-        if (dto.fields.contains(::id.name)) id = dto.id
+        if (dto.fields.contains(::id.name)) dto.id?.let { id = it }
         if (dto.fields.contains(::structuralComponentId.name)) structuralComponentId = dto.structuralComponentId
         if (dto.fields.contains(::subComponentId.name)) subComponentId = dto.subComponentId
         if (dto.fields.contains(::drawingNumber.name)) drawingNumber = dto.drawingNumber
