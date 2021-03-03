@@ -5,6 +5,7 @@ import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.services.PhotoService
 import com.uav_recon.app.configurations.ControllerConfiguration
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
+import com.uav_recon.app.configurations.ControllerConfiguration.VERSION2
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -40,6 +41,26 @@ class PhotoController(private val photoService: PhotoService) : BaseController()
                                                    observationId,
                                                    observationDefectId,
                                                    getAuthenticatedUserId()))
+    }
+
+    @PostMapping("${VERSION2}/inspection/{inspectionId}/observation/{observationId}/observationDefect/{observationDefectId}/photo")
+    fun uploadPhoto2(
+        @RequestHeader(X_TOKEN) token: String,
+        @PathVariable inspectionId: String,
+        @PathVariable observationId: String,
+        @PathVariable observationDefectId: String,
+        @RequestBody body: PhotoUploadDto,
+        @RequestParam data: MultipartFile): ResponseEntity<PhotoDto> {
+        return ResponseEntity.ok(
+            photoService.save(
+                PhotoDto(body.uuid, null, null, body.name, body.createdAt, body.location, body.drawables),
+                data,
+                inspectionId,
+                observationId,
+                observationDefectId,
+                getAuthenticatedUserId()
+            )
+        )
     }
 
     @PutMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect/{observationDefectId}/photo/{uuid}")
