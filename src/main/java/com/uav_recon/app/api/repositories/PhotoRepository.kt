@@ -5,6 +5,7 @@ import org.springframework.data.repository.CrudRepository
 import java.util.*
 
 interface PhotoRepository : CrudRepository<Photo, String> {
+    fun findFirstByUuid(uuid: String): Photo?
     fun findAllByObservationDefectIdAndDeletedIsFalse(observationDefectId: String): List<Photo>
     fun findAllByDeletedIsFalseAndObservationDefectIdIn(ids: List<String>): List<Photo>
     fun findByUuidAndObservationDefectIdAndDeletedIsFalse(uuid: String, observationDefectId: String): Optional<Photo>
