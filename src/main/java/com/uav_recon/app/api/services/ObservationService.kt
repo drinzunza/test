@@ -5,15 +5,20 @@ import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
 import com.uav_recon.app.api.entities.requests.bridge.ObservationInspectDto
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
+import com.uav_recon.app.api.repositories.SubcomponentRepository
+import com.uav_recon.app.api.repositories.templates.SubcomponentAndStructureRepository
 import com.uav_recon.app.api.utils.isEachMeasureUnit
 import org.springframework.stereotype.Service
+import java.util.*
 import javax.transaction.Transactional
 
 @Service
 class ObservationService(
         private val inspectionRepository: InspectionRepository,
         private val observationRepository: ObservationRepository,
-        private val observationDefectService: ObservationDefectService
+        private val observationDefectService: ObservationDefectService,
+        private val subcomponentAndStructureRepository: SubcomponentAndStructureRepository,
+        private val subcomponentRepository : SubcomponentRepository
 ) {
     private val MEASURE_TYPE_EACH = "each"
     private val invalidInspectionUuid = Error(101, "Invalid inspection UUID")
@@ -74,6 +79,21 @@ class ObservationService(
         observation.updatedBy = updatedBy
         observation.inspected = dto.inspected
         return observationRepository.save(observation).toDto()
+    }
+
+    fun generateObservationsFromTemplate(authenticatedUser: User, structureId: String, inspectionId: String): List<ObservationDto> {
+        val observationList = mutableListOf<ObservationDto>()
+        val subComponentAndStructureList = subcomponentAndStructureRepository.findAllByStructureId(structureId)
+        val subComponents = subcomponentRepository.findAllByDeletedIsFalseAndIdIn(subComponentAndStructureList.map { it.subcomponentId}).map { it.id to it }.toMap()
+        subComponentAndStructureList.forEach {
+            if(it.subcomponentId in subComponents){
+                val generatedUUID = UUID.randomUUID().toString()
+                observationList.add(Observation(
+                        generatedUUID, generatedUUID, authenticatedUser.id.toInt(), authenticatedUser.id.toInt(), inspectionId,
+                        subComponents[it.subcomponentId]?.componentId, it.subcomponentId, dimensionNumber = it.size).toDto())
+            }
+        }
+        return observationList
     }
 
     fun findAllByInspectionUuidAndNotDeleted(uuid: String): List<ObservationDto> {
