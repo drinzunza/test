@@ -87,6 +87,13 @@ class InspectionService(
             createdBy = inspection.createdBy
         }
         val saved = inspectionRepository.save(dto.toEntity(null, createdBy, updatedBy))
+        //If this is a newly created inspection, populate empty observations based on structure template.
+        if(inspection == null){
+            // Get observations based on template.
+            val observations = observationService.generateObservationsFromTemplate(user, dto.structureId.toString(), dto.uuid)
+            // Populate observation in inspection.
+            observationService.save(observations, dto.uuid, updatedBy)
+        }
         saveWeather(saved)
         if (dto.observations != null) {
             observationService.save(dto.observations, dto.uuid, updatedBy)
