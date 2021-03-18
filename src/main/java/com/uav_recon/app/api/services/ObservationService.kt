@@ -68,6 +68,22 @@ class ObservationService(
         return saved.toDto()
     }
 
+    @Throws(Error::class)
+    @Transactional
+    fun saveV2(dto: ObservationDto, inspectionId: String, updatedBy: Int): ObservationDto {
+        val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
+            ?: throw Error(101, "Invalid inspection UUID")
+        val observation = observationRepository.findFirstByUuid(dto.uuid)
+        val createdBy = observation?.createdBy ?: updatedBy
+
+        // Disabled set value without useHealthIndex = true. Need to support old app and frontend versions.
+        val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId, observation?.healthIndex))
+        dto.observationDefects?.forEach {
+            observationDefectService.save(it, inspectionId, saved.uuid, updatedBy)
+        }
+        return saved.toDto()
+    }
+
     @Transactional
     fun save(list: List<ObservationDto>, inspectionId: String, updatedBy: Int): List<ObservationDto> {
         return list.map { dto -> save(dto, inspectionId, updatedBy) }
