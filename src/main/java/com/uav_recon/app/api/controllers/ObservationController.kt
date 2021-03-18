@@ -24,7 +24,7 @@ class ObservationController(private val observationService: ObservationService) 
                         @RequestBody observation: ObservationDto,
                         @PathVariable inspectionUuid: String
     ) : ResponseEntity<ObservationDto> {
-        return ResponseEntity.ok(observationService.save(observation, inspectionUuid, getAuthenticatedUserId()))
+        return ResponseEntity.ok(observationService.saveV2(observation, inspectionUuid, getAuthenticatedUserId()))
     }
 
     @DeleteMapping("${VERSION}/inspection/{inspectionUuid}/observation/{uuid}")
