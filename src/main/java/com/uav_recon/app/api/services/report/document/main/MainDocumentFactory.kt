@@ -31,6 +31,7 @@ import java.nio.file.Paths
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 
 internal const val EMPTY_CELL_VALUE = ""
@@ -137,27 +138,51 @@ class MainDocumentFactory(
         val structure = inspection.getStructure()
         val inspector = inspection.getInspector()
         val company = inspector.getCompany()
+        val structureType = structure?.structureTypeId
 
+        // Default sort by components, sub-components, station marker.
         inspection.observations = inspection.observations
                 ?.sortedWith(compareBy({it.component?.name}, {it.subcomponent?.name}))
         inspection.observations?.forEach { observation ->
             observation.defects = observation.defects?.sortedWith(compareBy { it.stationMarker })
         }
 
-        logger.info("start create document")
+        // Put all defects in one list.
+        var defectList : MutableList<ObservationDefect> = ArrayList()
+        var maintenanceList: MutableList<ObservationDefect> = ArrayList()
+        // Create a map of defect id to observation for faster access.
+        val defectToObservationMap : HashMap<String, Observation> = HashMap()
+        inspection.observations?.forEach { observation ->
+            observation.defects?.forEach {
+                if(it.type == StructuralType.STRUCTURAL){
+                    defectList.add(it)
+                } else {
+                    maintenanceList.add(it)
+                }
+                defectToObservationMap[it.id] = observation
+            }
+        }
+
+        // If structure is of type tunnel, sort defects by station marker.
+        if(structureType == 4L){
+            defectList = defectList.sortedWith(compareBy { it.stationMarker }).toMutableList()
+            maintenanceList = maintenanceList.sortedWith(compareBy { it.stationMarker }).toMutableList()
+        }
+
         return Document.create {
             border { BORDER }
 
             page { createTitlePage(report, inspection, inspector, structure, company) }
             page { createGlobalPage(inspection) }
-            page { createStructuralDefectsReport(inspection, inspector) }
-            page { createNonStructuralDefectsReport(inspection, inspector) }
+            page { createStructuralDefectsReport(inspection, inspector, structureType == 4L) }
+            page { createNonStructuralDefectsReport(inspection, inspector, structureType == 4L) }
             page { createObservationSummary(inspection) }
 
-            inspection.observations?.forEach { observation ->
-                observation.defects?.forEach { defect ->
-                    page { createDefectReportPage(inspection, inspector, structure, observation, defect) }
-                }
+            defectList.forEach { defect ->
+                    page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.id]!!, defect) }
+            }
+            maintenanceList.forEach { defect ->
+                page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.id]!!, defect) }
             }
         }
     }
@@ -463,15 +488,15 @@ class MainDocumentFactory(
         lineFeed { SINGLE_LINE_FEED_ELEMENT }
     }
 
-    private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User) {
-        createDefectsReport(inspection, inspector, NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.MAINTENANCE)
+    private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User, sortByStationing: Boolean) {
+        createDefectsReport(inspection, inspector, NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.MAINTENANCE, sortByStationing)
     }
 
-    private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User) {
-        createDefectsReport(inspection, inspector, STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.STRUCTURAL)
+    private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User, sortByStationing: Boolean) {
+        createDefectsReport(inspection, inspector, STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.STRUCTURAL, sortByStationing)
     }
 
-    private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType) {
+    private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType, sortByStationing: Boolean) {
         orientation = Page.Orientation.LANDSCAPE
 
         paragraph {
@@ -483,7 +508,7 @@ class MainDocumentFactory(
             width { TABLE_WIDTH_LANDSCAPE }
             with(DefectsReportFields) {
                 buildHeaderRow(type)
-                buildRows(inspection, inspector, type, configuration.server.host)
+                buildRows(inspection, inspector, type, configuration.server.host, sortByStationing)
             }
         }
     }

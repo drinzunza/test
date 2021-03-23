@@ -10,6 +10,8 @@ import com.uav_recon.app.api.utils.*
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.math.roundToInt
 
 private const val IMAGES_LING_SIZE = 16.0
@@ -174,28 +176,43 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
 
         fun Table.Builder.buildRows(
                 inspection: Inspection, inspector: User,
-                type: StructuralType, server: String
+                type: StructuralType, server: String,
+                sortByStationing: Boolean
         ) {
             var coloredCell = true
+            // Put all defects in one list.
+            var defectList : MutableList<ObservationDefect> = ArrayList()
+            // Create a map of defect id to observation for faster access.
+            val defectToObservationMap : HashMap<String, Observation> = HashMap()
             inspection.observations?.forEach { observation ->
-                observation.defects
-                        ?.filter { type == it.type }
-                        ?.also {
+                observation.defects?.forEach {
+                    defectList.add(it)
+                    defectToObservationMap[it.id] = observation
+                }
+            }
+
+            if(sortByStationing){
+                defectList = defectList.sortedWith(compareBy { it.stationMarker }).toMutableList()
+            }
+
+
+            defectList.filter { type == it.type }
+                    .also {
                             coloredCell = !coloredCell
                         }
-                        ?.forEachIndexed { defectIndex, defect ->
-                            row {
-                                FIELDS_CELLS[type]?.forEach { field: DefectsReportFields ->
-                                    cell {
-                                        width = field.getCellWidth(this@buildRows.width)
-                                        color = if (coloredCell) ReportConstants.COLOR_GRAY else null
+                    .forEachIndexed { defectIndex, defect ->
+                        row {
+                            FIELDS_CELLS[type]?.forEach { field: DefectsReportFields ->
+                                cell {
+                                    width = field.getCellWidth(this@buildRows.width)
+                                    color = if (coloredCell) ReportConstants.COLOR_GRAY else null
 
-                                        addParagraph(rows.size, inspection, inspector, observation, defect, defectIndex, field, type, server)
-                                    }
+                                    addParagraph(rows.size, inspection, inspector, defectToObservationMap[defect.id]!!, defect, defectIndex, field, type, server)
                                 }
                             }
                         }
-            }
+                    }
+
         }
 
         private fun ObservationDefect.getWeatherText(): String? {
@@ -218,7 +235,7 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                 when (field) {
                     INDEX -> addCellText(rowIndex.toString())
                     DEFECT_ID, OBSERVATION_ID -> addCellText(defect.id)
-                    SUB_COMPONENT -> addCellText(if (defectIndex == 0) observation.reportComponentName else null)
+                    SUB_COMPONENT -> addCellText(observation.reportComponentName)
                     LOCATION_ID -> addCellText(defect.span, TEXT_NOT_APPLICABLE)
                     DATE -> {
                         addCellText(defect.createdAtClient?.let {
