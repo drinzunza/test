@@ -49,18 +49,21 @@ class PhotoController(private val photoService: PhotoService) : BaseController()
         @PathVariable inspectionId: String,
         @PathVariable observationId: String,
         @PathVariable observationDefectId: String,
-        @RequestBody body: PhotoUploadDto,
+        @RequestParam name: String,
+        @RequestParam uuid: String,
+        @RequestParam latitude: Double?,
+        @RequestParam longitude: Double?,
+        @RequestParam altitude: Double?,
+        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX") createdAt: OffsetDateTime?,
+        @RequestParam drawables: String?,
         @RequestParam data: MultipartFile): ResponseEntity<PhotoDto> {
-        return ResponseEntity.ok(
-            photoService.save(
-                PhotoDto(body.uuid, null, null, body.name, body.createdAt, body.location, body.drawables),
-                data,
-                inspectionId,
-                observationId,
-                observationDefectId,
-                getAuthenticatedUserId()
-            )
-        )
+        val location = LocationDto(latitude, longitude, altitude)
+        return ResponseEntity.ok(photoService.save(PhotoDto(uuid, null, null, name, createdAt, location, drawables),
+            data,
+            inspectionId,
+            observationId,
+            observationDefectId,
+            getAuthenticatedUserId()))
     }
 
     @PutMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect/{observationDefectId}/photo/{uuid}")
