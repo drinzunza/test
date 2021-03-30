@@ -1,0 +1,16 @@
+{
+  "default": {
+    "bridge_info_visible" : true,
+    "weather_visible" : true,
+    "map_visible" : true,
+    "critical_findings_visible" : true,
+    "term_rating_visible" : true,
+    "percentage_scale" : true
+  },
+  "non-infra": {
+    "bridge_info_visible" : false,
+    "critical_findings_visible" : false,
+    "term_rating_visible" : false,
+    "percentage_scale" : false
+  }
+}

@@ -75,15 +75,6 @@ class MainDocumentFactory(
         internal val DATE_FORMAT = SimpleDateFormat("MM/dd/yyyy", Locale.US)
         private const val FORMAT_KEY_VALUE = "%s: %s"
 
-        private const val PERCENT = "%"
-        private const val SGR_RATING = "SGR Rating"
-        private const val TERM_RATING = "Term Rating"
-        private const val INSPECTED_BY_FORMAT = "Inspected By: %s (User id: %s)"
-
-        private const val ACTION_REPAIR_SCHEDULE = "Action & Repair Schedule: "
-        private const val DEFECT_DESCRIPTION = "Defect description: "
-        private const val OBSERVATION_DESCRIPTION = "Observation description: "
-
         private val BORDER: Document.Border = Document.Border.Simple(BORDER_SIZE, BORDER_SPACE, ReportConstants.COLOR_BLACK)
         internal val BOLD_STYLE_LIST = listOf(BOLD)
         internal val ITALIC_STYLE_LIST = listOf(ITALIC)
@@ -93,27 +84,17 @@ class MainDocumentFactory(
         private val DOUBLE_LINE_FEED_ELEMENT = LineFeedElement.Simple(2)
         private val TRIPLE_LINE_FEED_ELEMENT = LineFeedElement.Simple(3)
 
-        private val STRUCTURE_TYPE_ELEMENT = TextElement.Simple("Structure Type: ", styles = BOLD_STYLE_LIST)
-        private val STRUCTURE_ID_ELEMENT = TextElement.Simple("Structure ID: ", styles = BOLD_STYLE_LIST)
-        private val CALTRANS_NO_ELEMENT =
-            TextElement.Simple("Caltrans Bridge No.: ", textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
-        private val POST_MILE_ELEMENT = TextElement.Simple("Post Mile: ", textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
-        private val STATIONING_ELEMENT = TextElement.Simple("Stationing: ", textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
-        private val PRIMARY_OWNER_ELEMENT =
-            TextElement.Simple("Primary Owner: ", styles = BOLD_STYLE_LIST)
-        private val STRUCTURE_NAME_ELEMENT =
-            TextElement.Simple("Structure Name: ", styles = BOLD_STYLE_LIST)
-        private val REPORT_PREPARED_ELEMENT = TextElement.Simple("Inspection Report Prepared By:", styles = BOLD_STYLE_LIST)
-        private val REPORT_NO_ELEMENT = TextElement.Simple("Inspection Report No.: ")
-        private val REPORT_DATE_ELEMENT = TextElement.Simple("Report Date: ")
-        private val INSPECTION_DATE_ELEMENT = TextElement.Simple("Inspection Date(s): ")
-        private val WEATHER_ELEMENT = TextElement.Simple("Weather: ")
+        private val SPACE_ELEMENT = TextElement.Simple("----", textSize = 6, textColor = ReportConstants.COLOR_WHITE)
+        private val PHOTO_SPACE_ELEMENT = TextElement.Simple("    --    ", textColor = ReportConstants.COLOR_WHITE)
 
-        private val CRITICAL_FINDINGS_ELEMENT =
-            TextElement.Simple("Critical Findings – Prompt Action Required", styles = ITALIC_BOLD_STYLE_LIST)
-        private val STRUCTURE_CONDITION_CODE_ELEMENT =
-            TextElement.Simple("General Structure Condition Code", styles = ITALIC_BOLD_STYLE_LIST)
-        private val GENERAL_INSPECTION_ELEMENT = TextElement.Simple("General Inspection Summary", styles = BOLD_STYLE_LIST)
+        private const val PERCENT = "%"
+        private const val INSPECTED_BY_FORMAT = "Inspected By: %s (User id: %s)"
+
+        private const val ACTION_REPAIR_SCHEDULE = "Action & Repair Schedule: "
+        private const val DEFECT_DESCRIPTION = "Defect description: "
+        private const val OBSERVATION_DESCRIPTION = "Observation description: "
+
+
 
         private val OBSERVATION_SUMMARY_ELEMENT = TextElement.Simple("Summary of Observations by", styles = BOLD_STYLE_LIST)
         private val MAJOR_STRUCTURAL_ELEMENT = TextElement.Simple("Major Structural Component", styles = BOLD_STYLE_LIST)
@@ -121,13 +102,10 @@ class MainDocumentFactory(
         private val OBSERVATION_REPORT_SUMMARY_ELEMENT = TextElement.Simple("Observation Report Summary", styles = ITALIC_BOLD_STYLE_LIST)
         private val DEFECT_PHOTOS_ELEMENT = TextElement.Simple("Inspection Photographs of Defects", styles = ITALIC_BOLD_STYLE_LIST)
 
-        private val SPACE_ELEMENT = TextElement.Simple("----", textSize = 6, textColor = ReportConstants.COLOR_WHITE)
-        private val PHOTO_SPACE_ELEMENT = TextElement.Simple("    --    ", textColor = ReportConstants.COLOR_WHITE)
-
         private val STRUCTURAL_DEFECTS_REPORT_ELEMENT =
-            TextElement.Simple("Field Inspection Report - Structural Defects", styles = BOLD_STYLE_LIST)
+                TextElement.Simple("Field Inspection Report - Structural Defects", styles = BOLD_STYLE_LIST)
         private val NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT =
-            TextElement.Simple("Field Inspection Report - Non-structural Main Observations", styles = BOLD_STYLE_LIST)
+                TextElement.Simple("Field Inspection Report - Non-structural Main Observations", styles = BOLD_STYLE_LIST)
     }
 
     override fun generateDocument(report: Report): Document {
@@ -169,11 +147,14 @@ class MainDocumentFactory(
             maintenanceList = maintenanceList.sortedWith(compareBy { it.stationMarker }).toMutableList()
         }
 
+        val infraStructureTypes = arrayOf(1,2,3,4,6,7)
+        val flavor = if (structure?.structureTypeId?.toInt() in infraStructureTypes) "default" else "non-infra"
+
         return Document.create {
             border { BORDER }
 
-            page { createTitlePage(report, inspection, inspector, structure, company) }
-            page { createGlobalPage(inspection) }
+            page { createTitlePage(report, inspection, inspector, structure, company, flavor) }
+            page { createGlobalPage(inspection, flavor) }
             page { createStructuralDefectsReport(inspection, inspector, structureType == 4L) }
             page { createNonStructuralDefectsReport(inspection, inspector, structureType == 4L) }
             page { createObservationSummary(inspection) }
@@ -187,31 +168,50 @@ class MainDocumentFactory(
         }
     }
 
-    private fun Page.Builder.createTitlePage(report: Report, inspection: Inspection?, inspector: User?, structure: Structure?, company: Company?) {
+    private fun Page.Builder.createTitlePage(report: Report, inspection: Inspection?, inspector: User?, structure: Structure?, company: Company?, flavor: String?) {
+
+         val structureTypeElement = TextElement.Simple(CustomReportManager.getInstance().getString("structure_type", flavor), styles = BOLD_STYLE_LIST)
+         val structureIdElement = TextElement.Simple(CustomReportManager.getInstance().getString("structure_id", flavor), styles = BOLD_STYLE_LIST)
+         val caltranNoElement =
+                TextElement.Simple(CustomReportManager.getInstance().getString("caltrans_no", flavor), textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
+         val postMileElement = TextElement.Simple(CustomReportManager.getInstance().getString("post_mile", flavor), textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
+         val stationingElement = TextElement.Simple(CustomReportManager.getInstance().getString("stationing", flavor), textSize = SMALL_TEXT_SIZE, styles = ITALIC_BOLD_STYLE_LIST)
+         val primaryOwnerElement =
+                TextElement.Simple(CustomReportManager.getInstance().getString("primary_owner", flavor), styles = BOLD_STYLE_LIST)
+         val structureNumberElement =
+                TextElement.Simple(CustomReportManager.getInstance().getString("structure_name", flavor), styles = BOLD_STYLE_LIST)
+         val reportPreparedElement = TextElement.Simple(CustomReportManager.getInstance().getString("report_prepared_by", flavor), styles = BOLD_STYLE_LIST)
+         val reportNumberElement = TextElement.Simple(CustomReportManager.getInstance().getString("report_no", flavor))
+         val reportDateElement = TextElement.Simple(CustomReportManager.getInstance().getString("report_date", flavor))
+         val inspectionDateElement = TextElement.Simple(CustomReportManager.getInstance().getString("inspection_date", flavor))
+
         paragraph {
             createElements(
                 TRIPLE_LINE_FEED_ELEMENT,
-                STRUCTURE_TYPE_ELEMENT, structureTypeRepository.findAll().find { it.id == structure?.structureTypeId }?.code ?: ""
+                    structureTypeElement,
+                    structureTypeRepository.findAll().find { it.id == structure?.structureTypeId }?.code ?: ""
             )
-            createElements(prefix = STRUCTURE_ID_ELEMENT, text = structure?.code)
-            createElements(prefix = STRUCTURE_NAME_ELEMENT, text = structure?.name)
-            createElements(prefix = PRIMARY_OWNER_ELEMENT, text = structure?.primaryOwner)
+            createElements(prefix = structureIdElement, text = structure?.code)
+            createElements(prefix = structureNumberElement, text = structure?.name)
+            createElements(prefix = primaryOwnerElement, text = structure?.primaryOwner)
             lineFeed { LineFeedElement.Simple(1) }
-            createElements(
-                prefix = CALTRANS_NO_ELEMENT,
-                text = structure?.caltransBridgeNo,
-                textStyles = listOf(),
-                textSize = SMALL_TEXT_SIZE
-            )
-            createElements(
-                prefix = POST_MILE_ELEMENT,
-                text = structure?.postmile?.toString(),
-                textStyles = listOf(),
-                textSize = SMALL_TEXT_SIZE
-            )
-            createElements(prefix = STATIONING_ELEMENT, text = inspection?.getStationing(structure) ?: "", textStyles = listOf(), textSize = SMALL_TEXT_SIZE)
+            if(CustomReportManager.getInstance().isVisible("bridge_info_visible", flavor)) {
+                createElements(
+                        prefix = caltranNoElement,
+                        text = structure?.caltransBridgeNo,
+                        textStyles = listOf(),
+                        textSize = SMALL_TEXT_SIZE
+                )
+                createElements(
+                        prefix = postMileElement,
+                        text = structure?.postmile?.toString(),
+                        textStyles = listOf(),
+                        textSize = SMALL_TEXT_SIZE
+                )
+                createElements(prefix = stationingElement, text = inspection?.getStationing(structure) ?: "", textStyles = listOf(), textSize = SMALL_TEXT_SIZE)
+            }
             lineFeed { LineFeedElement.Simple(7) }
-            text { REPORT_PREPARED_ELEMENT }
+            text { reportPreparedElement }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             picture(
                 company?.name ?: "Demo Company",
@@ -220,17 +220,14 @@ class MainDocumentFactory(
                 LOGO_HEIGHT
             )
             lineFeed { LineFeedElement.Simple(4) }
-            text { REPORT_NO_ELEMENT }
+            text { reportNumberElement }
             text(report.id, styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            text { REPORT_DATE_ELEMENT }
+            text { reportDateElement }
             text(formatDate(), styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            text { INSPECTION_DATE_ELEMENT }
+            text { inspectionDateElement }
             text(formatDate(inspection?.startDate?.toDate() ?: Date()), styles = ITALIC_STYLE_LIST)
-            lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            text { WEATHER_ELEMENT }
-            text(inspection?.getWeatherText() ?: "", styles = ITALIC_STYLE_LIST)
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
         }
         paragraphLeft {
@@ -269,44 +266,76 @@ class MainDocumentFactory(
         }
     }
 
-    private fun Page.Builder.createGlobalPage(inspection: Inspection) {
-        mapLoaderService.loadImage(inspection)?.let {
-            paragraph {
-                picture(inputStream = it, width = MAP_PICTURE_WIDTH, height = MAP_PICTURE_HEIGHT)
-                lineFeed { DOUBLE_LINE_FEED_ELEMENT }
-            }
-        }
+    private fun Page.Builder.createGlobalPage(inspection: Inspection, flavor: String?) {
+        val criticalFindElement =
+                TextElement.Simple(CustomReportManager.getInstance().getString("critical_findings", flavor), styles = ITALIC_BOLD_STYLE_LIST)
+        val structureConditionCodeElement =
+                TextElement.Simple(CustomReportManager.getInstance().getString("structure_condition_code", flavor), styles = ITALIC_BOLD_STYLE_LIST)
+        val generalInspectionElement = TextElement.Simple(CustomReportManager.getInstance().getString("general_inspection_summary", flavor), styles = BOLD_STYLE_LIST)
+        val sgrRating = CustomReportManager.getInstance().getString("sgr_rating", flavor)
+        val termRating = CustomReportManager.getInstance().getString("term_rating", flavor)
+//        mapLoaderService.loadImage(inspection)?.let {
+//            paragraph {
+//                picture(inputStream = it, width = MAP_PICTURE_WIDTH, height = MAP_PICTURE_HEIGHT)
+//                lineFeed { DOUBLE_LINE_FEED_ELEMENT }
+//            }
+//        }
         table {
             width { TABLE_WIDTH_PORTRAIT }
             row {
-                cell {
-                    paragraph {
-                        text { CRITICAL_FINDINGS_ELEMENT }
+                if(CustomReportManager.getInstance().isVisible("critical_findings_visible", flavor)){
+                    cell {
+                        paragraph {
+                            text { criticalFindElement }
+                        }
                     }
                 }
                 cell {
                     paragraph {
-                        text { STRUCTURE_CONDITION_CODE_ELEMENT }
+                        text { structureConditionCodeElement }
                     }
                 }
             }
             row {
-                cell {
-                    paragraph {
-                        val values = CriticalFinding.values()
-                        values.forEachIndexed { index, value ->
-                            text(value.formatToValueCount(inspection), styles = ITALIC_STYLE_LIST)
-                            if (index != values.size - 1) lineFeed { SINGLE_LINE_FEED_ELEMENT }
+                if(CustomReportManager.getInstance().isVisible("critical_findings_visible", flavor)) {
+                    cell {
+                        paragraph {
+                            val values = CriticalFinding.values()
+                            values.forEachIndexed { index, value ->
+                                text(value.formatToValueCount(inspection), styles = ITALIC_STYLE_LIST)
+                                if (index != values.size - 1) lineFeed { SINGLE_LINE_FEED_ELEMENT }
+                            }
                         }
-                    }
 
+                    }
                 }
                 cell {
                     paragraph {
                         val sqrRating = inspectionService.calculateSgrRating(inspection)
-                        text(formatRating(SGR_RATING, sqrRating, PERCENT), styles = ITALIC_STYLE_LIST)
-                        lineFeed { SINGLE_LINE_FEED_ELEMENT }
-                        text(formatRating(TERM_RATING, inspection.termRating?.formatTermRating() ?: "0.0"), styles = ITALIC_STYLE_LIST)
+                        if(CustomReportManager.getInstance().isVisible("percentage_scale", flavor)) {
+                            text(formatRating(sgrRating, sqrRating, PERCENT), styles = ITALIC_STYLE_LIST)
+                        } else {
+                            var digit_sgr = 1
+                            if(sqrRating != null){
+                                digit_sgr = if(sqrRating > 80){
+                                    1
+                                } else if(sqrRating > 60){
+                                    2
+                                } else if(sqrRating > 40){
+                                    3
+                                } else if(sqrRating > 20){
+                                    4
+                                } else {
+                                    5
+                                }
+                            }
+
+                            text(formatRating(sgrRating, digit_sgr, ""), styles = ITALIC_STYLE_LIST)
+                        }
+                        if(CustomReportManager.getInstance().isVisible("term_rating_visible", flavor)){
+                            lineFeed { SINGLE_LINE_FEED_ELEMENT }
+                            text(formatRating(termRating, inspection.termRating?.formatTermRating() ?: "0.0"), styles = ITALIC_STYLE_LIST)
+                        }
                     }
                 }
             }
@@ -321,7 +350,7 @@ class MainDocumentFactory(
             row {
                 cell {
                     paragraph {
-                        text { GENERAL_INSPECTION_ELEMENT }
+                        text { generalInspectionElement }
                     }
                 }
             }
