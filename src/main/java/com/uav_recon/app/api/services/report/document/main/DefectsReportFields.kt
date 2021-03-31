@@ -183,6 +183,10 @@ private const val TEXT_MAINTENANCE_ITEM = "Maintenance item"
                         alignment = Alignment.CENTER
                         addCellText(defect.previousDefectNumber)
                     }
+                    MainDocumentFactory.O_CLOCK_POSITION_TAG -> {
+                        alignment = Alignment.CENTER
+                        addCellText(if (defect.clockPosition == null) null else  defect.clockPosition.toString(), TEXT_NOT_APPLICABLE)
+                    }
                     else -> addCellText()
                 }
             }

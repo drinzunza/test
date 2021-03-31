@@ -44,8 +44,8 @@
     "corrective_action" : "Corr. Action",
     "repair_method" : "Repair Method",
     "repair_date" : "Repair Date",
-    "inspection_date_table" : "Inspect. Date"
-
+    "inspection_date_table" : "Inspect. Date",
+    "o_clock": "O' Clock Position"
   },
   "non-infra": {
     "sgr_rating" : "Severity Scale",

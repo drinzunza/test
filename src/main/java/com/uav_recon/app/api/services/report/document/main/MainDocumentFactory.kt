@@ -92,6 +92,7 @@ class MainDocumentFactory(
         const val OBSERVATION_ID_TAG = "OBSERVATION_ID_TAG"
         const val PREV_OBSERVATION_ID_TAG = "PREV_OBSERVATION_ID_TAG"
         const val OBSERVATION_NAME_TAG = "OBSERVATION_NAME_TAG"
+        const val O_CLOCK_POSITION_TAG = "O_CLOCK_POSITION_TAG"
 
         internal val DATE_FORMAT = SimpleDateFormat("MM/dd/yyyy", Locale.US)
         private const val FORMAT_KEY_VALUE = "%s: %s"
@@ -536,17 +537,17 @@ class MainDocumentFactory(
         lineFeed { SINGLE_LINE_FEED_ELEMENT }
     }
 
-    private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User, sortByStationing: Boolean, flavor: String) {
+    private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User, isTunnelStructure: Boolean, flavor: String) {
         val title = TextElement.Simple(CustomReportManager.getInstance().getString("non_structural_defects_report", flavor), styles = ITALIC_BOLD_STYLE_LIST)
-        createDefectsReport(inspection, inspector, title, StructuralType.MAINTENANCE, sortByStationing, flavor)
+        createDefectsReport(inspection, inspector, title, StructuralType.MAINTENANCE, isTunnelStructure, flavor)
     }
 
-    private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User, sortByStationing: Boolean, flavor: String) {
+    private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User, isTunnelStructure: Boolean, flavor: String) {
         val title = TextElement.Simple(CustomReportManager.getInstance().getString("structural_defects_report", flavor), styles = ITALIC_BOLD_STYLE_LIST)
-        createDefectsReport(inspection, inspector, title, StructuralType.STRUCTURAL, sortByStationing, flavor)
+        createDefectsReport(inspection, inspector, title, StructuralType.STRUCTURAL, isTunnelStructure, flavor)
     }
 
-    private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType, sortByStationing: Boolean, flavor: String) {
+    private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType, isTunnelStructure: Boolean, flavor: String) {
         orientation = Page.Orientation.LANDSCAPE
 
         val indexElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("index", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
@@ -559,6 +560,8 @@ class MainDocumentFactory(
                 0.1236f, SUB_COMPONENT_TAG)
         val locationIdElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("location_id", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
                 0.0653f, LOCATION_TAG)
+        val oClockPositionElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("o_clock", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0653f, O_CLOCK_POSITION_TAG)
         val prevDefIdElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("prev_def_id", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
                 0.0417f, PREV_DEF_ID_TAG)
         val prevObsIdElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("prev_obs_id", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
@@ -609,6 +612,9 @@ class MainDocumentFactory(
         if(CustomReportManager.getInstance().isVisible("corrective_action_column", flavor)) {
             map[StructuralType.STRUCTURAL]?.add(correctiveActionElement)
         }
+        if(isTunnelStructure){
+            map[StructuralType.STRUCTURAL]?.add(oClockPositionElement)
+        }
         map[StructuralType.STRUCTURAL]?.add(repairMethodElement)
         map[StructuralType.STRUCTURAL]?.add(repairDateElement)
 
@@ -622,6 +628,9 @@ class MainDocumentFactory(
         map[StructuralType.MAINTENANCE]?.add(stationElement)
         map[StructuralType.MAINTENANCE]?.add(observationNameElement)
         map[StructuralType.MAINTENANCE]?.add(sizeElement)
+        if(isTunnelStructure){
+            map[StructuralType.MAINTENANCE]?.add(oClockPositionElement)
+        }
         map[StructuralType.MAINTENANCE]?.add(imageElement)
         map[StructuralType.MAINTENANCE]?.add(csRatingElement)
         map[StructuralType.MAINTENANCE]?.add(criticalFindingsElement)
@@ -638,7 +647,7 @@ class MainDocumentFactory(
             width { TABLE_WIDTH_LANDSCAPE }
             with(DefectsReportFields) {
                 buildHeaderRow(map[type]?.toList())
-                buildRows(inspection, inspector, type, configuration.server.host, sortByStationing, map[type]?.toList())
+                buildRows(inspection, inspector, type, configuration.server.host, isTunnelStructure, map[type]?.toList())
             }
         }
     }
