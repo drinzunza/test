@@ -12,6 +12,7 @@ import com.uav_recon.app.api.services.report.ReportConstants
 import com.uav_recon.app.api.services.report.document.DocumentFactory
 import com.uav_recon.app.api.services.report.document.models.Document
 import com.uav_recon.app.api.services.report.document.models.Page
+import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.services.report.document.models.body.Paragraph
 import com.uav_recon.app.api.services.report.document.models.body.Table
 import com.uav_recon.app.api.services.report.document.models.body.Table.Row
@@ -21,8 +22,7 @@ import com.uav_recon.app.api.services.report.document.models.elements.LinkTextEl
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement.Typeface.BOLD
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement.Typeface.ITALIC
-import com.uav_recon.app.api.utils.formatDate
-import com.uav_recon.app.api.utils.toDate
+import com.uav_recon.app.api.utils.*
 import com.uav_recon.app.configurations.UavConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -93,6 +93,12 @@ class MainDocumentFactory(
         const val PREV_OBSERVATION_ID_TAG = "PREV_OBSERVATION_ID_TAG"
         const val OBSERVATION_NAME_TAG = "OBSERVATION_NAME_TAG"
         const val O_CLOCK_POSITION_TAG = "O_CLOCK_POSITION_TAG"
+        const val SPAN_TAG = "SPAN_TAG"
+        const val DRAWING_TAG = "DRAWING_TAG"
+        const val ROOM_TAG = "ROOM_TAG"
+        const val DEFECT_NAME_TAG = "DEFECT_NAME_TAG"
+        const val CONDITION_TAG = "CONDITION_TAG"
+        const val PHOTO_QUANTITY_TAG = "PHOTO_QUANTITY_TAG"
 
         const val COMPONENT_TAG = "COMPONENT_TAG"
         const val TOTAL_QUANTITY_TAG = "TOTAL_QUANTITY_TAG"
@@ -117,6 +123,8 @@ class MainDocumentFactory(
 
         private val SPACE_ELEMENT = TextElement.Simple("----", textSize = 6, textColor = ReportConstants.COLOR_WHITE)
         private val PHOTO_SPACE_ELEMENT = TextElement.Simple("    --    ", textColor = ReportConstants.COLOR_WHITE)
+        private val OBSERVATION_REPORT_SUMMARY_ELEMENT = TextElement.Simple("Observation Report Summary", styles = ITALIC_BOLD_STYLE_LIST)
+
 
         private const val PERCENT = "%"
         private const val INSPECTED_BY_FORMAT = "Inspected By: %s (User id: %s)"
@@ -125,8 +133,7 @@ class MainDocumentFactory(
         private const val DEFECT_DESCRIPTION = "Defect description: "
         private const val OBSERVATION_DESCRIPTION = "Observation description: "
 
-        private val OBSERVATION_REPORT_SUMMARY_ELEMENT = TextElement.Simple("Observation Report Summary", styles = ITALIC_BOLD_STYLE_LIST)
-        private val DEFECT_PHOTOS_ELEMENT = TextElement.Simple("Inspection Photographs of Defects", styles = ITALIC_BOLD_STYLE_LIST)
+        private val DEFECT_PHOTOS_ELEMENT = TextElement.Simple("Inspection Photographs", styles = ITALIC_BOLD_STYLE_LIST)
     }
 
     override fun generateDocument(report: Report): Document {
@@ -183,10 +190,10 @@ class MainDocumentFactory(
             page { createObservationSummary(inspection, flavor) }
 
             defectList.forEach { defect ->
-                    page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.id]!!, defect) }
+                    page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.id]!!, defect, flavor) }
             }
             maintenanceList.forEach { defect ->
-                page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.id]!!, defect) }
+                page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.id]!!, defect, flavor) }
             }
         }
     }
@@ -469,9 +476,102 @@ class MainDocumentFactory(
                 }
     }
 
-    private fun Page.Builder.createDefectReportPage(inspection: Inspection, inspector: User, structure: Structure?, observation: Observation, defect: ObservationDefect) {
+    private fun getValue(fieldTag: String, observation: Observation, defect: ObservationDefect): String? {
+        return when (fieldTag) {
+            COMPONENT_TAG -> observation.component?.name
+            SPAN_TAG -> defect.span
+            SUB_COMPONENT_TAG -> observation.subcomponent?.name
+            DRAWING_TAG -> observation.drawingNumber
+            ROOM_TAG -> observation.roomNumber
+            DEFECT_TAG, OBSERVATION_ID_TAG -> defect.id
+            OBSERVATION_NAME_TAG -> defect.toMaintenance()?.observationName?.name
+            DEFECT_NAME_TAG -> defect.toStructural()?.defect?.name
+            CONDITION_TAG -> defect.toStructural()?.condition?.let {
+                "${it.type.ordinal + 1} - ${it.type.normalName}"
+            }
+            DATE_TAG -> defect.createdAtClient?.formatDate(DATE_FORMAT)
+            STATION_TAG -> defect.stationMarker
+            CRITICAL_FINDING_TAG -> if (defect.criticalFindings.isNullOrEmpty()) "" else defect.criticalFindings?.size.toString()
+            PHOTO_QUANTITY_TAG -> defect.photos?.size?.toString() ?: "0"
+            O_CLOCK_POSITION_TAG -> if (defect.clockPosition == null) null else  defect.clockPosition.toString()
+            LOCATION_TAG -> defect.span
+            SIZE_TAG -> {
+                when (defect.type) {
+                    StructuralType.STRUCTURAL -> defect.toStructural()?.getSizeWithMeasureUnits(observation)
+                    StructuralType.MAINTENANCE -> null
+                    else -> null
+                }
+            } else -> ""
+        }
+    }
 
+    private fun Page.Builder.createDefectReportPage(inspection: Inspection, inspector: User, structure: Structure?, observation: Observation, defect: ObservationDefect, flavor: String) {
 
+        val component = Pair<String, String>(CustomReportManager.getInstance().getString("component_key", flavor), COMPONENT_TAG)
+        val subComponent = Pair<String, String>(CustomReportManager.getInstance().getString("sub_component_key", flavor), SUB_COMPONENT_TAG)
+        val station = Pair<String, String>(CustomReportManager.getInstance().getString("station_key", flavor), STATION_TAG)
+
+        val defectName = Pair<String, String>(CustomReportManager.getInstance().getString("defect_name_key", flavor), DEFECT_NAME_TAG)
+        val defectCondition = Pair<String, String>(CustomReportManager.getInstance().getString("defect_condition_key", flavor), CONDITION_TAG)
+        val photoQty = Pair<String, String>(CustomReportManager.getInstance().getString("photo_qty_key", flavor), PHOTO_QUANTITY_TAG)
+        val defectId = Pair<String, String>(CustomReportManager.getInstance().getString("defect_id_key", flavor), DEFECT_TAG)
+        val observationId = Pair<String, String>(CustomReportManager.getInstance().getString("observation_id_key", flavor), OBSERVATION_ID_TAG)
+        val observationName = Pair<String, String>(CustomReportManager.getInstance().getString("observation_name_key", flavor), OBSERVATION_NAME_TAG)
+        val inspectionDate = Pair<String, String>(CustomReportManager.getInstance().getString("inspection_date_key", flavor), DATE_TAG)
+        val critical = Pair<String, String>(CustomReportManager.getInstance().getString("critical_key", flavor), CRITICAL_FINDING_TAG)
+        val location = Pair<String, String>(CustomReportManager.getInstance().getString("location_key", flavor), LOCATION_TAG)
+        val size = Pair<String, String>(CustomReportManager.getInstance().getString("size_key", flavor), SIZE_TAG)
+        val oClock = Pair<String, String>(CustomReportManager.getInstance().getString("o_clock_key", flavor), O_CLOCK_POSITION_TAG)
+
+        val structuralLeftFields = ArrayList<Pair<String, String>>()
+        structuralLeftFields.add(component)
+        structuralLeftFields.add(subComponent)
+        structuralLeftFields.add(size)
+        if(CustomReportManager.getInstance().isVisible("station_column", flavor)){
+            structuralLeftFields.add(station)
+        }
+
+        if(structure?.structureTypeId == 4L){
+            structuralLeftFields.add(oClock)
+        }
+
+        if(CustomReportManager.getInstance().isVisible("location_id_column", flavor)){
+            structuralLeftFields.add(location)
+        }
+
+        val structuralRightFields = ArrayList<Pair<String, String>>()
+        structuralRightFields.add(inspectionDate)
+        structuralRightFields.add(defectId)
+        structuralRightFields.add(defectName)
+        structuralRightFields.add(defectCondition)
+        structuralRightFields.add(photoQty)
+        if(CustomReportManager.getInstance().isVisible("critical_findings_column", flavor)){
+            structuralRightFields.add(critical)
+        }
+
+        val maintenanceLeftFields = ArrayList<Pair<String, String>>()
+        maintenanceLeftFields.add(component)
+        maintenanceLeftFields.add(subComponent)
+        if(CustomReportManager.getInstance().isVisible("station_column", flavor)){
+            maintenanceLeftFields.add(station)
+        }
+        if(CustomReportManager.getInstance().isVisible("location_id_column", flavor)){
+            maintenanceLeftFields.add(location)
+        }
+
+        val maintenanceRightFields = ArrayList<Pair<String, String>>()
+        maintenanceRightFields.add(inspectionDate)
+        maintenanceRightFields.add(observationId)
+        maintenanceRightFields.add(observationName)
+        maintenanceRightFields.add(photoQty)
+        if(CustomReportManager.getInstance().isVisible("critical_findings_column", flavor)){
+            maintenanceRightFields.add(critical)
+        }
+
+        var alignmentMap =  mapOf(Alignment.START to structuralLeftFields, Alignment.END to structuralRightFields)
+        if(defect.type == StructuralType.MAINTENANCE){
+             alignmentMap =  mapOf(Alignment.START to maintenanceLeftFields, Alignment.END to maintenanceRightFields)
+        }
 
         paragraph {
             text { OBSERVATION_REPORT_SUMMARY_ELEMENT }
@@ -481,13 +581,13 @@ class MainDocumentFactory(
             borders { false }
             width { TABLE_WIDTH_PORTRAIT }
             row {
-                DefectFields.getCellAlignmentMap(defect).forEach {
+                alignmentMap.forEach {
                 cell {
                         width { TABLE_WIDTH_PORTRAIT / 2 }
                         paragraph {
                             alignment { it.key }
                             it.value.forEach { field ->
-                                elementsKeyValue(field.title, field.getValue(inspection, structure, observation, defect), SMALL_TEXT_SIZE)
+                                elementsKeyValue(field.first, getValue(field.second, observation, defect), SMALL_TEXT_SIZE)
                             }
                         }
                     }

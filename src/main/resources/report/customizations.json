@@ -10,8 +10,8 @@
     "station_column" : true,
     "critical_findings_column" : true,
     "corrective_action_column" : true,
-    "maintenance_observation_section" : true
-
+    "maintenance_observation_section" : true,
+    "span_number" : true
   },
   "non-infra": {
     "bridge_info_visible" : false,
@@ -22,6 +22,7 @@
     "station_column" : false,
     "critical_findings_column" : false,
     "corrective_action_column" : false,
-    "maintenance_observation_section" : false
+    "maintenance_observation_section" : false,
+    "span_number" : false
   }
 }

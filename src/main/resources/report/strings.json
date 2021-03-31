@@ -52,7 +52,24 @@
     "cs2": "CS-2",
     "cs3": "CS-3",
     "cs4": "CS-4",
-    "hi" : "HI"
+    "hi" : "HI",
+    "component_key" : "Component: ",
+    "sub_component_key": "Sub-component: ",
+    "span_key" : "Span #: ",
+    "drawing_key" : "Drawing Number: ",
+    "room_key" : "Room No.: ",
+    "defect_id_key" : "Defect ID: ",
+    "observation_id_key": "Observation ID: ",
+    "defect_name_key" : "Defect Name: ",
+    "observation_name_key" : "Observation Name: ",
+    "defect_condition_key" : "Defect Condition State: ",
+    "inspection_date_key" : "Inspection Date: ",
+    "station_key" : "Station Marker: ",
+    "critical_key" : "Critical Findings :",
+    "photo_qty_key" : "Photo Qty: ",
+    "location_key" : "Location ID: ",
+    "size_key" : "Size: ",
+    "o_clock_key": "O Clock Position: "
   },
   "non-infra": {
     "sgr_rating" : "Severity Scale",
@@ -72,6 +89,13 @@
     "cs2": "IS-2",
     "cs3": "IS-3",
     "cs4": "IS-4",
-    "hi" : "IS"
+    "hi" : "IS",
+    "component_key" : "Main Location: ",
+    "sub_component_key": "Item: ",
+    "defect_id_key" : "Observation ID: ",
+    "observation_id_key": "Observation ID: ",
+    "defect_name_key" : "Observation Name: ",
+    "observation_name_key" : "Observation Name: ",
+    "defect_condition_key" : "Observation Impact Scale: "
   }
 }
