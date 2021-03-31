@@ -94,6 +94,15 @@ class MainDocumentFactory(
         const val OBSERVATION_NAME_TAG = "OBSERVATION_NAME_TAG"
         const val O_CLOCK_POSITION_TAG = "O_CLOCK_POSITION_TAG"
 
+        const val COMPONENT_TAG = "COMPONENT_TAG"
+        const val TOTAL_QUANTITY_TAG = "TOTAL_QUANTITY_TAG"
+        const val UNIT_TAG = "UNIT_TAG"
+        const val CS_1_TAG = "CS_1_TAG"
+        const val CS_2_TAG = "CS_2_TAG"
+        const val CS_3_TAG = "CS_3_TAG"
+        const val CS_4_TAG = "CS_4_TAG"
+        const val HI_TAG = "HI_TAG"
+
         internal val DATE_FORMAT = SimpleDateFormat("MM/dd/yyyy", Locale.US)
         private const val FORMAT_KEY_VALUE = "%s: %s"
 
@@ -115,9 +124,6 @@ class MainDocumentFactory(
         private const val ACTION_REPAIR_SCHEDULE = "Action & Repair Schedule: "
         private const val DEFECT_DESCRIPTION = "Defect description: "
         private const val OBSERVATION_DESCRIPTION = "Observation description: "
-
-        private val OBSERVATION_SUMMARY_ELEMENT = TextElement.Simple("Summary of Observations by", styles = BOLD_STYLE_LIST)
-        private val MAJOR_STRUCTURAL_ELEMENT = TextElement.Simple("Major Structural Component", styles = BOLD_STYLE_LIST)
 
         private val OBSERVATION_REPORT_SUMMARY_ELEMENT = TextElement.Simple("Observation Report Summary", styles = ITALIC_BOLD_STYLE_LIST)
         private val DEFECT_PHOTOS_ELEMENT = TextElement.Simple("Inspection Photographs of Defects", styles = ITALIC_BOLD_STYLE_LIST)
@@ -174,7 +180,7 @@ class MainDocumentFactory(
             if(CustomReportManager.getInstance().isVisible("maintenance_observation_section", flavor)){
                 page { createNonStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor) }
             }
-            page { createObservationSummary(inspection) }
+            page { createObservationSummary(inspection, flavor) }
 
             defectList.forEach { defect ->
                     page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.id]!!, defect) }
@@ -291,12 +297,7 @@ class MainDocumentFactory(
         val generalInspectionElement = TextElement.Simple(CustomReportManager.getInstance().getString("general_inspection_summary", flavor), styles = BOLD_STYLE_LIST)
         val sgrRating = CustomReportManager.getInstance().getString("sgr_rating", flavor)
         val termRating = CustomReportManager.getInstance().getString("term_rating", flavor)
-//        mapLoaderService.loadImage(inspection)?.let {
-//            paragraph {
-//                picture(inputStream = it, width = MAP_PICTURE_WIDTH, height = MAP_PICTURE_HEIGHT)
-//                lineFeed { DOUBLE_LINE_FEED_ELEMENT }
-//            }
-//        }
+
         table {
             width { TABLE_WIDTH_PORTRAIT }
             row {
@@ -396,11 +397,42 @@ class MainDocumentFactory(
         return String.format(FORMAT_KEY_VALUE, key, value?.let { it.toString() + (suffix ?: "") } ?: "")
     }
 
-    private fun Page.Builder.createObservationSummary(inspection: Inspection) {
+    private fun Page.Builder.createObservationSummary(inspection: Inspection, flavor: String) {
+
+        val observationSummaryElement = TextElement.Simple(CustomReportManager.getInstance().getString("observation_summary", flavor), styles = BOLD_STYLE_LIST)
+        val majorStructuralElement = TextElement.Simple(CustomReportManager.getInstance().getString("major_structural", flavor), styles = BOLD_STYLE_LIST)
+
+        val subComponentElement = listOf(TextElement.Simple(CustomReportManager.getInstance().getString("sub_component", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST),
+                ReportConstants.COLOR_GRAY_BLUE, 0.25f, SUB_COMPONENT_TAG)
+        val totalQuantityElement = listOf(TextElement.Simple(CustomReportManager.getInstance().getString("total_quantity", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST),
+                ReportConstants.COLOR_GRAY_BLUE, 0.25f, TOTAL_QUANTITY_TAG)
+        val unitElement = listOf(TextElement.Simple(CustomReportManager.getInstance().getString("unit", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST),
+                ReportConstants.COLOR_GRAY_BLUE, 0.0715f, UNIT_TAG)
+        val cs1Element = listOf(TextElement.Simple(CustomReportManager.getInstance().getString("cs1", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST),
+                ReportConstants.COLOR_DARK_GREEN, 0.0715f, CS_1_TAG)
+        val cs2Element = listOf(TextElement.Simple(CustomReportManager.getInstance().getString("cs2", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST),
+                ReportConstants.COLOR_YELLOW, 0.0715f, CS_2_TAG)
+        val cs3Element = listOf(TextElement.Simple(CustomReportManager.getInstance().getString("cs3", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST),
+                ReportConstants.COLOR_ORANGE, 0.0715f, CS_3_TAG)
+        val cs4Element = listOf(TextElement.Simple(CustomReportManager.getInstance().getString("cs4", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST),
+                ReportConstants.COLOR_RED, 0.0715f, CS_4_TAG)
+        val hiElement = listOf(TextElement.Simple(CustomReportManager.getInstance().getString("hi", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST),
+                ReportConstants.COLOR_GRAY, 0.0715f, HI_TAG)
+
+        val fields = ArrayList<List<Any>>()
+        fields.add(subComponentElement)
+        fields.add(totalQuantityElement)
+        fields.add(unitElement)
+        fields.add(cs1Element)
+        fields.add(cs2Element)
+        fields.add(cs3Element)
+        fields.add(cs4Element)
+        fields.add(hiElement)
+
         paragraph {
-            text { OBSERVATION_SUMMARY_ELEMENT }
+            text { observationSummaryElement }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
-            text { MAJOR_STRUCTURAL_ELEMENT }
+            text { majorStructuralElement }
             lineFeed { DOUBLE_LINE_FEED_ELEMENT }
         }
 
@@ -415,13 +447,18 @@ class MainDocumentFactory(
                     }.filter { it.totalQuantity > 0 }
 
                     if (list.isNotEmpty()) {
-                        val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
+                        var totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
+
+                        if(!CustomReportManager.getInstance().isVisible("percentage_scale", flavor)){
+                            totalHealthIndex = DefectSummaryFields.percentageToScale(totalHealthIndex)
+                        }
+
                         table {
                             width { TABLE_WIDTH_PORTRAIT }
-                            DefectSummaryFields.buildHeaderRows(this, component.name, totalHealthIndex)
+                            DefectSummaryFields.buildHeaderRows(this, component.name, totalHealthIndex, fields, flavor)
                             list.forEach {
                                 row {
-                                    DefectSummaryFields.buildCells(this, it)
+                                    DefectSummaryFields.buildCells(this, it, fields, flavor)
                                 }
                             }
                         }

@@ -39,13 +39,20 @@
     "observation_name" : "Observation Name",
     "size" : "Size",
     "image": "Image",
-    "cs" : "IS",
+    "cs" : "CS",
     "critical_findings_table" : "Critical Findings",
     "corrective_action" : "Corr. Action",
     "repair_method" : "Repair Method",
     "repair_date" : "Repair Date",
     "inspection_date_table" : "Inspect. Date",
-    "o_clock": "O' Clock Position"
+    "o_clock": "O' Clock Position",
+    "total_quantity": "Total Quantity",
+    "unit": "Unit",
+    "cs1": "CS-1",
+    "cs2": "CS-2",
+    "cs3": "CS-3",
+    "cs4": "CS-4",
+    "hi" : "HI"
   },
   "non-infra": {
     "sgr_rating" : "Severity Scale",
@@ -60,6 +67,11 @@
     "defect_id" : "Observation ID",
     "sub_component" : "Item",
     "prev_def_id" : "Prev. obs. ID",
-    "defect_description table": "Observation Description"
+    "defect_description table": "Observation Description",
+    "cs1": "IS-1",
+    "cs2": "IS-2",
+    "cs3": "IS-3",
+    "cs4": "IS-4",
+    "hi" : "IS"
   }
 }

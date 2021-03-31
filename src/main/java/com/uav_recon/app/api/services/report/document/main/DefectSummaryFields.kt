@@ -8,70 +8,57 @@ import com.uav_recon.app.api.services.report.document.models.body.Table
 import com.uav_recon.app.api.services.report.document.models.elements.TextElement
 import kotlin.math.roundToInt
 
-internal enum class DefectSummaryFields(
+internal class DefectSummaryFields(
         val textElement: TextElement.Simple,
         val cellColor: String? = null,
         private val widthPercent: Float
 ) {
 
-    SUB_COMPONENT(
-        TextElement.Simple("Sub-Component", styles = MainDocumentFactory.BOLD_STYLE_LIST),
-        cellColor = ReportConstants.COLOR_GRAY_BLUE,
-        widthPercent = 0.25f
-    ),
-    QTY(
-        TextElement.Simple("Total Quantity", styles = MainDocumentFactory.BOLD_STYLE_LIST),
-        cellColor = ReportConstants.COLOR_GRAY_BLUE,
-        widthPercent = 0.25f
-    ),
-    UNIT(
-        TextElement.Simple("Unit", styles = MainDocumentFactory.BOLD_STYLE_LIST),
-        cellColor = ReportConstants.COLOR_GRAY_BLUE,
-        widthPercent = 0.0715f
-    ),
-    CS1(
-        TextElement.Simple("CS-1", styles = MainDocumentFactory.BOLD_STYLE_LIST),
-        cellColor = ReportConstants.COLOR_DARK_GREEN,
-        widthPercent = 0.0715f
-    ),
-    CS2(
-        TextElement.Simple("CS-2", styles = MainDocumentFactory.BOLD_STYLE_LIST),
-        cellColor = ReportConstants.COLOR_YELLOW,
-        widthPercent = 0.0715f
-    ),
-    CS3(
-        TextElement.Simple("CS-3", styles = MainDocumentFactory.BOLD_STYLE_LIST),
-        cellColor = ReportConstants.COLOR_ORANGE,
-        widthPercent = 0.0715f
-    ),
-    CS4(
-        TextElement.Simple("CS-4", styles = MainDocumentFactory.BOLD_STYLE_LIST),
-        cellColor = ReportConstants.COLOR_RED,
-        widthPercent = 0.0715f
-    ),
-    HEALTH_INDEX(
-        TextElement.Simple("HI", styles = MainDocumentFactory.BOLD_STYLE_LIST),
-        cellColor = ReportConstants.COLOR_GRAY,
-        widthPercent = 0.0715f
-    );
 
-    fun getValue(observation: ObservationData): String {
-        return when (this) {
-            SUB_COMPONENT -> observation.subComponentName
-            QTY -> observation.totalQuantity.toString()
-            UNIT -> observation.measureUnits
-            CS1 -> observation.cs1.toString()
-            CS2 -> observation.cs2.toString()
-            CS3 -> observation.cs3.toString()
-            CS4 -> observation.cs4.toString()
-            HEALTH_INDEX -> "%.3f".format(observation.healthIndex)
-        } ?: EMPTY_CELL_VALUE
-    }
 
     val cellWidth: Int
         get() = (TABLE_WIDTH_PORTRAIT * widthPercent).roundToInt()
 
     companion object {
+
+        fun getValue(observation: ObservationData, fieldTag: String, flavor: String): String {
+            return when (fieldTag) {
+                MainDocumentFactory.SUB_COMPONENT_TAG -> observation.subComponentName
+                MainDocumentFactory.TOTAL_QUANTITY_TAG -> observation.totalQuantity.toString()
+                MainDocumentFactory.UNIT_TAG -> observation.measureUnits
+                MainDocumentFactory.CS_1_TAG -> observation.cs1.toString()
+                MainDocumentFactory.CS_2_TAG -> observation.cs2.toString()
+                MainDocumentFactory.CS_3_TAG -> observation.cs3.toString()
+                MainDocumentFactory.CS_4_TAG -> observation.cs4.toString()
+                MainDocumentFactory.HI_TAG -> if(!CustomReportManager.getInstance().isVisible("percentage_scale", flavor))
+                    "%.3f".format(observation.healthIndex) else "%.3f".format(percentageToScale(observation.healthIndex))
+                else -> ""
+            } ?: EMPTY_CELL_VALUE
+        }
+
+        private fun getCellWidth (widthPercent: Float) : Int{
+            return (TABLE_WIDTH_PORTRAIT * widthPercent).roundToInt()
+        }
+
+        fun percentageToScale(f: Double): Double{
+            return when {
+                f > 0.80 -> {
+                    1.0
+                }
+                f > 0.60 -> {
+                    2.0
+                }
+                f > 0.40 -> {
+                    3.0
+                }
+                f > 0.20 -> {
+                    4.0
+                }
+                else -> {
+                    5.0
+                }
+            }
+        }
 
         private fun createCell(width: Int, text: TextElement, cellColor: String? = null) =
             Table.Row.Cell.create {
@@ -86,9 +73,9 @@ internal enum class DefectSummaryFields(
                 }
             }
 
-        fun buildHeaderRows(tableBuilder: Table.Builder, componentName: String, healthIndex: Double) {
+        fun buildHeaderRows(tableBuilder: Table.Builder, componentName: String, healthIndex: Double, fields: ArrayList<List<Any>>, flavor: String) {
             tableBuilder.apply {
-                val headerCells = values().map { createCell(it.cellWidth, it.textElement, it.cellColor) }
+                val headerCells = fields.map { createCell(getCellWidth(it[2] as Float), it[0] as TextElement, it[1] as String) }
                 row {
                     cells {
                         return@cells headerCells.mapIndexed { index, cell ->
@@ -96,7 +83,7 @@ internal enum class DefectSummaryFields(
                                 createCell(
                                     cell.width ?: 0,
                                     TextElement.Simple(
-                                        "$componentName (HI = %.3f)".format(healthIndex),
+                                        "$componentName (${CustomReportManager.getInstance().getString("hi", flavor)} = %.3f)".format(healthIndex),
                                         styles = MainDocumentFactory.BOLD_STYLE_LIST
                                     ),
                                     cellColor = ReportConstants.COLOR_GRAY
@@ -119,13 +106,13 @@ internal enum class DefectSummaryFields(
             }
         }
 
-        fun buildCells(rowBuilder: Table.Row.Builder, data: ObservationData) {
+        fun buildCells(rowBuilder: Table.Row.Builder, data: ObservationData, fields: ArrayList<List<Any>>, flavor: String) {
             rowBuilder.apply {
-                values().forEach { field ->
+                fields.forEach { field ->
                     cell {
-                        width { field.cellWidth }
+                        width { getCellWidth(field[2] as Float) }
                         paragraph {
-                            text(field.getValue(data), textSize = SMALL_TABLE_TEXT_SIZE)
+                            text(getValue(data, field[3] as String, flavor), textSize = SMALL_TABLE_TEXT_SIZE)
                         }
                     }
                 }
