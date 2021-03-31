@@ -32,6 +32,7 @@ import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.math.roundToInt
 
 internal const val EMPTY_CELL_VALUE = ""
@@ -72,6 +73,26 @@ class MainDocumentFactory(
     private val logger = LoggerFactory.getLogger(MainDocumentFactory::class.java)
 
     companion object {
+
+        const val INDEX_TAG = "INDEX_TAG"
+        const val DEFECT_TAG = "DEFECT_TAG"
+        const val SUB_COMPONENT_TAG = "SUB_COMPONENT_TAG"
+        const val LOCATION_TAG = "LOCATION_TAG"
+        const val PREV_DEF_ID_TAG = "PREV_DEF_ID_TAG"
+        const val DATE_TAG = "DATE_TAG"
+        const val STATION_TAG = "STATION_TAG"
+        const val DEFECT_DESCRIPTION_TAG = "DEFECT_DESCRIPTION_TAG"
+        const val SIZE_TAG = "SIZE_TAG"
+        const val IMAGE_TAG = "IMAGE_TAG"
+        const val CS_TAG = "CS_TAG"
+        const val CRITICAL_FINDING_TAG = "CRITICAL_FINDING_TAG"
+        const val CORRECTIVE_ACTION_TAG = "CORRECTIVE_ACTION_TAG"
+        const val REPAIR_TAG = "REPAIR_TAG"
+        const val REPAIR_DATE_TAG = "REPAIR_DATE"
+        const val OBSERVATION_ID_TAG = "OBSERVATION_ID_TAG"
+        const val PREV_OBSERVATION_ID_TAG = "PREV_OBSERVATION_ID_TAG"
+        const val OBSERVATION_NAME_TAG = "OBSERVATION_NAME_TAG"
+
         internal val DATE_FORMAT = SimpleDateFormat("MM/dd/yyyy", Locale.US)
         private const val FORMAT_KEY_VALUE = "%s: %s"
 
@@ -94,18 +115,11 @@ class MainDocumentFactory(
         private const val DEFECT_DESCRIPTION = "Defect description: "
         private const val OBSERVATION_DESCRIPTION = "Observation description: "
 
-
-
         private val OBSERVATION_SUMMARY_ELEMENT = TextElement.Simple("Summary of Observations by", styles = BOLD_STYLE_LIST)
         private val MAJOR_STRUCTURAL_ELEMENT = TextElement.Simple("Major Structural Component", styles = BOLD_STYLE_LIST)
 
         private val OBSERVATION_REPORT_SUMMARY_ELEMENT = TextElement.Simple("Observation Report Summary", styles = ITALIC_BOLD_STYLE_LIST)
         private val DEFECT_PHOTOS_ELEMENT = TextElement.Simple("Inspection Photographs of Defects", styles = ITALIC_BOLD_STYLE_LIST)
-
-        private val STRUCTURAL_DEFECTS_REPORT_ELEMENT =
-                TextElement.Simple("Field Inspection Report - Structural Defects", styles = BOLD_STYLE_LIST)
-        private val NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT =
-                TextElement.Simple("Field Inspection Report - Non-structural Main Observations", styles = BOLD_STYLE_LIST)
     }
 
     override fun generateDocument(report: Report): Document {
@@ -155,8 +169,10 @@ class MainDocumentFactory(
 
             page { createTitlePage(report, inspection, inspector, structure, company, flavor) }
             page { createGlobalPage(inspection, flavor) }
-            page { createStructuralDefectsReport(inspection, inspector, structureType == 4L) }
-            page { createNonStructuralDefectsReport(inspection, inspector, structureType == 4L) }
+            page { createStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor) }
+            if(CustomReportManager.getInstance().isVisible("maintenance_observation_section", flavor)){
+                page { createNonStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor) }
+            }
             page { createObservationSummary(inspection) }
 
             defectList.forEach { defect ->
@@ -416,6 +432,9 @@ class MainDocumentFactory(
     }
 
     private fun Page.Builder.createDefectReportPage(inspection: Inspection, inspector: User, structure: Structure?, observation: Observation, defect: ObservationDefect) {
+
+
+
         paragraph {
             text { OBSERVATION_REPORT_SUMMARY_ELEMENT }
         }
@@ -517,16 +536,98 @@ class MainDocumentFactory(
         lineFeed { SINGLE_LINE_FEED_ELEMENT }
     }
 
-    private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User, sortByStationing: Boolean) {
-        createDefectsReport(inspection, inspector, NON_STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.MAINTENANCE, sortByStationing)
+    private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User, sortByStationing: Boolean, flavor: String) {
+        val title = TextElement.Simple(CustomReportManager.getInstance().getString("non_structural_defects_report", flavor), styles = ITALIC_BOLD_STYLE_LIST)
+        createDefectsReport(inspection, inspector, title, StructuralType.MAINTENANCE, sortByStationing, flavor)
     }
 
-    private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User, sortByStationing: Boolean) {
-        createDefectsReport(inspection, inspector, STRUCTURAL_DEFECTS_REPORT_ELEMENT, StructuralType.STRUCTURAL, sortByStationing)
+    private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User, sortByStationing: Boolean, flavor: String) {
+        val title = TextElement.Simple(CustomReportManager.getInstance().getString("structural_defects_report", flavor), styles = ITALIC_BOLD_STYLE_LIST)
+        createDefectsReport(inspection, inspector, title, StructuralType.STRUCTURAL, sortByStationing, flavor)
     }
 
-    private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType, sortByStationing: Boolean) {
+    private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType, sortByStationing: Boolean, flavor: String) {
         orientation = Page.Orientation.LANDSCAPE
+
+        val indexElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("index", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0417f, INDEX_TAG)
+        val defectIdElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("defect_id", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0986f, DEFECT_TAG)
+        val observationIdElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("observation_id", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0986f, OBSERVATION_ID_TAG)
+        val subComponentElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("sub_component", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.1236f, SUB_COMPONENT_TAG)
+        val locationIdElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("location_id", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0653f, LOCATION_TAG)
+        val prevDefIdElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("prev_def_id", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0417f, PREV_DEF_ID_TAG)
+        val prevObsIdElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("prev_obs_id", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0417f, PREV_OBSERVATION_ID_TAG)
+        val dateElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("inspection_date_table", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0653f, DATE_TAG)
+        val stationElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("station", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0764f, STATION_TAG)
+        val defectDescriptionElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("defect_description_table", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.1194f, DEFECT_DESCRIPTION_TAG)
+        val observationNameElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("observation_name", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.1194f, OBSERVATION_NAME_TAG)
+        val sizeElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("size", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0458f, SIZE_TAG)
+        val imageElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("image", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0375f, IMAGE_TAG)
+        val csRatingElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("cs", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0361f, CS_TAG)
+        val criticalFindingsElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("critical_findings_table", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.06f, CRITICAL_FINDING_TAG)
+        val correctiveActionElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("corrective_action", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0458f, CORRECTIVE_ACTION_TAG)
+        val repairMethodElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("repair_method", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0757f, REPAIR_TAG)
+        val repairDateElement = Triple(TextElement.Simple(CustomReportManager.getInstance().getString("repair_date", flavor), styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
+                0.0657f, REPAIR_DATE_TAG)
+
+        val map: HashMap<StructuralType, ArrayList<Triple<TextElement, Float, String>>> = HashMap()
+        map[StructuralType.STRUCTURAL] = ArrayList()
+        map[StructuralType.STRUCTURAL]?.add(indexElement)
+        map[StructuralType.STRUCTURAL]?.add(defectIdElement)
+        map[StructuralType.STRUCTURAL]?.add(subComponentElement)
+        if(CustomReportManager.getInstance().isVisible("location_id_column", flavor)) {
+            map[StructuralType.STRUCTURAL]?.add(locationIdElement)
+        }
+        map[StructuralType.STRUCTURAL]?.add(prevDefIdElement)
+        map[StructuralType.STRUCTURAL]?.add(dateElement)
+        if(CustomReportManager.getInstance().isVisible("station_column", flavor)) {
+            map[StructuralType.STRUCTURAL]?.add(stationElement)
+        }
+        map[StructuralType.STRUCTURAL]?.add(defectDescriptionElement)
+        map[StructuralType.STRUCTURAL]?.add(sizeElement)
+        map[StructuralType.STRUCTURAL]?.add(imageElement)
+        map[StructuralType.STRUCTURAL]?.add(csRatingElement)
+        if(CustomReportManager.getInstance().isVisible("critical_findings_column", flavor)) {
+            map[StructuralType.STRUCTURAL]?.add(criticalFindingsElement)
+        }
+        if(CustomReportManager.getInstance().isVisible("corrective_action_column", flavor)) {
+            map[StructuralType.STRUCTURAL]?.add(correctiveActionElement)
+        }
+        map[StructuralType.STRUCTURAL]?.add(repairMethodElement)
+        map[StructuralType.STRUCTURAL]?.add(repairDateElement)
+
+        map[StructuralType.MAINTENANCE] = ArrayList()
+        map[StructuralType.MAINTENANCE]?.add(indexElement)
+        map[StructuralType.MAINTENANCE]?.add(observationIdElement)
+        map[StructuralType.MAINTENANCE]?.add(subComponentElement)
+        map[StructuralType.MAINTENANCE]?.add(locationIdElement)
+        map[StructuralType.MAINTENANCE]?.add(prevObsIdElement)
+        map[StructuralType.MAINTENANCE]?.add(dateElement)
+        map[StructuralType.MAINTENANCE]?.add(stationElement)
+        map[StructuralType.MAINTENANCE]?.add(observationNameElement)
+        map[StructuralType.MAINTENANCE]?.add(sizeElement)
+        map[StructuralType.MAINTENANCE]?.add(imageElement)
+        map[StructuralType.MAINTENANCE]?.add(csRatingElement)
+        map[StructuralType.MAINTENANCE]?.add(criticalFindingsElement)
+        map[StructuralType.MAINTENANCE]?.add(correctiveActionElement)
+        map[StructuralType.MAINTENANCE]?.add(repairMethodElement)
+        map[StructuralType.MAINTENANCE]?.add(repairDateElement)
 
         paragraph {
             text { title }
@@ -536,8 +637,8 @@ class MainDocumentFactory(
         table {
             width { TABLE_WIDTH_LANDSCAPE }
             with(DefectsReportFields) {
-                buildHeaderRow(type)
-                buildRows(inspection, inspector, type, configuration.server.host, sortByStationing)
+                buildHeaderRow(map[type]?.toList())
+                buildRows(inspection, inspector, type, configuration.server.host, sortByStationing, map[type]?.toList())
             }
         }
     }
