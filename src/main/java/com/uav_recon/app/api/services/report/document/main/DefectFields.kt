@@ -5,82 +5,134 @@ import com.uav_recon.app.api.services.report.document.main.MainDocumentFactory.C
 import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.utils.*
 
-private const val NONE = "NONE"
+internal class DefectFields(private val flavor: String = "default", private val isTunnelStructure: Boolean = false) {
 
-internal enum class DefectFields(val title: String) {
+    private val structuralLeftFields = ArrayList<DefectField>()
+    private val structuralRightFields = ArrayList<DefectField>()
+    private val maintenanceLeftFields = ArrayList<DefectField>()
+    private val maintenanceRightFields = ArrayList<DefectField>()
 
-    COMPONENT("Component: "),
-    SPAN("Span #: "),
-    SUB_COMPONENT("Sub-component name: "),
-    DRAWING_NUMBER("Drawing Number: "),
-    ROOM_NO("Room No.: "),
-    DEFECT_ID("Defect ID: "),
-    OBSERVATION_ID("Observation ID: "),
-    DEFECT_NAME("Defect Name: "),
-    OBSERVATION_NAME("Observation Name: "),
-    DEFECT_CONDITION("Defect Condition State: "),
-    INSPECTION_DATE("Inspection Date: "),
-    STATION_MARKER("Station Marker: "),
-    CRITICAL_FINDINGS("Critical Findings: "),
-    PHOTO_QTY("Photo QTY's: "),
-    LOCATION_ID("Location ID: "),
-    SIZE("Size: ");
+    private var structureAlignmentMap: Map<Alignment, List<DefectField>>
+    private var maintenanceAlignmentMap: Map<Alignment, List<DefectField>>
 
-    fun getValue(inspection: Inspection, structure: Structure?, observation: Observation, defect: ObservationDefect): String? {
-        return when (this) {
-            COMPONENT -> observation.component?.name
-            SPAN -> defect.span
-            SUB_COMPONENT -> observation.subcomponent?.name
-            DRAWING_NUMBER -> observation.drawingNumber
-            ROOM_NO -> observation.roomNumber
-            DEFECT_ID, OBSERVATION_ID -> defect.id
-            OBSERVATION_NAME -> defect.toMaintenance()?.observationName?.name
-            DEFECT_NAME -> defect.toStructural()?.defect?.name
-            DEFECT_CONDITION -> defect.toStructural()?.condition?.let {
-                "${it.type.ordinal + 1} - ${it.type.normalName}"
-            }
-            INSPECTION_DATE -> defect.createdAtClient?.formatDate(DATE_FORMAT)
-            STATION_MARKER -> defect.stationMarker
-            CRITICAL_FINDINGS -> if (defect.criticalFindings.isNullOrEmpty()) NONE else defect.criticalFindings?.size.toString()
-            PHOTO_QTY -> defect.photos?.size?.toString() ?: "0"
-
-            LOCATION_ID -> defect.span
-            SIZE -> {
-                when (defect.type) {
-                    StructuralType.STRUCTURAL -> defect.toStructural()?.getSizeWithMeasureUnits(observation)
-                    StructuralType.MAINTENANCE -> null
-                    else -> null
-                }
-            }
+    init {
+        addStructuralLeftField("component_key", COMPONENT_TAG)
+        addStructuralLeftField("sub_component_key", SUB_COMPONENT_TAG)
+        addStructuralLeftField("size_key", SIZE_TAG)
+        if (CustomReportManager.getInstance().isVisible("station_column", flavor)) {
+            addStructuralLeftField("station_key", STATION_TAG)
         }
+        if (isTunnelStructure) {
+            addStructuralLeftField("o_clock_key", O_CLOCK_POSITION_TAG)
+        }
+        if (CustomReportManager.getInstance().isVisible("location_id_column", flavor)) {
+            addStructuralLeftField("location_key", LOCATION_TAG)
+        }
+        addStructuralRightField("inspection_date_key", DATE_TAG)
+        addStructuralRightField("defect_id_key", DEFECT_TAG)
+        addStructuralRightField("defect_name_key", DEFECT_NAME_TAG)
+        addStructuralRightField("defect_condition_key", CONDITION_TAG)
+        addStructuralRightField("photo_qty_key", PHOTO_QUANTITY_TAG)
+        if (CustomReportManager.getInstance().isVisible("critical_findings_column", flavor)) {
+            addStructuralRightField("critical_key", CRITICAL_FINDING_TAG)
+        }
+
+        addMaintenanceLeftField("component_key", COMPONENT_TAG)
+        addMaintenanceLeftField("sub_component_key", SUB_COMPONENT_TAG)
+        if (CustomReportManager.getInstance().isVisible("station_column", flavor)) {
+            addMaintenanceLeftField("station_key", STATION_TAG)
+        }
+        if (isTunnelStructure) {
+            addMaintenanceLeftField("o_clock_key", O_CLOCK_POSITION_TAG)
+        }
+        if (CustomReportManager.getInstance().isVisible("location_id_column", flavor)) {
+            addMaintenanceLeftField("location_key", LOCATION_TAG)
+        }
+
+        addMaintenanceRightField("inspection_date_key", DATE_TAG)
+        addMaintenanceRightField("observation_id_key", OBSERVATION_ID_TAG)
+        addMaintenanceRightField("observation_name_key", OBSERVATION_NAME_TAG)
+        addMaintenanceRightField("photo_qty_key", PHOTO_QUANTITY_TAG)
+        if (CustomReportManager.getInstance().isVisible("critical_findings_column", flavor)) {
+            addMaintenanceRightField("critical_key", CRITICAL_FINDING_TAG)
+        }
+
+        structureAlignmentMap = mapOf(Alignment.START to structuralLeftFields, Alignment.END to structuralRightFields)
+        maintenanceAlignmentMap = mapOf(Alignment.START to maintenanceLeftFields, Alignment.END to maintenanceRightFields)
+    }
+
+    fun getCellAlignmentMap(defect: ObservationDefect): Map<Alignment, List<DefectField>> {
+        return when (defect.type) {
+            StructuralType.STRUCTURAL -> structureAlignmentMap
+            StructuralType.MAINTENANCE -> maintenanceAlignmentMap
+            else -> structureAlignmentMap
+        }
+    }
+
+    private fun addStructuralLeftField(title_key: String, tag: String) {
+        structuralLeftFields.add(DefectField(CustomReportManager.getInstance().getString(title_key, flavor), tag))
+    }
+
+    private fun addStructuralRightField(title_key: String, tag: String) {
+        structuralRightFields.add(DefectField(CustomReportManager.getInstance().getString(title_key, flavor), tag))
+    }
+
+    private fun addMaintenanceLeftField(title_key: String, tag: String) {
+        maintenanceLeftFields.add(DefectField(CustomReportManager.getInstance().getString(title_key, flavor), tag))
+    }
+
+    private fun addMaintenanceRightField(title_key: String, tag: String) {
+        maintenanceRightFields.add(DefectField(CustomReportManager.getInstance().getString(title_key, flavor), tag))
     }
 
     companion object {
+        const val COMPONENT_TAG = "COMPONENT_TAG"
+        const val DEFECT_TAG = "DEFECT_TAG"
+        const val SUB_COMPONENT_TAG = "SUB_COMPONENT_TAG"
+        const val LOCATION_TAG = "LOCATION_TAG"
+        const val DATE_TAG = "DATE_TAG"
+        const val STATION_TAG = "STATION_TAG"
+        const val SIZE_TAG = "SIZE_TAG"
+        const val CRITICAL_FINDING_TAG = "CRITICAL_FINDING_TAG"
+        const val OBSERVATION_ID_TAG = "OBSERVATION_ID_TAG"
+        const val OBSERVATION_NAME_TAG = "OBSERVATION_NAME_TAG"
+        const val O_CLOCK_POSITION_TAG = "O_CLOCK_POSITION_TAG"
+        const val DEFECT_NAME_TAG = "DEFECT_NAME_TAG"
+        const val CONDITION_TAG = "CONDITION_TAG"
+        const val PHOTO_QUANTITY_TAG = "PHOTO_QUANTITY_TAG"
+    }
 
-        private val STRUCTURAL_LEFT_FIELDS = listOf(COMPONENT, SUB_COMPONENT, STATION_MARKER, LOCATION_ID, SIZE)
-        private val STRUCTURAL_RIGHT_FIELDS = listOf(
-            INSPECTION_DATE, DEFECT_ID, DEFECT_NAME, DEFECT_CONDITION, CRITICAL_FINDINGS, PHOTO_QTY
-        )
-        private val MAINTENANCE_LEFT_FIELDS = listOf(COMPONENT, SUB_COMPONENT, STATION_MARKER, LOCATION_ID)
-        private val MAINTENANCE_RIGHT_FIELDS = listOf(
-            INSPECTION_DATE, OBSERVATION_ID, OBSERVATION_NAME, CRITICAL_FINDINGS, PHOTO_QTY
-        )
 
-        private val STRUCTURAL_ALIGNMENT_MAP =  mapOf(
-                Alignment.START to STRUCTURAL_LEFT_FIELDS,
-                Alignment.END to STRUCTURAL_RIGHT_FIELDS
-        )
-        private val MAINTENANCE_ALIGNMENT_MAP =  mapOf(
-                Alignment.START to STRUCTURAL_LEFT_FIELDS,
-                Alignment.END to MAINTENANCE_RIGHT_FIELDS
-        )
+    class DefectField(val title: String, val tag: String) {
 
-        fun getCellAlignmentMap(defect: ObservationDefect): Map<Alignment, List<DefectFields>> {
-            return when (defect.type) {
-                StructuralType.STRUCTURAL -> STRUCTURAL_ALIGNMENT_MAP
-                StructuralType.MAINTENANCE -> MAINTENANCE_ALIGNMENT_MAP
-                else -> STRUCTURAL_ALIGNMENT_MAP
+        fun getValue(inspection: Inspection, structure: Structure?, observation: Observation, defect: ObservationDefect, tag: String): String? {
+            return when (tag) {
+                COMPONENT_TAG -> observation.component?.name
+                SUB_COMPONENT_TAG -> observation.subcomponent?.name
+                DEFECT_TAG, OBSERVATION_ID_TAG -> defect.id
+                OBSERVATION_NAME_TAG -> defect.toMaintenance()?.observationName?.name
+                DEFECT_NAME_TAG -> defect.toStructural()?.defect?.name
+                CONDITION_TAG -> defect.toStructural()?.condition?.let {
+                    "${it.type.ordinal + 1} - ${it.type.normalName}"
+                }
+                DATE_TAG -> defect.createdAtClient?.formatDate(DATE_FORMAT)
+                STATION_TAG -> defect.stationMarker
+                CRITICAL_FINDING_TAG -> if (defect.criticalFindings.isNullOrEmpty()) "" else defect.criticalFindings?.size.toString()
+                PHOTO_QUANTITY_TAG -> defect.photos?.size?.toString() ?: "0"
+                LOCATION_TAG -> defect.span
+                SIZE_TAG -> {
+                    when (defect.type) {
+                        StructuralType.STRUCTURAL -> defect.toStructural()?.getSizeWithMeasureUnits(observation)
+                        StructuralType.MAINTENANCE -> null
+                        else -> null
+                    }
+                }
+                O_CLOCK_POSITION_TAG -> if (defect.clockPosition == null) null else defect.clockPosition.toString()
+                else -> ""
             }
         }
+
+
     }
+
 }
