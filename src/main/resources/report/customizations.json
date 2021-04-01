@@ -1,0 +1,28 @@
+{
+  "default": {
+    "bridge_info_visible" : true,
+    "weather_visible" : true,
+    "map_visible" : true,
+    "critical_findings_visible" : true,
+    "term_rating_visible" : true,
+    "percentage_scale" : true,
+    "location_id_column" : true,
+    "station_column" : true,
+    "critical_findings_column" : true,
+    "corrective_action_column" : true,
+    "maintenance_observation_section" : true,
+    "span_number" : true
+  },
+  "non-infra": {
+    "bridge_info_visible" : false,
+    "critical_findings_visible" : false,
+    "term_rating_visible" : false,
+    "percentage_scale" : false,
+    "location_id_column" : false,
+    "station_column" : false,
+    "critical_findings_column" : false,
+    "corrective_action_column" : false,
+    "maintenance_observation_section" : false,
+    "span_number" : false
+  }
+}

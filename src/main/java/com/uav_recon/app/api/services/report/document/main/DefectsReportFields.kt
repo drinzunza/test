@@ -10,6 +10,7 @@ import com.uav_recon.app.api.utils.*
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.*
+import javax.xml.soap.Text
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.math.roundToInt
@@ -17,130 +18,22 @@ import kotlin.math.roundToInt
 private const val IMAGES_LING_SIZE = 16.0
 private const val TEXT_MAINTENANCE_ITEM = "Maintenance item"
 
-enum class DefectsReportFields(val textElement: TextElement.Simple, private val widthPercent: Float) {
-    INDEX(
-            TextElement.Simple("Index", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0417f
-    ),
-    DEFECT_ID(
-            TextElement.Simple("Defect ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0986f
-    ),
-    OBSERVATION_ID(
-            TextElement.Simple("Observation ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0986f
-    ),
-    SUB_COMPONENT(
-            TextElement.Simple("Sub-Component", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.1236f
-    ),
-    LOCATION_ID(
-            TextElement.Simple("Location ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0653f
-    ),
-    PREV_DEF_NO(
-            TextElement.Simple("Prev. def. ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0417f
-    ),
-    PREV_NO(
-            TextElement.Simple("Prev. ID", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0417f
-    ),
-    DATE(
-            TextElement.Simple("Inspect. Date", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0653f
-    ),
-    STATION(
-            TextElement.Simple("Station", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0764f
-    ),
-    DEFECT_DESCRIPTION(
-            TextElement.Simple("Defect Description", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.1194f
-    ),
-    OBSERVATION_NAME(
-            TextElement.Simple("Observation Name", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.1194f
-    ),
-    SIZE(
-            TextElement.Simple("Size", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0458f
-    ),
-    IMAGE(
-            TextElement.Simple("Image", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0375f
-    ),
-    CS_RATING(
-            TextElement.Simple("CS", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0361f
-    ),
-    CRITICAL_FINDINGS(
-            TextElement.Simple("Critical Findings", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.06f
-    ),
-    CORR_ACTION(
-            TextElement.Simple("Corr. Action", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0458f
-    ),
-    REPAIR_METHOD(
-            TextElement.Simple("Repair Method", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0757f
-    ),
-    REPAIR_DATE(
-            TextElement.Simple("Repair Date", styles = MainDocumentFactory.BOLD_STYLE_LIST, textSize = SMALL_TABLE_TEXT_SIZE),
-            widthPercent = 0.0657f
-    );
+ class DefectsReportFields(val textElement: TextElement.Simple, private val widthPercent: Float) {
 
-    fun getCellWidth(rowWidth: Int?): Int? = rowWidth?.toFloat()?.times(widthPercent)?.roundToInt()
 
     companion object {
 
-        private val FIELDS_CELLS = mapOf(
-                StructuralType.STRUCTURAL to listOf(
-                        INDEX,
-                        DEFECT_ID,
-                        SUB_COMPONENT,
-                        LOCATION_ID,
-                        PREV_DEF_NO,
-                        DATE,
-                        STATION,
-                        DEFECT_DESCRIPTION,
-                        SIZE,
-                        IMAGE,
-                        CS_RATING,
-                        CRITICAL_FINDINGS,
-                        CORR_ACTION,
-                        REPAIR_METHOD,
-                        REPAIR_DATE
-                ),
-                StructuralType.MAINTENANCE to listOf(
-                        INDEX,
-                        OBSERVATION_ID,
-                        SUB_COMPONENT,
-                        LOCATION_ID,
-                        PREV_NO,
-                        DATE,
-                        STATION,
-                        OBSERVATION_NAME,
-                        SIZE,
-                        IMAGE,
-                        CS_RATING,
-                        CRITICAL_FINDINGS,
-                        CORR_ACTION,
-                        REPAIR_METHOD,
-                        REPAIR_DATE
-                )
-        )
+        fun getCellWidth(rowWidth: Int?, widthPercent: Float): Int? = rowWidth?.toFloat()?.times(widthPercent)?.roundToInt()
 
-        fun Table.Builder.buildHeaderRow(type: StructuralType) {
+        fun Table.Builder.buildHeaderRow(fields: List<Triple<TextElement, Float, String>>?) {
             val tableWidth = width
             row {
-                FIELDS_CELLS[type]?.forEach { field: DefectsReportFields ->
+                fields?.forEach { field: Triple<TextElement, Float, String> ->
                     cell {
-                        width { field.getCellWidth(tableWidth) }
+                        width { getCellWidth(tableWidth, field.second) }
                         paragraph {
                             alignment = Alignment.START
-                            element { field.textElement }
+                            element { field.first }
                         }
                     }
                 }
@@ -177,7 +70,9 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
         fun Table.Builder.buildRows(
                 inspection: Inspection, inspector: User,
                 type: StructuralType, server: String,
-                sortByStationing: Boolean
+                sortByStationing: Boolean,
+                fields: List<Triple<TextElement, Float, String>>?
+
         ) {
             var coloredCell = true
             // Put all defects in one list.
@@ -202,12 +97,12 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                         }
                     .forEachIndexed { defectIndex, defect ->
                         row {
-                            FIELDS_CELLS[type]?.forEach { field: DefectsReportFields ->
+                            fields?.forEach { field: Triple<TextElement, Float, String> ->
                                 cell {
-                                    width = field.getCellWidth(this@buildRows.width)
+                                    width = getCellWidth(this@buildRows.width, field.second)
                                     color = if (coloredCell) ReportConstants.COLOR_GRAY else null
 
-                                    addParagraph(rows.size, inspection, inspector, defectToObservationMap[defect.id]!!, defect, defectIndex, field, type, server)
+                                    addParagraph(rows.size, inspection, inspector, defectToObservationMap[defect.id]!!, defect, defectIndex, field.third, type, server)
                                 }
                             }
                         }
@@ -226,30 +121,30 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
                 observation: Observation,
                 defect: ObservationDefect,
                 defectIndex: Int,
-                field: DefectsReportFields,
+                fieldTag: String,
                 type: StructuralType,
                 server: String
         ) {
             paragraph {
                 alignment = Alignment.START
-                when (field) {
-                    INDEX -> addCellText(rowIndex.toString())
-                    DEFECT_ID, OBSERVATION_ID -> addCellText(defect.id)
-                    SUB_COMPONENT -> addCellText(observation.reportComponentName)
-                    LOCATION_ID -> addCellText(defect.span, TEXT_NOT_APPLICABLE)
-                    DATE -> {
+                when (fieldTag) {
+                    MainDocumentFactory.INDEX_TAG -> addCellText(rowIndex.toString())
+                    MainDocumentFactory.DEFECT_TAG, MainDocumentFactory.OBSERVATION_ID_TAG -> addCellText(defect.id)
+                    MainDocumentFactory.SUB_COMPONENT_TAG -> addCellText(observation.reportComponentName)
+                    MainDocumentFactory.LOCATION_TAG -> addCellText(defect.span, TEXT_NOT_APPLICABLE)
+                    MainDocumentFactory.DATE_TAG -> {
                         addCellText(defect.createdAtClient?.let {
                             SimpleDateFormat("MM/dd/yy", Locale.US).format(it.toDate())
                         } ?: EMPTY_CELL_VALUE)
                     }
-                    STATION -> addCellText(defect.stationMarker)
-                    OBSERVATION_NAME -> addCellText(defect.toMaintenance()?.observationName?.name)
-                    DEFECT_DESCRIPTION -> addCellText(defect.toStructural()?.defect?.name)
-                    SIZE -> when (type) {
+                    MainDocumentFactory.STATION_TAG -> addCellText(defect.stationMarker)
+                    MainDocumentFactory.OBSERVATION_NAME_TAG -> addCellText(defect.toMaintenance()?.observationName?.name)
+                    MainDocumentFactory.DEFECT_DESCRIPTION_TAG -> addCellText(defect.toStructural()?.defect?.name)
+                    MainDocumentFactory.SIZE_TAG -> when (type) {
                         StructuralType.MAINTENANCE -> addCellText(TEXT_NOT_APPLICABLE)
                         StructuralType.STRUCTURAL -> addCellText(defect.toStructural()?.getSizeWithMeasureUnits(observation))
                     }
-                    IMAGE -> {
+                    MainDocumentFactory.IMAGE_TAG -> {
                         alignment = Alignment.CENTER
                         createDefectPhotoGalleryUrl(server, defect, inspection, inspector)?.let { url: String ->
                             iconLink(url, drawableRes = "icon_images_report.png", size = IMAGES_LING_SIZE)
@@ -257,36 +152,40 @@ enum class DefectsReportFields(val textElement: TextElement.Simple, private val 
 
                         alignment = Alignment.CENTER
                     }
-                    CORR_ACTION -> {
+                    MainDocumentFactory.CORRECTIVE_ACTION_TAG -> {
                         alignment = Alignment.CENTER
                         addCellText(defect.observationType?.letter())
                     }
-                    CS_RATING -> {
+                    MainDocumentFactory.CS_TAG -> {
                         alignment = Alignment.CENTER
                         when (type) {
                             StructuralType.MAINTENANCE -> addCellText(TEXT_NOT_APPLICABLE)
                             StructuralType.STRUCTURAL -> addCellText(convertCsRating(defect.toStructural()?.condition?.type))
                         }
                     }
-                    REPAIR_METHOD -> {
+                    MainDocumentFactory.REPAIR_TAG -> {
                         alignment = Alignment.CENTER
                         addCellText(defect.repairMethod)
                     }
-                    REPAIR_DATE -> {
+                    MainDocumentFactory.REPAIR_DATE_TAG -> {
                         alignment = Alignment.CENTER
                         addCellText(defect.repairDate)
                     }
-                    CRITICAL_FINDINGS -> {
+                    MainDocumentFactory.CRITICAL_FINDING_TAG -> {
                         alignment = Alignment.CENTER
                         addCellText(defect.criticalFindings?.joinToString(",\n") { it.name.toLowerCase().capitalize() })
                     }
-                    PREV_DEF_NO -> {
+                    MainDocumentFactory.PREV_DEF_ID_TAG -> {
                         alignment = Alignment.CENTER
                         addCellText(defect.previousDefectNumber)
                     }
-                    PREV_NO -> {
+                    MainDocumentFactory.PREV_OBSERVATION_ID_TAG -> {
                         alignment = Alignment.CENTER
                         addCellText(defect.previousDefectNumber)
+                    }
+                    MainDocumentFactory.O_CLOCK_POSITION_TAG -> {
+                        alignment = Alignment.CENTER
+                        addCellText(if (defect.clockPosition == null) null else  defect.clockPosition.toString(), TEXT_NOT_APPLICABLE)
                     }
                     else -> addCellText()
                 }
