@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.FileCopyUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 class CustomReportManager {
@@ -27,12 +30,14 @@ class CustomReportManager {
     }
 
     private CustomReportManager() throws IOException {
-        File resource = new ClassPathResource("report/strings.json").getFile();
-        String text = new String(Files.readAllBytes(resource.toPath()));
+        InputStream inputStream = new ClassPathResource("report/strings.json").getInputStream();
+        byte[] bdata = FileCopyUtils.copyToByteArray(inputStream);
+        String text = new String(bdata, StandardCharsets.UTF_8);
         stringRootNode = new ObjectMapper().readTree(text);
 
-        resource = new ClassPathResource("report/customizations.json").getFile();
-        text = new String(Files.readAllBytes(resource.toPath()));
+        inputStream = new ClassPathResource("report/customizations.json").getInputStream();
+        bdata = FileCopyUtils.copyToByteArray(inputStream);
+        text = new String(bdata, StandardCharsets.UTF_8);
         customizationRootNode = new ObjectMapper().readTree(text);
     }
 
