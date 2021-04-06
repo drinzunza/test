@@ -60,7 +60,6 @@ internal class DefectReportFields(private val flavor: String = "default", privat
         addMaintenanceField("observation_name", 0.1194f, OBSERVATION_NAME_TAG)
         addMaintenanceField("size", 0.0458f, SIZE_TAG)
         addMaintenanceField("image", 0.0375f, IMAGE_TAG)
-        addStructuralField("cs", 0.0361f, CS_TAG)
         addMaintenanceField("critical_findings_table", 0.06f, CRITICAL_FINDING_TAG)
         addMaintenanceField("corrective_action", 0.0458f, CORRECTIVE_ACTION_TAG)
         if (isTunnelStructure) {
