@@ -451,9 +451,9 @@ class MainDocumentFactory(
                 null else "${type ?: ""} - ${defect.repairMethod ?: ""} prior to ${defect.repairDate ?: ""}"
             elementsKeyValue(ACTION_REPAIR_SCHEDULE, schedule, SMALL_TEXT_SIZE)
             val title = when (defect.type) {
-                StructuralType.STRUCTURAL -> DEFECT_DESCRIPTION
+                StructuralType.STRUCTURAL -> CustomReportManager.getInstance().getString("defect_description", flavor)
                 StructuralType.MAINTENANCE -> OBSERVATION_DESCRIPTION
-                else -> DEFECT_DESCRIPTION
+                else -> CustomReportManager.getInstance().getString("defect_description", flavor)
             }
             elementsKeyValue(title, defect.description, SMALL_TEXT_SIZE)
         }

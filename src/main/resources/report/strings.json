@@ -84,6 +84,7 @@
     "defect_id" : "Observation ID",
     "sub_component" : "Item",
     "prev_def_id" : "Prev. obs. ID",
+    "cs" : "IS",
     "defect_description table": "Observation Description",
     "cs1": "IS-1",
     "cs2": "IS-2",
