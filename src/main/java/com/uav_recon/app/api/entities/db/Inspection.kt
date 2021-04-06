@@ -1,13 +1,9 @@
 package com.uav_recon.app.api.entities.db
 
+import com.uav_recon.app.api.entities.requests.bridge.InspectionUpdateDto
 import org.hibernate.annotations.Type
 import java.time.OffsetDateTime
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Table
-import javax.persistence.Transient
+import javax.persistence.*
 
 @Entity
 @Table(name = "inspections")
@@ -65,4 +61,22 @@ fun Inspection.inspectionDate(): OffsetDateTime? {
         }
     }
     return minDate ?: startDate
+}
+
+fun Inspection.update(dto: InspectionUpdateDto): Inspection {
+        if (dto.fields.contains(::isEditable.name)) isEditable = dto.isEditable
+        if (dto.fields.contains(::startDate.name)) startDate = dto.startDate
+        if (dto.fields.contains(::endDate.name)) endDate = dto.endDate
+        if (dto.fields.contains(::structureId.name)) structureId = dto.structureId
+        if (dto.fields.contains(::latitude.name)) latitude = dto.location?.latitude
+        if (dto.fields.contains(::longitude.name)) longitude = dto.location?.longitude
+        if (dto.fields.contains(::altitude.name)) altitude = dto.location?.altitude
+        if (dto.fields.contains(::status.name)) status = dto.status
+        if (dto.fields.contains(::generalSummary.name)) generalSummary = dto.generalSummary
+        if (dto.fields.contains(::sgrRating.name)) sgrRating = dto.sgrRating
+        if (dto.fields.contains(::termRating.name)) termRating = dto.termRating
+        if (dto.fields.contains(::spansCount.name)) spansCount = dto.spansCount
+        if (dto.fields.contains(::projectId.name)) projectId = dto.projectId
+        if (dto.fields.contains(::archived.name)) archived = dto.archived
+        return this
 }

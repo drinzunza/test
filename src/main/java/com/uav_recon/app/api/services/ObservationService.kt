@@ -1,8 +1,10 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.*
+import com.uav_recon.app.api.entities.requests.bridge.InspectionUpdateDto
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
 import com.uav_recon.app.api.entities.requests.bridge.ObservationInspectDto
+import com.uav_recon.app.api.entities.requests.bridge.ObservationUpdateDto
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.repositories.SubcomponentRepository
@@ -66,6 +68,22 @@ class ObservationService(
         return saved.toDto()
     }
 
+    @Throws(Error::class)
+    @Transactional
+    fun saveV2(dto: ObservationDto, inspectionId: String, updatedBy: Int): ObservationDto {
+        val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
+            ?: throw Error(101, "Invalid inspection UUID")
+        val observation = observationRepository.findFirstByUuid(dto.uuid)
+        val createdBy = observation?.createdBy ?: updatedBy
+
+        // Disabled set value without useHealthIndex = true. Need to support old app and frontend versions.
+        val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId, observation?.healthIndex))
+        dto.observationDefects?.forEach {
+            observationDefectService.save(it, inspectionId, saved.uuid, updatedBy)
+        }
+        return saved.toDto()
+    }
+
     @Transactional
     fun save(list: List<ObservationDto>, inspectionId: String, updatedBy: Int): List<ObservationDto> {
         return list.map { dto -> save(dto, inspectionId, updatedBy) }
@@ -78,6 +96,13 @@ class ObservationService(
                 ?: throw Error(102, "Invalid observation uuid")
         observation.updatedBy = updatedBy
         observation.inspected = dto.inspected
+        return observationRepository.save(observation).toDto()
+    }
+
+    fun updateObservation(user: User, uuid: String, dto: ObservationUpdateDto): ObservationDto {
+        val observation = observationRepository.findFirstByUuid(uuid)
+                ?: throw Error(102, "Invalid observation uuid")
+        observation.update(dto)
         return observationRepository.save(observation).toDto()
     }
 

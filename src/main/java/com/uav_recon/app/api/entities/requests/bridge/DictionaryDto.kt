@@ -13,7 +13,10 @@ data class DictionaryDto(
         var structures: List<StructureDto>,
         var locationIds: List<LocationIdDto>,
         var observationNames: List<ObservationName>,
-        var structureTypes: List<StructureTypeDto>
+        var structureTypes: List<StructureTypeDto>,
+        var observationTypes: List<ObservationTypeDto>,
+        var conditionTypes: List<ConditionTypeDto>,
+        var criticalFindings: List<CriticalFindingDto>
 ) : Serializable {
 
     fun isEmpty(): Boolean {
