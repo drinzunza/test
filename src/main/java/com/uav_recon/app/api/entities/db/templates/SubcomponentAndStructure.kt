@@ -13,5 +13,5 @@ class SubcomponentAndStructure(
         var subcomponentId: String,
         @Column(name = "structure_id")
         var structureId: String,
-        var size: Int
+        var size: Int? = 0
 ) : Serializable
