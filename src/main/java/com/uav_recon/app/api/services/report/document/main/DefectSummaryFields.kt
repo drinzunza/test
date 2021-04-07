@@ -49,8 +49,10 @@ internal class DefectSummaryFields(private val flavor: String = "default") {
                         if (index == ReportConstants.MERGE_RANGE.first) {
                             createCell(
                                     cell.width ?: 0,
+
                                     TextElement.Simple(
-                                            "$componentName (HI = %.3f)".format(healthIndex),
+                                            if (CustomReportManager.getInstance().isVisible("percentage_scale", flavor))
+                                                "$componentName (%.3f)".format(healthIndex) else "$componentName  (%.0f)".format(percentageToScale(healthIndex)),
                                             styles = MainDocumentFactory.BOLD_STYLE_LIST
                                     ),
                                     cellColor = ReportConstants.COLOR_GRAY
@@ -97,8 +99,8 @@ internal class DefectSummaryFields(private val flavor: String = "default") {
                 CS_2_TAG -> observation.cs2.toString()
                 CS_3_TAG -> observation.cs3.toString()
                 CS_4_TAG -> observation.cs4.toString()
-                HI_TAG -> if (!CustomReportManager.getInstance().isVisible("percentage_scale", flavor))
-                    "%.3f".format(observation.healthIndex) else "%.3f".format(percentageToScale(observation.healthIndex))
+                HI_TAG -> if (CustomReportManager.getInstance().isVisible("percentage_scale", flavor))
+                    "%.3f".format(observation.healthIndex) else "%.0f".format(percentageToScale(observation.healthIndex))
                 else -> ""
             } ?: EMPTY_CELL_VALUE
         }
