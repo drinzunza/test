@@ -57,6 +57,14 @@ class InspectionController(private val inspectionService: InspectionService) : B
         return ResponseEntity.ok(inspectionService.updateArchive(body))
     }
 
+    @PatchMapping("$VERSION2/inspection/{uuid}")
+    fun updateInspectionV2(@RequestHeader(X_TOKEN) token: String,
+                           @PathVariable uuid: String,
+                           @RequestBody body: InspectionUpdateDto
+    ): ResponseEntity<InspectionDtoV2> {
+        return ResponseEntity.ok(inspectionService.updateInspection(getAuthenticatedUser(), uuid, body))
+    }
+
     // V1
 
     @Deprecated("Use v2 version")

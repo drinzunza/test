@@ -2,8 +2,11 @@ package com.uav_recon.app.api.services
 
 import com.google.common.io.Files
 import com.uav_recon.app.api.entities.db.Photo
+import com.uav_recon.app.api.entities.db.User
+import com.uav_recon.app.api.entities.db.update
 import com.uav_recon.app.api.entities.requests.bridge.LocationDto
 import com.uav_recon.app.api.entities.requests.bridge.PhotoDto
+import com.uav_recon.app.api.entities.requests.bridge.PhotoUpdateDto
 import com.uav_recon.app.api.entities.requests.bridge.UpdatePhotoDto
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationDefectRepository
@@ -11,7 +14,6 @@ import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.repositories.PhotoRepository
 import com.uav_recon.app.configurations.UavConfiguration
 import org.slf4j.LoggerFactory
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
@@ -79,6 +81,14 @@ class PhotoService(
         fileService.regenerateRectImages(photo)
         photoRepository.save(photo)
         saveWeather(photo)
+    }
+
+    fun updatePhoto(user: User, uuid: String, dto: PhotoUpdateDto): PhotoDto {
+        val photo = photoRepository.findFirstByUuid(uuid)
+            ?: throw Error(105, "Invalid photo uuid")
+        photo.update(dto)
+        fileService.regenerateRectImages(photo)
+        return photoRepository.save(photo).toDto()
     }
 
     @Throws(Error::class)

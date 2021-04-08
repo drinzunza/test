@@ -95,7 +95,6 @@ class MainDocumentFactory(
         private const val INSPECTED_BY_FORMAT = "Inspected By: %s (User id: %s)"
 
         private const val ACTION_REPAIR_SCHEDULE = "Action & Repair Schedule: "
-        private const val DEFECT_DESCRIPTION = "Defect description: "
         private const val OBSERVATION_DESCRIPTION = "Observation description: "
 
         private val DEFECT_PHOTOS_ELEMENT = TextElement.Simple("Inspection Photographs", styles = ITALIC_BOLD_STYLE_LIST)

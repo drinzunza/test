@@ -1,9 +1,7 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.*
-import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
-import com.uav_recon.app.api.entities.requests.bridge.SimpleUserDto
-import com.uav_recon.app.api.entities.requests.bridge.Weather
+import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.repositories.*
 import com.uav_recon.app.api.utils.toOffsetDateTime
 import org.slf4j.LoggerFactory
@@ -163,6 +161,14 @@ class ObservationDefectService(
         defect.updatedBy = updatedBy
         defect.id = changeObservationDefectIdStructure(defect.id, structure)
         return observationDefectRepository.save(defect).toDto(createdByUser)
+    }
+
+    fun updateObservationDefect(user: User, uuid: String, dto: ObservationDefectUpdateDto): ObservationDefectDto {
+        val observationDefect = observationDefectRepository.findFirstByUuid(uuid)
+            ?: throw Error(103, "Invalid observation defect UUID")
+        observationDefect.update(dto)
+        val createdByUser = userService.get(observationDefect.createdBy).toDto()
+        return observationDefectRepository.save(observationDefect).toDto(createdByUser)
     }
 
     @Throws(Error::class)

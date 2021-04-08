@@ -97,6 +97,7 @@
     "observation_id_key": "Observation ID: ",
     "defect_name_key" : "Observation Name: ",
     "observation_name_key" : "Observation Name: ",
-    "defect_condition_key" : "Observation Impact Scale: "
+    "defect_condition_key" : "Observation Impact Scale: ",
+    "defect_description_table" : "Observation Description"
   }
 }

@@ -25,9 +25,6 @@ import org.springframework.web.bind.annotation.*
 class ReportController(
         private val reportService: ReportService,
         private val inspectionService: InspectionService,
-        private val observationRepository: ObservationRepository,
-        private val observationDefectRepository: ObservationDefectRepository,
-        private val componentRepository: ComponentRepository,
         private val mainDocumentFactory: MainDocumentFactory
 ) : BaseController() {
 

@@ -249,6 +249,9 @@ class DictionaryService(
         val locations = locationIdRepository.findAll().map { s -> s.toDto() }
         val observationNames = observationNameRepository.findAll().toList()
         val structureTypes = structureTypeRepository.findAll().toList()
+        val observationTypes = ObservationType.values().map { ObservationTypeDto(it.title, it.name, it.letter) }
+        val conditionTypes = ConditionType.values().map { ConditionTypeDto(it.title, it.name, it.csWeight) }
+        val criticalFindings = CriticalFinding.values().map { CriticalFindingDto(it.name.toLowerCase().capitalize(), it.name) }
 
         // Get dictionaries with ids
         val structureTypeId = buildType.toStructureTypePart()
@@ -273,7 +276,8 @@ class DictionaryService(
 
         return DictionaryDto(conditions, defects, subcomponents,
                 components, structures, locations, observationNames,
-                structureTypes.map { t -> t.toDto() }
+                structureTypes.map { t -> t.toDto() },
+                observationTypes, conditionTypes, criticalFindings
         )
     }
 

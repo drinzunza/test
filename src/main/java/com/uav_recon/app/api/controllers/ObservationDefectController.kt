@@ -1,6 +1,9 @@
 package com.uav_recon.app.api.controllers
 
 import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
+import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectUpdateDto
+import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
+import com.uav_recon.app.api.entities.requests.bridge.ObservationUpdateDto
 import com.uav_recon.app.api.services.ObservationDefectService
 import com.uav_recon.app.configurations.ControllerConfiguration
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
@@ -38,5 +41,13 @@ class ObservationDefectController(private val observationDefectService: Observat
                           @PathVariable observationId: String
     ): ResponseEntity<ObservationDefectDto> {
         return ResponseEntity.ok(observationDefectService.update(getAuthenticatedUserId(), defectId, observationId))
+    }
+
+    @PatchMapping("${VERSION}/observation-defect/{uuid}")
+    fun update(@RequestHeader(X_TOKEN) token: String,
+               @PathVariable uuid: String,
+               @RequestBody body: ObservationDefectUpdateDto
+    ): ResponseEntity<ObservationDefectDto> {
+        return ResponseEntity.ok(observationDefectService.updateObservationDefect(getAuthenticatedUser(), uuid, body))
     }
 }
