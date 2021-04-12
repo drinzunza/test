@@ -3,12 +3,14 @@ package com.uav_recon.app.api.controllers
 import com.uav_recon.app.api.entities.db.BuildType
 import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.services.DictionaryService
+import com.uav_recon.app.api.services.ObservationDefectService
 import com.uav_recon.app.configurations.ControllerConfiguration.BUILD_TYPE
 import com.uav_recon.app.configurations.ControllerConfiguration.ETAG
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION2
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION_CODE
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("")
 class DictionaryController(private val dictionaryService: DictionaryService) : BaseController() {
+
+    private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
 
     @GetMapping("$VERSION/structures")
     fun get(@RequestHeader(X_TOKEN) token: String,
@@ -33,14 +37,19 @@ class DictionaryController(private val dictionaryService: DictionaryService) : B
                         @RequestHeader(VERSION_CODE, required = false, defaultValue = "") versionCode: String,
                         @RequestBody body: StructureIdsDto
     ): ResponseEntity<DictionaryDto> {
+
+        logger.info("Structure Body: $body")
+
         val fixETag = etag.removePrefix("\"").removeSuffix("\"")
         val lastEtagHash = dictionaryService.getLastEtagHash()
         val result = dictionaryService.getEtagChanges(getAuthenticatedUser(), fixETag, BuildType.parse(buildType), body.structureIds)
 
         return if (lastEtagHash == fixETag && result.isEmpty()) {
+            logger.info("Responding with null body...")
             ResponseEntity.status(HttpStatus.NOT_MODIFIED).header(ETAG, lastEtagHash).body(null)
         } else {
             val tempEtag = if (versionCode.isNotEmpty()) lastEtagHash else fixETag
+            logger.info("Structure result: $result")
             ResponseEntity.ok().header(ETAG, tempEtag).body(result)
         }
     }
