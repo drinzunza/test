@@ -18,16 +18,16 @@ internal class DefectFields(private val flavor: String = "default", private val 
     init {
         addStructuralLeftField("component_key", COMPONENT_TAG)
         addStructuralLeftField("sub_component_key", SUB_COMPONENT_TAG)
-        addStructuralLeftField("size_key", SIZE_TAG)
         if (CustomReportManager.getInstance().isVisible("station_column", flavor)) {
             addStructuralLeftField("station_key", STATION_TAG)
-        }
-        if (isTunnelStructure) {
-            addStructuralLeftField("o_clock_key", O_CLOCK_POSITION_TAG)
         }
         if (CustomReportManager.getInstance().isVisible("location_id_column", flavor)) {
             addStructuralLeftField("location_key", LOCATION_TAG)
         }
+        if (isTunnelStructure) {
+            addStructuralLeftField("o_clock_key", O_CLOCK_POSITION_TAG)
+        }
+        addStructuralLeftField("size_key", SIZE_TAG)
         addStructuralRightField("inspection_date_key", DATE_TAG)
         addStructuralRightField("defect_id_key", DEFECT_TAG)
         addStructuralRightField("defect_name_key", DEFECT_NAME_TAG)
@@ -42,11 +42,11 @@ internal class DefectFields(private val flavor: String = "default", private val 
         if (CustomReportManager.getInstance().isVisible("station_column", flavor)) {
             addMaintenanceLeftField("station_key", STATION_TAG)
         }
-        if (isTunnelStructure) {
-            addMaintenanceLeftField("o_clock_key", O_CLOCK_POSITION_TAG)
-        }
         if (CustomReportManager.getInstance().isVisible("location_id_column", flavor)) {
             addMaintenanceLeftField("location_key", LOCATION_TAG)
+        }
+        if (isTunnelStructure) {
+            addMaintenanceLeftField("o_clock_key", O_CLOCK_POSITION_TAG)
         }
 
         addMaintenanceRightField("inspection_date_key", DATE_TAG)
