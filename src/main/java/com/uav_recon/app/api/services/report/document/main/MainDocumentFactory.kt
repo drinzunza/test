@@ -692,7 +692,7 @@ class MainDocumentFactory(
                                     projectName = projects.firstOrNull { it.id == inspection.projectId }?.name,
                                     inspectorName = inspector?.let { "${inspector.firstName} ${inspector.lastName}" },
                                     previousDefectNumber = observationDefect.previousDefectNumber,
-                                    createdAt = it.createdAt
+                                    createdAt = it.createdAtClient
                             ))
                         }
                     }
