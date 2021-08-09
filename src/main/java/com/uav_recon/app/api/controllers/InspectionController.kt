@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse
 
 @RestController
 class InspectionController(private val inspectionService: InspectionService) : BaseController() {
-
+    private val OCTET_CONTENT_STREAM_CONTENT_TYPE = "application/octet-stream"
     // V2
 
     @GetMapping("$VERSION2/inspection")
@@ -44,7 +44,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
         @RequestParam(required = true) inspectionId: String,
         response: HttpServletResponse
     ) {
-        response.contentType = "application/octet-stream";
+        response.contentType = OCTET_CONTENT_STREAM_CONTENT_TYPE;
         response.status = HttpServletResponse.SC_OK;
         val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(structureId, inspectionId);
         response.setHeader(
@@ -54,8 +54,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
         val zipOutputStream = ZipOutputStream(response.outputStream);
         inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
             zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}"));
-            IOUtils.copy(stream, zipOutputStream);
-            stream.close();
+            stream.use { stream.copyTo(zipOutputStream) }
             zipOutputStream.closeEntry();
         }
         zipOutputStream.close();

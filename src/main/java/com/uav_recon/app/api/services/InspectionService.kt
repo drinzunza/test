@@ -113,24 +113,22 @@ class InspectionService(
             val structure = structureRepository.findFirstById(structureId)
             val observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.get().uuid);
             if (structure != null) {
-                val resultPhotos: MutableList<InspectionArchivePhotoItemDto> = mutableListOf()
                 val observationDefects = observationDefectRepository
                     .findAllByDeletedIsFalseAndObservationIdIn(observations.map(Observation::id))
                 val photos = photoRepository
                     .findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefects.map(ObservationDefect::id));
                 val groupByDefectId = photos.groupBy(Photo::observationDefectId);
-                groupByDefectId.forEach { (groupByDefectIdKey, groupByDefectIdValue) ->
-                    var index = 1;
-                    groupByDefectIdValue.forEach {
-                        resultPhotos.add(InspectionArchivePhotoItemDto(
-                            fileService.get(it.link, it.drawables, FileService.FileType.WITH_RECT),
-                            groupByDefectIdKey,
-                            index
+                val resultPhotos = groupByDefectId
+                    .flatMap { (groupByDefectIdKey, groupByDefectIdValue) ->
+                        groupByDefectIdValue.mapIndexed { index, it ->
+                            InspectionArchivePhotoItemDto(
+                                fileService.get(it.link, it.drawables, FileService.FileType.WITH_RECT),
+                                groupByDefectIdKey,
+                                index
                             )
-                        )
-                        index++;
+                        }
                     }
-                }
+
                 inspectionArchivePhotoDto.photos = resultPhotos;
                 inspectionArchivePhotoDto.structureCode = structure.code;
                 inspectionArchivePhotoDto.structureName = structure.name;
@@ -145,7 +143,7 @@ class InspectionService(
         structureId: String?,
         companyId: Long?,
         withObservations: Boolean
-    ) = listNotDeletedDto(user, projectId, structureId, companyId, withObservations).map { i -> i.toDtoV1() }
+    ) = listNotDeletedDto(user, projectId, structureId, companyId, withObservations).map { notDeletedItem -> notDeletedItem.toDtoV1() }
 
     fun listNotDeletedDto(
         user: User,
