@@ -15,32 +15,34 @@ import kotlin.math.roundToInt
 
 @Service
 class InspectionService(
-        private val inspectionRepository: InspectionRepository,
-        private val photoRepository: PhotoRepository,
-        private val observationRepository: ObservationRepository,
-        private val observationDefectRepository: ObservationDefectRepository,
-        private val observationService: ObservationService,
-        private val weatherService: WeatherService,
-        private val userRepository: UserRepository,
-        private val inspectionRoleRepository: InspectionRoleRepository,
-        private val projectRoleRepository: ProjectRoleRepository,
-        private val projectRepository: ProjectRepository,
-        private val companyRepository: CompanyRepository,
-        private val structureRepository: StructureRepository,
-        private val componentRepository: ComponentRepository,
-        private val subcomponentRepository: SubcomponentRepository,
-        private val defectRepository: DefectRepository,
-        private val conditionRepository: ConditionRepository,
-        private val observationNameRepository: ObservationNameRepository,
-        private val locationIdRepository: LocationIdRepository
+    private val inspectionRepository: InspectionRepository,
+    private val photoRepository: PhotoRepository,
+    private val observationRepository: ObservationRepository,
+    private val observationDefectRepository: ObservationDefectRepository,
+    private val observationService: ObservationService,
+    private val weatherService: WeatherService,
+    private val userRepository: UserRepository,
+    private val inspectionRoleRepository: InspectionRoleRepository,
+    private val projectRoleRepository: ProjectRoleRepository,
+    private val projectRepository: ProjectRepository,
+    private val companyRepository: CompanyRepository,
+    private val structureRepository: StructureRepository,
+    private val componentRepository: ComponentRepository,
+    private val subcomponentRepository: SubcomponentRepository,
+    private val defectRepository: DefectRepository,
+    private val conditionRepository: ConditionRepository,
+    private val observationNameRepository: ObservationNameRepository,
+    private val locationIdRepository: LocationIdRepository,
+    private val fileService: FileService
 ) : BaseService() {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
 
-    fun Inspection.toDto(withObservations: Boolean = true,
-                         inspectors: List<SimpleUserDto>? = null,
-                         structure: Structure? = null,
-                         observations: List<ObservationDto>? = null
+    fun Inspection.toDto(
+        withObservations: Boolean = true,
+        inspectors: List<SimpleUserDto>? = null,
+        structure: Structure? = null,
+        observations: List<ObservationDto>? = null
     ) = InspectionDtoV2(
         uuid = uuid,
         location = if (latitude != null) LocationDto(latitude, longitude, altitude) else null,
@@ -56,7 +58,9 @@ class InspectionService(
         status = status,
         termRating = termRating,
         weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
-        observations = observations ?: if (withObservations) observationService.findAllByInspectionUuidAndNotDeleted(uuid) else listOf(),
+        observations = observations ?: if (withObservations) observationService.findAllByInspectionUuidAndNotDeleted(
+            uuid
+        ) else listOf(),
         spansCount = spansCount,
         projectId = projectId,
         archived = archived,
@@ -88,9 +92,10 @@ class InspectionService(
         }
         val saved = inspectionRepository.save(dto.toEntity(null, createdBy, updatedBy))
         //If this is a newly created inspection, populate empty observations based on structure template.
-        if(inspection == null){
+        if (inspection == null) {
             // Get observations based on template.
-            val observations = observationService.generateObservationsFromTemplate(user, dto.structureId.toString(), dto.uuid)
+            val observations =
+                observationService.generateObservationsFromTemplate(user, dto.structureId.toString(), dto.uuid)
             // Populate observation in inspection.
             observationService.save(observations, dto.uuid, updatedBy)
         }
@@ -101,23 +106,66 @@ class InspectionService(
         return saved.toDto()
     }
 
-    fun listNotDeletedDtoV1(user: User, projectId: Long?, structureId: String?, companyId: Long?, withObservations: Boolean)
-            = listNotDeletedDto(user, projectId, structureId, companyId, withObservations).map { i -> i.toDtoV1() }
+    fun getPhotosArchiveData(structureId: String, inspectionId: String): InspectionArchivePhotoDto {
+        val inspection = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId)
+        val inspectionArchivePhotoDto = InspectionArchivePhotoDto();
+        if (inspection.isPresent) {
+            val structure = structureRepository.findFirstById(structureId)
+            val observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.get().uuid);
+            if (structure != null) {
+                val observationDefects = observationDefectRepository
+                    .findAllByDeletedIsFalseAndObservationIdIn(observations.map(Observation::id))
+                val photos = photoRepository
+                    .findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefects.map(ObservationDefect::id));
+                val groupByDefectId = photos.groupBy(Photo::observationDefectId);
+                val resultPhotos = groupByDefectId
+                    .flatMap { (groupByDefectIdKey, groupByDefectIdValue) ->
+                        groupByDefectIdValue.mapIndexed { index, it ->
+                            InspectionArchivePhotoItemDto(
+                                fileService.get(it.link, it.drawables, FileService.FileType.WITH_RECT),
+                                groupByDefectIdKey,
+                                index
+                            )
+                        }
+                    }
 
-    fun listNotDeletedDto(user: User, projectId: Long?, structureId: String?, companyId: Long?, withObservations: Boolean): List<InspectionDtoV2> {
+                inspectionArchivePhotoDto.photos = resultPhotos;
+                inspectionArchivePhotoDto.structureCode = structure.code;
+                inspectionArchivePhotoDto.structureName = structure.name;
+            }
+        }
+        return inspectionArchivePhotoDto;
+    }
+
+    fun listNotDeletedDtoV1(
+        user: User,
+        projectId: Long?,
+        structureId: String?,
+        companyId: Long?,
+        withObservations: Boolean
+    ) = listNotDeletedDto(user, projectId, structureId, companyId, withObservations).map { notDeletedItem -> notDeletedItem.toDtoV1() }
+
+    fun listNotDeletedDto(
+        user: User,
+        projectId: Long?,
+        structureId: String?,
+        companyId: Long?,
+        withObservations: Boolean
+    ): List<InspectionDtoV2> {
         var inspections = listNotDeleted(user, projectId, structureId, companyId)
 
         // TODO fix for admin inspection android crash (Out Of Memory)
         if (withObservations) {
             val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
             val assignedInspectionIds = inspectionRoles.map { it.inspectionId }
-            inspections = inspections.filter { it.createdBy.toLong() == user.id || assignedInspectionIds.contains(it.uuid) }
+            inspections =
+                inspections.filter { it.createdBy.toLong() == user.id || assignedInspectionIds.contains(it.uuid) }
         }
-        
+
         val inspectorsMap = getUsers(inspections.map { it.uuid })
         val structures = structureRepository.findAllByIdIn(inspections.mapNotNull { it.structureId })
-        return inspections.map {
-            i -> i.toDto(withObservations, inspectorsMap[i.uuid], structures.find { it.id == i.structureId })
+        return inspections.map { i ->
+            i.toDto(withObservations, inspectorsMap[i.uuid], structures.find { it.id == i.structureId })
         }
     }
 
@@ -145,8 +193,8 @@ class InspectionService(
 
     fun getNotDeleted(user: User, uuid: String): InspectionDtoV2 {
         val inspection = listNotDeleted(user, null, null, null)
-                .firstOrNull { uuid.isNotBlank() && it.uuid == uuid }
-                ?: throw Error(181, "Not found inspection")
+            .firstOrNull { uuid.isNotBlank() && it.uuid == uuid }
+            ?: throw Error(181, "Not found inspection")
         return inspection.toDto(true)
     }
 
@@ -156,13 +204,13 @@ class InspectionService(
         val userIds = getUserIds(user, companyIds)
 
         val isOwnerCompany = companyRepository.findFirstByDeletedIsFalseAndId(companyId ?: user.companyId ?: 0)
-                ?.type == CompanyType.OWNER
+            ?.type == CompanyType.OWNER
         val companyProjects = projectRepository.findAllByDeletedIsFalseAndCompanyIdIn(companyIds)
         val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
         val projectRoles = projectRoleRepository.findAllByProjectIdIn(companyProjects.map { it.id })
 
         var results = if (!isOwnerCompany) inspectionRepository.findAllByProjectIdInOrCreatedByInOrUuidIn(
-                companyProjects.map { it.id }, userIds, inspectionRoles.map { it.inspectionId }
+            companyProjects.map { it.id }, userIds, inspectionRoles.map { it.inspectionId }
         ).filter { it.deleted == false } else listOf()
 
         if (isOwnerCompany) {
@@ -173,18 +221,18 @@ class InspectionService(
         } else if (user.admin) {
             // 2. Admin can see all own company inspections
             results = results
-                    .filter { !(companyId != null && !companyIds.contains(companyId)) }
+                .filter { !(companyId != null && !companyIds.contains(companyId)) }
         } else {
             // 3. Users can see own created inspections
             // 4. Inspectors can see assigned inspections
             // 5. PMs can see inspections of assigned projects
             results = results
-                    .filter { it.canSeeInspection(user, inspectionRoles, projectRoles)}
-                    .filter { !(companyId != null && !companyIds.contains(companyId)) }
+                .filter { it.canSeeInspection(user, inspectionRoles, projectRoles) }
+                .filter { !(companyId != null && !companyIds.contains(companyId)) }
         }
         results = results
-                .filter { it.canSeeProject(projectId) }
-                .filter { it.canSeeStructure(structureId) }
+            .filter { it.canSeeProject(projectId) }
+            .filter { it.canSeeStructure(structureId) }
 
         fillObjectsForSgrAndHealthIndex(results)
         val countSgr = updateSgrRating(results)
@@ -253,11 +301,13 @@ class InspectionService(
     fun saveWeather(inspection: Inspection): Inspection {
         if (inspection.temperature == null) {
             val weather = weatherService.getHistoricalWeather(
-                    inspection.latitude, inspection.longitude, inspection.startDate?.toEpochSecond()
+                inspection.latitude, inspection.longitude, inspection.startDate?.toEpochSecond()
             )
             if (weather != null) {
-                logger.info("Save inspection weather ${inspection.latitude}:${inspection.longitude}, " +
-                        "${inspection.createdAt}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}")
+                logger.info(
+                    "Save inspection weather ${inspection.latitude}:${inspection.longitude}, " +
+                            "${inspection.createdAt}, ${weather.temperature}, ${weather.humidity}, ${weather.wind}"
+                )
                 inspection.temperature = weather.temperature
                 inspection.humidity = weather.humidity
                 inspection.wind = weather.wind
@@ -272,8 +322,8 @@ class InspectionService(
     fun getUsers(inspectionId: String): List<SimpleUserDto> {
         // All can see users on inspection
         val ids = inspectionRoleRepository.findAllByInspectionId(inspectionId)
-                .filter { it.roles?.contains(Role.INSPECTOR) ?: false }
-                .map { it.userId }
+            .filter { it.roles?.contains(Role.INSPECTOR) ?: false }
+            .map { it.userId }
         return userRepository.findAllByIdIn(ids).map { u -> u.toDto() }
     }
 
@@ -281,7 +331,7 @@ class InspectionService(
         // All can see users on inspection
         val map = mutableMapOf<String, List<SimpleUserDto>>()
         val roles = inspectionRoleRepository.findAllByInspectionIdIn(inspectionIds)
-                .filter { it.roles?.contains(Role.INSPECTOR) ?: false }
+            .filter { it.roles?.contains(Role.INSPECTOR) ?: false }
         val users = userRepository.findAllByIdIn(roles.map { it.userId }).map { u -> u.toDto() }
         inspectionIds.forEach { id ->
             map[id] = users.filter { roles.filter { it.inspectionId == id }.map { it.userId }.contains(it.id) }
@@ -306,15 +356,15 @@ class InspectionService(
         val existRoles = inspectionRoleRepository.findAllByInspectionId(body.inspectionId)
         val inspectionRoles = body.inspectors.map {
             InspectionRole(
-                    inspectionId = body.inspectionId,
-                    userId = it,
-                    roles = arrayOf(Role.INSPECTOR)
+                inspectionId = body.inspectionId,
+                userId = it,
+                roles = arrayOf(Role.INSPECTOR)
             )
         }
         inspectionRoleRepository.deleteAll(existRoles)
         inspectionRoleRepository.saveAll(inspectionRoles)
         return InspectionUsersDto(body.inspectionId,
-                users.map { SimpleUserDto(it.id, it.email, it.firstName, it.lastName) }
+            users.map { SimpleUserDto(it.id, it.email, it.firstName, it.lastName) }
         )
     }
 
@@ -353,9 +403,10 @@ class InspectionService(
         return !(id != null && structureId != id)
     }
 
-    fun Inspection.canSeeInspection(user: User,
-                         inspectionRoles: List<InspectionRole>,
-                         projectRoles: List<ProjectRole>
+    fun Inspection.canSeeInspection(
+        user: User,
+        inspectionRoles: List<InspectionRole>,
+        projectRoles: List<ProjectRole>
     ): Boolean {
         val isInspector = hasInspectionRole(user, inspectionRoles, Role.INSPECTOR)
         val isPm = hasProjectRole(user, projectRoles, Role.PM)
@@ -374,7 +425,7 @@ class InspectionService(
 
         // Hack for old user inspections with project == null
         val isCompanyProject = if (project?.companyId == null) true else user.companyId == project.companyId
-        
+
         val isAdmin = user.admin && user.companyId != null && isCompanyProject
         val isCreated = inspection?.createdBy?.toLong() == user.id
         logger.info("User ${user.id}, inspection ${inspection?.uuid}, project ${project?.id}")
@@ -384,7 +435,7 @@ class InspectionService(
 
     fun hasEditRights(user: User, inspection: Inspection?): Boolean {
         val roles = getInspectionRoles(user, inspection)
-        val isInspector =  inspection?.hasInspectionRole(user, roles, Role.INSPECTOR) ?: false
+        val isInspector = inspection?.hasInspectionRole(user, roles, Role.INSPECTOR) ?: false
         logger.info("User ${user.id} isInspector=$isInspector")
         return isInspector
     }
@@ -441,17 +492,20 @@ class InspectionService(
         val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(inspections.map { it.uuid })
         val components = componentRepository.findAllByIdIn(observations.map { it.structuralComponentId ?: "" })
         val subcomponents = subcomponentRepository.findAllByIdIn(observations.map { it.subComponentId ?: "" })
-        val observationDefects = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observations.map { it.uuid })
+        val observationDefects =
+            observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observations.map { it.uuid })
         val photos = photoRepository.findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefects.map { it.uuid })
         val defects = defectRepository.findAllByIdIn(observationDefects.map { it.defectId ?: "" })
         val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
-        val observationNames = observationNameRepository.findAllByIdIn(observationDefects.map { it.observationNameId ?: "" })
+        val observationNames =
+            observationNameRepository.findAllByIdIn(observationDefects.map { it.observationNameId ?: "" })
         val locationIds = locationIdRepository.findAll()
 
         observationDefects.forEach { observationDefect ->
             observationDefect.defect = defects.firstOrNull { it.id == observationDefect.defectId }
             observationDefect.condition = conditions.firstOrNull { it.id == observationDefect.conditionId }
-            observationDefect.observationName = observationNames.firstOrNull { it.id == observationDefect.observationNameId }
+            observationDefect.observationName =
+                observationNames.firstOrNull { it.id == observationDefect.observationNameId }
             observationDefect.photos = photos.filter { it.observationDefectId == observationDefect.uuid }
         }
         observations.forEach { observation ->
@@ -468,7 +522,8 @@ class InspectionService(
     fun fillObjectsForSgrAndHealthIndex(inspections: List<Inspection>) {
         val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(inspections.map { it.uuid })
         val subcomponents = subcomponentRepository.findAllByIdIn(observations.map { it.subComponentId ?: "" })
-        val observationDefects = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observations.map { it.uuid })
+        val observationDefects =
+            observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observations.map { it.uuid })
         val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
         val locationIds = locationIdRepository.findAll()
 
@@ -485,18 +540,24 @@ class InspectionService(
         }
     }
 
-    fun getComponentUsage(user: User, projectId: Long?, structureId: String?, type: StructuralType?): List<ComponentUsageDto> {
+    fun getComponentUsage(
+        user: User,
+        projectId: Long?,
+        structureId: String?,
+        type: StructuralType?
+    ): List<ComponentUsageDto> {
         val inspectionIds = listNotDeleted(user, projectId, structureId, null).map { it.uuid }
         val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(inspectionIds)
         val observationIds = observations.map { it.uuid }
         val componentIds = observations.mapNotNull { it.structuralComponentId }
         val components = componentRepository.findAllByIdIn(componentIds)
         val observationDefects = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observationIds)
-                .filter { type == null || it.type == type }
+            .filter { type == null || it.type == type }
 
         val componentsUsage = mutableListOf<ComponentUsageDto>()
         components.forEach { component ->
-            val componentObservationIds = observations.filter { it.structuralComponentId == component.id }.map { it.uuid }
+            val componentObservationIds =
+                observations.filter { it.structuralComponentId == component.id }.map { it.uuid }
             val count = observationDefects.count { componentObservationIds.contains(it.observationId) }
             componentsUsage.add(ComponentUsageDto(component.id, component.name, count))
         }
@@ -507,12 +568,13 @@ class InspectionService(
         val inspectionIds = listNotDeleted(user, projectId, structureId, null).map { it.uuid }
         val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(inspectionIds)
         val observationIds = observations.map { it.uuid }
-        val observationDefectsTypes = observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observationIds)
+        val observationDefectsTypes =
+            observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(observationIds)
                 .map { it.type }
 
         return ComponentTypesUsageDto(
-                observationDefectsTypes.count { it == StructuralType.STRUCTURAL },
-                observationDefectsTypes.count { it == StructuralType.MAINTENANCE }
+            observationDefectsTypes.count { it == StructuralType.STRUCTURAL },
+            observationDefectsTypes.count { it == StructuralType.MAINTENANCE }
         )
     }
 }
