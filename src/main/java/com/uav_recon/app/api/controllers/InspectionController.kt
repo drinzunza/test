@@ -57,6 +57,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
             zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}"));
             stream.use { stream.copyTo(zipOutputStream) }
             zipOutputStream.closeEntry();
+            stream.close();
         }
         zipOutputStream.finish();
         zipOutputStream.close();
