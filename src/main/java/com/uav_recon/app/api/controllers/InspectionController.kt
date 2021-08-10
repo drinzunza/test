@@ -58,6 +58,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
             stream.use { stream.copyTo(zipOutputStream) }
             zipOutputStream.closeEntry();
         }
+        zipOutputStream.finish();
         zipOutputStream.close();
     }
 
