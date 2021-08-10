@@ -45,7 +45,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
         @RequestParam(required = true) inspectionId: String,
         response: HttpServletResponse
     ) {
-        response.contentType = OCTET_CONTENT_STREAM_CONTENT_TYPE;
+        response.contentType = "application/zip";
         response.status = HttpServletResponse.SC_OK;
         val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(structureId, inspectionId);
         response.setHeader(
@@ -60,6 +60,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
             stream.close();
         }
         zipOutputStream.finish();
+        zipOutputStream.flush();
         zipOutputStream.close();
     }
 
