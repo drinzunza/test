@@ -48,13 +48,15 @@ class InspectionController(private val inspectionService: InspectionService) : B
         response.contentType = "application/zip";
         response.status = HttpServletResponse.SC_OK;
         val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(structureId, inspectionId);
+        val contentDispositionFileName = "${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
+            .replace(" ", "_")
         response.setHeader(
             "Content-Disposition",
-            "attachment;filename=${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
+            "attachment;filename=$contentDispositionFileName"
         )
         val zipOutputStream = ZipOutputStream(response.outputStream);
         inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
-            zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}"));
+            zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}.jpg"));
             stream.use { stream.copyTo(zipOutputStream) }
             zipOutputStream.closeEntry();
             stream.close();
