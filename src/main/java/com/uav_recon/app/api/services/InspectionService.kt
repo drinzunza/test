@@ -119,7 +119,7 @@ class InspectionService(
                     .findAllByDeletedIsFalseAndObservationIdIn(observations.map(Observation::id))
                 logger.info(observationDefects.count().toString())
                 val photos = photoRepository
-                    .findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefects.map(ObservationDefect::id));
+                    .findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefects.map(ObservationDefect::uuid));
                 logger.info(photos.count().toString())
                 val groupByDefectId = photos.groupBy(Photo::observationDefectId);
                 val resultPhotos = groupByDefectId
