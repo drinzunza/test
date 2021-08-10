@@ -113,14 +113,14 @@ class InspectionService(
             val structure = structureRepository.findFirstById(structureId)
             logger.info(structure.toString())
             val observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.get().uuid);
-            logger.info(observations.toString())
+            logger.info(observations.count().toString())
             if (structure != null) {
                 val observationDefects = observationDefectRepository
                     .findAllByDeletedIsFalseAndObservationIdIn(observations.map(Observation::id))
-                logger.info(observationDefects.toString())
+                logger.info(observationDefects.count().toString())
                 val photos = photoRepository
                     .findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefects.map(ObservationDefect::id));
-                logger.info(photos.toString())
+                logger.info(photos.count().toString())
                 val groupByDefectId = photos.groupBy(Photo::observationDefectId);
                 val resultPhotos = groupByDefectId
                     .flatMap { (groupByDefectIdKey, groupByDefectIdValue) ->
@@ -132,7 +132,7 @@ class InspectionService(
                             )
                         }
                     }
-                logger.info(resultPhotos.toString())
+                logger.info(resultPhotos.count().toString())
                 inspectionArchivePhotoDto.photos = resultPhotos;
                 inspectionArchivePhotoDto.structureCode = structure.code;
                 inspectionArchivePhotoDto.structureName = structure.name;

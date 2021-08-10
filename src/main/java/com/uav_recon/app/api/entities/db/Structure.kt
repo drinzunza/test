@@ -29,4 +29,8 @@ class Structure(
     var deleted: Boolean? = false,
     @Column(name = "company_id")
     var companyId: Long? = null
-) : Serializable
+) : Serializable {
+    override fun toString(): String {
+        return "Structure(id='$id', code='$code', name='$name', structureTypeId=$structureTypeId, primaryOwner=$primaryOwner, caltransBridgeNo=$caltransBridgeNo, postmile=$postmile, beginStationing=$beginStationing, endStationing=$endStationing, deleted=$deleted, companyId=$companyId)"
+    }
+}
