@@ -40,6 +40,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
 
     @GetMapping("$VERSION2/downloadInspectionPhotosZip")
     fun getInspectionPhotosArchive(
+        @RequestHeader(X_TOKEN) token: String,
         @RequestParam(required = true) structureId: String,
         @RequestParam(required = true) inspectionId: String,
         response: HttpServletResponse
