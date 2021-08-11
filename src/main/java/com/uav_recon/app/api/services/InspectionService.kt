@@ -116,7 +116,7 @@ class InspectionService(
             logger.info(observations.count().toString())
             if (structure != null) {
                 val observationDefects = observationDefectRepository
-                    .findAllByDeletedIsFalseAndObservationIdIn(observations.map(Observation::id))
+                    .findAllByDeletedIsFalseAndObservationIdIn(observations.map(Observation::uuid))
                 logger.info(observationDefects.count().toString())
                 val photos = photoRepository
                     .findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefects.map(ObservationDefect::uuid));
