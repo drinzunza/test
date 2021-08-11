@@ -106,11 +106,11 @@ class InspectionService(
         return saved.toDto()
     }
 
-    fun getPhotosArchiveData(structureId: String, inspectionId: String): InspectionArchivePhotoDto {
+    fun getPhotosArchiveData(inspectionId: String): InspectionArchivePhotoDto {
         val inspection = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId)
         val inspectionArchivePhotoDto = InspectionArchivePhotoDto();
-        if (inspection.isPresent) {
-            val structure = structureRepository.findFirstById(structureId)
+        if (inspection.isPresent && inspection.get().structureId != null) {
+            val structure = structureRepository.findFirstById(inspection.get().structureId!!)
             logger.info(structure.toString())
             val observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(inspection.get().uuid);
             logger.info(observations.count().toString())

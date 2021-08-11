@@ -41,13 +41,12 @@ class InspectionController(private val inspectionService: InspectionService) : B
     @GetMapping("$VERSION2/downloadInspectionPhotosZip")
     fun getInspectionPhotosArchive(
         @RequestHeader(X_TOKEN) token: String,
-        @RequestParam(required = true) structureId: String,
         @RequestParam(required = true) inspectionId: String,
         response: HttpServletResponse
     ) {
         response.contentType = "application/zip";
         response.status = HttpServletResponse.SC_OK;
-        val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(structureId, inspectionId);
+        val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(inspectionId);
         val contentDispositionFileName = "${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
             .replace(" ", "_")
         response.setHeader(
