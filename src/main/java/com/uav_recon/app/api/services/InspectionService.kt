@@ -109,6 +109,7 @@ class InspectionService(
     fun getPhotosArchiveData(inspectionId: String): InspectionArchivePhotoDto {
         val inspection = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId)
         val inspectionArchivePhotoDto = InspectionArchivePhotoDto();
+        logger.info(inspection.toString())
         if (inspection.isPresent && inspection.get().structureId != null) {
             val structure = structureRepository.findFirstById(inspection.get().structureId!!)
             logger.info(structure.toString())
