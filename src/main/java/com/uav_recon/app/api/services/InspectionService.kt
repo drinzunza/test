@@ -140,6 +140,8 @@ class InspectionService(
                 inspectionArchivePhotoDto.structureCode = structure.code;
                 inspectionArchivePhotoDto.structureName = structure.name;
             }
+        } else {
+            throw Error(105, "Inspection not found or inspection does not contain relation to structure")
         }
         return inspectionArchivePhotoDto;
     }
@@ -150,7 +152,13 @@ class InspectionService(
         structureId: String?,
         companyId: Long?,
         withObservations: Boolean
-    ) = listNotDeletedDto(user, projectId, structureId, companyId, withObservations).map { notDeletedItem -> notDeletedItem.toDtoV1() }
+    ) = listNotDeletedDto(
+        user,
+        projectId,
+        structureId,
+        companyId,
+        withObservations
+    ).map { notDeletedItem -> notDeletedItem.toDtoV1() }
 
     fun listNotDeletedDto(
         user: User,
