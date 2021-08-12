@@ -106,6 +106,7 @@ class InspectionService(
         return saved.toDto()
     }
 
+    @Throws(Error::class)
     fun getPhotosArchiveData(inspectionId: String): InspectionArchivePhotoDto {
         val inspection = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId)
         val inspectionArchivePhotoDto = InspectionArchivePhotoDto();

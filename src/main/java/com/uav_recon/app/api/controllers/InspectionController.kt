@@ -67,27 +67,6 @@ class InspectionController(private val inspectionService: InspectionService) : B
             .header("Content-Disposition", "attachment; filename=$filename")
             .body(responseBody)
 
-//        val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(inspectionId);
-//        response.status = HttpServletResponse.SC_OK;
-//        response.contentType = APPLICATION_ZIP_CONTENT_TYPE;
-//        val contentDispositionFileName =
-//            "${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
-//                .replace(" ", "_")
-//        response.setHeader(
-//            "Content-Disposition",
-//            "attachment;filename=$contentDispositionFileName"
-//        )
-//        val zipOutputStream = ZipOutputStream(response.outputStream);
-//        inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
-//            zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}.jpg"));
-//            stream.use { stream.copyTo(zipOutputStream) }
-//            zipOutputStream.closeEntry();
-//            stream.close();
-//        }
-//        zipOutputStream.finish();
-//        zipOutputStream.flush();
-//        zipOutputStream.close();
-
     }
 
     @GetMapping("$VERSION2/inspection/{uuid}")
