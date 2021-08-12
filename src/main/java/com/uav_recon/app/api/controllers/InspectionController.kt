@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import javax.servlet.ServletException
 import javax.servlet.http.HttpServletResponse
 
 
@@ -67,7 +68,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
             zipOutputStream.flush();
             zipOutputStream.close();
         } catch (e: Exception) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Error", e)
+            throw ServletException(e);
         }
 
     }
