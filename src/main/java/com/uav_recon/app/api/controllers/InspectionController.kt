@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.servlet.ServletException
@@ -18,7 +19,7 @@ import javax.servlet.http.HttpServletResponse
 
 @RestController
 class InspectionController(private val inspectionService: InspectionService) : BaseController() {
-    private val OCTET_CONTENT_STREAM_CONTENT_TYPE = "application/octet-stream"
+    private val APPLICATION_ZIP_CONTENT_TYPE = "application/zip"
     // V2
 
     @GetMapping("$VERSION2/inspection")
@@ -44,20 +45,13 @@ class InspectionController(private val inspectionService: InspectionService) : B
     @GetMapping("$VERSION2/downloadInspectionPhotosZip")
     fun getInspectionPhotosArchive(
         @RequestHeader(X_TOKEN) token: String,
-        @RequestParam(required = true) inspectionId: String,
-        response: HttpServletResponse
-    ) {
-        try {
-            val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(inspectionId);
-            response.contentType = "application/zip";
-            response.status = HttpServletResponse.SC_OK;
-            val contentDispositionFileName = "${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
-                .replace(" ", "_")
-            response.setHeader(
-                "Content-Disposition",
-                "attachment;filename=$contentDispositionFileName"
-            )
-            val zipOutputStream = ZipOutputStream(response.outputStream);
+        @RequestParam(required = true) inspectionId: String
+    ): ResponseEntity<StreamingResponseBody> {
+        val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(inspectionId);
+        val filename = "${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
+            .replace(" ", "_");
+        val responseBody = StreamingResponseBody { out ->
+            val zipOutputStream = ZipOutputStream(out);
             inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
                 zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}.jpg"));
                 stream.use { stream.copyTo(zipOutputStream) }
@@ -67,9 +61,32 @@ class InspectionController(private val inspectionService: InspectionService) : B
             zipOutputStream.finish();
             zipOutputStream.flush();
             zipOutputStream.close();
-        } catch (e: Exception) {
-            throw ServletException(e);
         }
+        return ResponseEntity
+            .ok()
+            .header("Content-Disposition", "attachment; filename=$filename")
+            .body(responseBody)
+
+//        val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(inspectionId);
+//        response.status = HttpServletResponse.SC_OK;
+//        response.contentType = APPLICATION_ZIP_CONTENT_TYPE;
+//        val contentDispositionFileName =
+//            "${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
+//                .replace(" ", "_")
+//        response.setHeader(
+//            "Content-Disposition",
+//            "attachment;filename=$contentDispositionFileName"
+//        )
+//        val zipOutputStream = ZipOutputStream(response.outputStream);
+//        inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
+//            zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}.jpg"));
+//            stream.use { stream.copyTo(zipOutputStream) }
+//            zipOutputStream.closeEntry();
+//            stream.close();
+//        }
+//        zipOutputStream.finish();
+//        zipOutputStream.flush();
+//        zipOutputStream.close();
 
     }
 
