@@ -42,7 +42,10 @@ class InspectionController(private val inspectionService: InspectionService) : B
     }
 
 
-    @GetMapping("$VERSION2/downloadInspectionPhotosZip")
+    @GetMapping(
+        value = ["$VERSION2/downloadInspectionPhotosZip"],
+        produces = [ "application/zip", "application/json"]
+    )
     fun getInspectionPhotosArchive(
         @RequestHeader(X_TOKEN) token: String,
         @RequestParam(required = true) inspectionId: String
