@@ -106,9 +106,11 @@ class InspectionService(
         return saved.toDto()
     }
 
+    @Throws(Error::class)
     fun getPhotosArchiveData(inspectionId: String): InspectionArchivePhotoDto {
         val inspection = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId)
         val inspectionArchivePhotoDto = InspectionArchivePhotoDto();
+        logger.info(inspection.toString())
         if (inspection.isPresent && inspection.get().structureId != null) {
             val structure = structureRepository.findFirstById(inspection.get().structureId!!)
             logger.info(structure.toString())
@@ -124,10 +126,12 @@ class InspectionService(
                 val groupByDefectId = photos.groupBy(Photo::observationDefectId);
                 val resultPhotos = groupByDefectId
                     .flatMap { (groupByDefectIdKey, groupByDefectIdValue) ->
+                        val defectObj = observationDefects.find { it.uuid == groupByDefectIdKey }
+                        val defectId = defectObj?.id;
                         groupByDefectIdValue.mapIndexed { index, it ->
                             InspectionArchivePhotoItemDto(
                                 fileService.get(it.link, it.drawables, FileService.FileType.WITH_RECT),
-                                groupByDefectIdKey,
+                                defectId,
                                 index
                             )
                         }
@@ -137,6 +141,8 @@ class InspectionService(
                 inspectionArchivePhotoDto.structureCode = structure.code;
                 inspectionArchivePhotoDto.structureName = structure.name;
             }
+        } else {
+            throw Error(105, "Inspection not found or inspection does not contain relation to structure")
         }
         return inspectionArchivePhotoDto;
     }
@@ -147,7 +153,13 @@ class InspectionService(
         structureId: String?,
         companyId: Long?,
         withObservations: Boolean
-    ) = listNotDeletedDto(user, projectId, structureId, companyId, withObservations).map { notDeletedItem -> notDeletedItem.toDtoV1() }
+    ) = listNotDeletedDto(
+        user,
+        projectId,
+        structureId,
+        companyId,
+        withObservations
+    ).map { notDeletedItem -> notDeletedItem.toDtoV1() }
 
     fun listNotDeletedDto(
         user: User,

@@ -4,6 +4,6 @@ import java.io.InputStream
 
 data class InspectionArchivePhotoItemDto(
     val stream: InputStream,
-    val defectId: String,
+    val defectId: String?,
     val index: Int
 )

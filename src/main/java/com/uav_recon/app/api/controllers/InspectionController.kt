@@ -1,21 +1,25 @@
 package com.uav_recon.app.api.controllers
 
-import com.google.api.client.util.IOUtils
 import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.entities.responses.bridge.InspectionUsersDto
 import com.uav_recon.app.api.services.InspectionService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION2
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import javax.servlet.ServletException
 import javax.servlet.http.HttpServletResponse
+
 
 @RestController
 class InspectionController(private val inspectionService: InspectionService) : BaseController() {
-    private val OCTET_CONTENT_STREAM_CONTENT_TYPE = "application/octet-stream"
+    private val APPLICATION_ZIP_CONTENT_TYPE = "application/zip"
     // V2
 
     @GetMapping("$VERSION2/inspection")
@@ -38,31 +42,34 @@ class InspectionController(private val inspectionService: InspectionService) : B
     }
 
 
-    @GetMapping("$VERSION2/downloadInspectionPhotosZip")
+    @GetMapping(
+        value = ["$VERSION2/downloadInspectionPhotosZip"],
+        produces = [ "application/zip", "application/json"]
+    )
     fun getInspectionPhotosArchive(
         @RequestHeader(X_TOKEN) token: String,
-        @RequestParam(required = true) inspectionId: String,
-        response: HttpServletResponse
-    ) {
-        response.contentType = "application/zip";
-        response.status = HttpServletResponse.SC_OK;
+        @RequestParam(required = true) inspectionId: String
+    ): ResponseEntity<StreamingResponseBody> {
         val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(inspectionId);
-        val contentDispositionFileName = "${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
-            .replace(" ", "_")
-        response.setHeader(
-            "Content-Disposition",
-            "attachment;filename=$contentDispositionFileName"
-        )
-        val zipOutputStream = ZipOutputStream(response.outputStream);
-        inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
-            zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}.jpg"));
-            stream.use { stream.copyTo(zipOutputStream) }
-            zipOutputStream.closeEntry();
-            stream.close();
+        val filename = "${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
+            .replace(" ", "_");
+        val responseBody = StreamingResponseBody { out ->
+            val zipOutputStream = ZipOutputStream(out);
+            inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
+                zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}.jpg"));
+                stream.use { stream.copyTo(zipOutputStream) }
+                zipOutputStream.closeEntry();
+                stream.close();
+            }
+            zipOutputStream.finish();
+            zipOutputStream.flush();
+            zipOutputStream.close();
         }
-        zipOutputStream.finish();
-        zipOutputStream.flush();
-        zipOutputStream.close();
+        return ResponseEntity
+            .ok()
+            .header("Content-Disposition", "attachment; filename=$filename")
+            .body(responseBody)
+
     }
 
     @GetMapping("$VERSION2/inspection/{uuid}")

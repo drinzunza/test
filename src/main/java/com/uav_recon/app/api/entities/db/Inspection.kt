@@ -50,7 +50,11 @@ class Inspection(
         var archived: Boolean? = false,
         @Transient
         var observations: List<Observation>? = null
-) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
+) : MobileAppCreatedEntity(uuid, createdBy, updatedBy) {
+        override fun toString(): String {
+                return "Inspection(isEditable=$isEditable, startDate=$startDate, endDate=$endDate, structureId=$structureId, temperature=$temperature, humidity=$humidity, wind=$wind, latitude=$latitude, longitude=$longitude, altitude=$altitude, status=$status, reportId=$reportId, reportDate=$reportDate, reportLink=$reportLink, generalSummary=$generalSummary, sgrRating=$sgrRating, termRating=$termRating, spansCount=$spansCount, deleted=$deleted, projectId=$projectId, archived=$archived, observations=$observations)"
+        }
+}
 
 fun Inspection.inspectionDate(): OffsetDateTime? {
     var minDate: OffsetDateTime? = null
