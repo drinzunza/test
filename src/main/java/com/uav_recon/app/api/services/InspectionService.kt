@@ -124,10 +124,12 @@ class InspectionService(
                 val groupByDefectId = photos.groupBy(Photo::observationDefectId);
                 val resultPhotos = groupByDefectId
                     .flatMap { (groupByDefectIdKey, groupByDefectIdValue) ->
+                        val defectObj = observationDefects.find { it.uuid == groupByDefectIdKey }
+                        val defectId = defectObj?.id;
                         groupByDefectIdValue.mapIndexed { index, it ->
                             InspectionArchivePhotoItemDto(
                                 fileService.get(it.link, it.drawables, FileService.FileType.WITH_RECT),
-                                groupByDefectIdKey,
+                                defectId,
                                 index
                             )
                         }
