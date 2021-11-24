@@ -141,7 +141,7 @@ class InspectionService(
                             InspectionArchivePhotoItemDto(
                                 fileService.get(it.link, it.drawables, FileService.FileType.WITH_RECT),
                                 defectId,
-                                index
+                                index = index + 1
                             )
                         }
                     }
