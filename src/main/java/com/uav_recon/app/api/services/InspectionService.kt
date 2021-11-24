@@ -123,11 +123,20 @@ class InspectionService(
                 val photos = photoRepository
                     .findAllByDeletedIsFalseAndObservationDefectIdIn(observationDefects.map(ObservationDefect::uuid));
                 logger.info(photos.count().toString())
-                val groupByDefectId = photos.groupBy(Photo::observationDefectId);
+                val groupByDefectId = photos.groupBy(Photo::observationDefectId)
+                val defectIdArrayList = arrayListOf<String>()
                 val resultPhotos = groupByDefectId
                     .flatMap { (groupByDefectIdKey, groupByDefectIdValue) ->
                         val defectObj = observationDefects.find { it.uuid == groupByDefectIdKey }
-                        val defectId = defectObj?.id;
+                        var defectId = defectObj?.id;
+                        val existDefectIdCount = Collections.frequency(defectIdArrayList, defectId);
+                        if (defectIdArrayList.contains(defectId)) {
+                            defectId = "$defectId(${existDefectIdCount + 1})";
+                        } else {
+                            if (defectId != null) {
+                                defectIdArrayList.add(defectId);
+                            }
+                        }
                         groupByDefectIdValue.mapIndexed { index, it ->
                             InspectionArchivePhotoItemDto(
                                 fileService.get(it.link, it.drawables, FileService.FileType.WITH_RECT),
@@ -137,7 +146,7 @@ class InspectionService(
                         }
                     }
                 logger.info(resultPhotos.count().toString())
-                inspectionArchivePhotoDto.photos = resultPhotos;
+                inspectionArchivePhotoDto.photos = resultPhotos
                 inspectionArchivePhotoDto.structureCode = structure.code;
                 inspectionArchivePhotoDto.structureName = structure.name;
             }
