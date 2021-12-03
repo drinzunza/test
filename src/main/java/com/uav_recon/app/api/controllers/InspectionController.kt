@@ -7,10 +7,12 @@ import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION2
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
+import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.servlet.ServletException
@@ -54,20 +56,23 @@ class InspectionController(private val inspectionService: InspectionService) : B
         val filename = "${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
             .replace(" ", "_");
         val responseBody = StreamingResponseBody { out ->
-            val zipOutputStream = ZipOutputStream(out);
+            val zipOutputStream = ZipOutputStream(out)
+            zipOutputStream.setLevel(Deflater.BEST_COMPRESSION)
             inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
                 zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}.jpg"));
                 stream.use { stream.copyTo(zipOutputStream) }
-                zipOutputStream.closeEntry();
-                stream.close();
+                zipOutputStream.closeEntry()
+                stream.close()
             }
             zipOutputStream.finish();
             zipOutputStream.flush();
             zipOutputStream.close();
         }
+        println("send archive")
         return ResponseEntity
             .ok()
             .header("Content-Disposition", "attachment; filename=$filename")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .body(responseBody)
 
     }
