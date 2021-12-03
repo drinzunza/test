@@ -72,7 +72,6 @@ class InspectionController(private val inspectionService: InspectionService) : B
         return ResponseEntity
             .ok()
             .header("Content-Disposition", "attachment; filename=$filename")
-            .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .body(responseBody)
 
     }
