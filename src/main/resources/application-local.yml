@@ -1,0 +1,63 @@
+spring:
+  profiles:
+    active: default
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: test.data.recon@gmail.com
+    password: xefwybgssakztafm
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  datasource:
+    url: jdbc:postgresql://localhost:1007/uav_recon
+    username: postgres
+    password: 123123
+  jpa:
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+    properties:
+      hibernate:
+        format_sql: true
+        ddl-auto: create
+        temp:
+          use_jdbc_metadata_defaults: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  flyway:
+    placeholders:
+      legacy_user_init_password: $2a$10$0nWhc.crRVf7c79Jg/VYe.vMByTd02qWpoWQM2ToApibM/SRtcqIW
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 2KB
+      max-file-size: 100MB
+      max-request-size: 115MB
+server:
+  port: 8080
+  undertow:
+    worker-threads: 32
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 2048
+uav:
+  files:
+    upload_dir: /Users/sergeyzhuravlev/uav-recon/files
+    root: /Users/sergeyzhuravlev/uav-recon/data/
+    use_google: false
+    gs_bucket: data_recon_test
+    remove_file_on_delete: false
+  token:
+    secret: WV0TzjM5ZM414ivwUPMj
+    token_expiration_time: 999999
+  security:
+    reset_password_timeout: 15 # in minutes
+    reset_password_code_length: 6
+  server:
+    host: http://35.223.228.180
+    id:
