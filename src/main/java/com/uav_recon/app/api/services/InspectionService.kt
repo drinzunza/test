@@ -125,6 +125,7 @@ class InspectionService(
                 logger.info(photos.count().toString())
                 val groupByDefectId = photos.groupBy(Photo::observationDefectId)
                 val defectIdArrayList = arrayListOf<String>()
+                defectIdArrayList.ensureCapacity(photos.count());
                 val resultPhotos = groupByDefectId
                     .flatMap { (groupByDefectIdKey, groupByDefectIdValue) ->
                         val defectObj = observationDefects.find { it.uuid == groupByDefectIdKey }
