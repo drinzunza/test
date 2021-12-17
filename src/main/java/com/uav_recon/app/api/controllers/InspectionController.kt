@@ -53,8 +53,8 @@ class InspectionController(private val inspectionService: InspectionService) : B
         @RequestParam(required = true) inspectionId: String
     ): ResponseEntity<StreamingResponseBody> {
         val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(inspectionId);
-        val filename = "${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}.zip"
-            .replace(" ", "_");
+        val re = Regex("[^A-Za-z0-9]");
+        val filename = re.replace("${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}", "_") + ".zip";
         val responseBody = StreamingResponseBody { out ->
             val zipOutputStream = ZipOutputStream(out)
             zipOutputStream.setLevel(Deflater.BEST_COMPRESSION)
