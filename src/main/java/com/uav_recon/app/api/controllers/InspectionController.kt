@@ -71,7 +71,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
         println("send archive")
         return ResponseEntity
             .ok()
-            .header("Content-Disposition", "attachment; filename=$filename")
+            .header("Content-Disposition", "attachment;filename=${filename}")
             .body(responseBody)
 
     }
