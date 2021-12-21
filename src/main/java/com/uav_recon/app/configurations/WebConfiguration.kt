@@ -36,7 +36,7 @@ class WebConfiguration(val configuration: UavConfiguration) : WebMvcConfigurer {
     fun restTemplate(builder: RestTemplateBuilder): RestTemplate {
         return builder
                 .setConnectTimeout(Duration.ofMillis(90000))
-                .setReadTimeout(Duration.ofMillis(300000))
+                .setReadTimeout(Duration.ofMillis(120000))
                 .build()
     }
 
