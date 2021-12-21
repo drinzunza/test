@@ -50,30 +50,25 @@ class InspectionController(private val inspectionService: InspectionService) : B
     )
     fun getInspectionPhotosArchive(
         @RequestHeader(X_TOKEN) token: String,
-        @RequestParam(required = true) inspectionId: String
-    ): ResponseEntity<StreamingResponseBody> {
+        @RequestParam(required = true) inspectionId: String,
+        response: HttpServletResponse
+    ) {
         val inspectionArchivePhotoDto = inspectionService.getPhotosArchiveData(inspectionId);
         val re = Regex("[^A-Za-z0-9]");
         val filename = re.replace("${inspectionArchivePhotoDto.structureCode}-${inspectionArchivePhotoDto.structureName}", "_") + ".zip";
-        val responseBody = StreamingResponseBody { out ->
-            val zipOutputStream = ZipOutputStream(out)
-            zipOutputStream.setLevel(Deflater.BEST_COMPRESSION)
-            inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
-                zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}.jpg"));
-                stream.use { stream.copyTo(zipOutputStream) }
-                zipOutputStream.closeEntry()
-                stream.close()
-            }
-            zipOutputStream.finish();
-            zipOutputStream.flush();
-            zipOutputStream.close();
+        response.contentType = "application/octet-stream";
+        response.status = HttpServletResponse.SC_OK;
+        response.setHeader("Content-Disposition", "attachment;filename=${filename}");
+        val zipOutputStream = ZipOutputStream(response.outputStream);
+        inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
+            zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}"));
+            stream.use { stream.copyTo(zipOutputStream) }
+            stream.close();
+            zipOutputStream.closeEntry();
         }
-        println("send archive")
-        return ResponseEntity
-            .ok()
-            .header("Content-Disposition", "attachment;filename=${filename}")
-            .body(responseBody)
-
+        zipOutputStream.finish();
+        zipOutputStream.flush();
+        zipOutputStream.close();
     }
 
     @GetMapping("$VERSION2/inspection/{uuid}")
