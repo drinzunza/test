@@ -61,7 +61,7 @@ class InspectionController(private val inspectionService: InspectionService) : B
         response.setHeader("Content-Disposition", "attachment;filename=${filename}");
         val zipOutputStream = ZipOutputStream(response.outputStream);
         inspectionArchivePhotoDto.photos.forEach { (stream, defectId, index) ->
-            zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}"));
+            zipOutputStream.putNextEntry(ZipEntry("${defectId}_${index}.jpg"));
             stream.use { stream.copyTo(zipOutputStream) }
             stream.close();
             zipOutputStream.closeEntry();
