@@ -19,6 +19,8 @@ class Company(
         var type: CompanyType,
         @Column(name = "creator_company_id")
         var creatorCompanyId: Long? = null,
+        @Column(name = "rating_inverse")
+        var ratingInverse: Boolean = false,
         @Column(name = "is_deleted")
         var deleted: Boolean = false,
         @Column(name = "created_by")
@@ -36,6 +38,7 @@ fun Company.toDto(types: List<StructureType>, companyTypes: List<CompanyStructur
         name = name,
         logo = logo,
         type = type,
+        ratingInverse = ratingInverse,
         structureTypes = types.filter {
                 companyTypes.filter { it.companyId == id }.map { it.structureTypeId }.contains(it.id)
         }.map { t -> t.toDto() }

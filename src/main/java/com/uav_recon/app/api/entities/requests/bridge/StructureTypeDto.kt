@@ -9,5 +9,7 @@ class StructureTypeDto(
     var name: String,
     var numOfSpansEnabled: Boolean = false,
     var clockPositionEnabled: Boolean = false,
+    var hideObservationType: Boolean = false,
+    var hideStationMarker: Boolean = false,
     var deleted: Boolean = false
 ) : Serializable
