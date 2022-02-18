@@ -2,8 +2,10 @@ package com.uav_recon.app.api.services.report
 
 import com.uav_recon.app.api.entities.db.Report
 import com.uav_recon.app.api.entities.requests.bridge.ReportDto
+import com.uav_recon.app.api.repositories.CompanyRepository
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ReportRepository
+import com.uav_recon.app.api.repositories.UserRepository
 import com.uav_recon.app.api.services.Error
 import com.uav_recon.app.api.services.FileService
 import com.uav_recon.app.api.services.report.document.DocumentFactory
@@ -14,7 +16,9 @@ import java.util.*
 @Service
 class ReportService(
         private val inspectionRepository: InspectionRepository,
+        private val companyRepository: CompanyRepository,
         private val reportRepository: ReportRepository,
+        private val userRepository: UserRepository,
         private val documentWriter: DocumentWriter,
         private val documentFactory: DocumentFactory,
         private val fileService: FileService
@@ -40,24 +44,29 @@ class ReportService(
     fun generate(userId: Int, inspectionId: String): ReportDto {
         inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
                 ?: throw Error(101, "Invalid inspection UUID")
-
-        val id = generateDisplayId(userId)
-        val uuid = UUID.randomUUID().toString()
-        val link = fileService.save("$userId/$inspectionId/$id.docx", ByteArray(0), "docx", null)
-        val report = Report(
+        val user = userRepository.findFirstById(userId.toLong())
+        if (user != null) {
+            val company = user.companyId?.let { companyRepository.findFirstById(it) }
+            val id = generateDisplayId(userId)
+            val uuid = UUID.randomUUID().toString()
+            val link = fileService.save("$userId/$inspectionId/$id.docx", ByteArray(0), "docx", null)
+            val report = Report(
                 id = id,
                 uuid = uuid,
                 link = link,
                 inspectionId = inspectionId,
                 createdBy = userId,
                 updatedBy = userId
-        )
+            )
 
-        val document = documentFactory.generateDocument(report)
-        documentWriter.writeDocument(document, fileService.getPath(link))
+            val document = documentFactory.generateDocument(report,  isInverse = company?.ratingInverse ?: false)
+            documentWriter.writeDocument(document, fileService.getPath(link))
 
-        val savedReport = reportRepository.save(report)
-        return savedReport.toDto()
+            val savedReport = reportRepository.save(report)
+            return savedReport.toDto()
+        } else {
+           throw Error(18, "User not found")
+        }
     }
 
     @Throws(Error::class)
