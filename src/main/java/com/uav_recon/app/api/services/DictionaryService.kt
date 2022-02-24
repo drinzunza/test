@@ -428,6 +428,8 @@ class DictionaryService(
             name = name,
             numOfSpansEnabled = numOfSpansEnabled,
             clockPositionEnabled = clockPositionEnabled,
-            deleted = deleted
+            deleted = deleted,
+            hideObservationType = hideObservationType,
+            hideStationMarker = hideStationMarker
     )
 }
