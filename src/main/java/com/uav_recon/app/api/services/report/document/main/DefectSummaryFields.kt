@@ -149,6 +149,7 @@ internal class DefectSummaryFields(private val flavor: String = "default") {
             val cs2: Int,
             val cs3: Int,
             val cs4: Int,
+            val weight: Int,
             val healthIndex: Double
     ) {
 
@@ -165,6 +166,7 @@ internal class DefectSummaryFields(private val flavor: String = "default") {
                 observationService.getCsValue(observation, ConditionType.FAIR, spansCount),
                 observationService.getCsValue(observation, ConditionType.POOR, spansCount),
                 observationService.getCsValue(observation, ConditionType.SEVERE, spansCount),
+                observation.subcomponent?.fdotBhiValue ?: 1,
                 observationService.getHealthIndex(observation, spansCount)
         )
     }
