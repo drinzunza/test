@@ -393,10 +393,12 @@ class MainDocumentFactory(
                     }.filter { it.totalQuantity > 0 }
 
                     if (list.isNotEmpty()) {
-                        val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
+                        val totalHealthIndex: Double = list.sumByDouble { it.healthIndex * it.weight }
+                        val totalWeight: Int = list.sumBy { it.weight }
+                        val healthIndex = totalHealthIndex / totalWeight
                         table {
                             width { TABLE_WIDTH_PORTRAIT }
-                            defectSummaryFields.buildHeaderRows(this, component.name, totalHealthIndex)
+                            defectSummaryFields.buildHeaderRows(this, component.name, healthIndex)
                             list.forEach {
                                 row {
                                     defectSummaryFields.buildCells(this, it)
