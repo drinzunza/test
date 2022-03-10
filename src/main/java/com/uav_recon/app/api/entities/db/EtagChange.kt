@@ -14,4 +14,5 @@ class EtagChange : Serializable {
     val locationIds = mutableListOf<String>()
     val observationNames = mutableListOf<String>()
     val companies = mutableListOf<String>()
+    val structureTypes = mutableListOf<String>()
 }
