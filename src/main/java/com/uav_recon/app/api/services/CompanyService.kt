@@ -74,13 +74,17 @@ class CompanyService(
         if (user.admin && user.companyId == body.id) {
             companyRepository.findFirstById(body.id)?.let {
                 it.name = body.name
+                it.ratingInverse = body.ratingInverse
+
                 it.logo = body.logo
                 it.updatedBy = user.id
+                createEtag(listOf(it.id.toString()))
                 return companyRepository.save(it).toDto(types, companyTypes)
             }
         }
         // Admin can edit owner companies
         if (user.admin && body.type == CompanyType.OWNER) {
+
             var company = companyRepository.findFirstById(body.id)
             if (company == null) company = Company(
                 name = body.name,
