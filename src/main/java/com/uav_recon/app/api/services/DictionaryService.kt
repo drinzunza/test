@@ -28,7 +28,8 @@ class DictionaryService(
         private val inspectionService: InspectionService,
         private val structureComponentService: StructureComponentService,
         private val structureTypeRepository: StructureTypeRepository,
-        private val companyStructureTypeRepository: CompanyStructureTypeRepository
+        private val companyStructureTypeRepository: CompanyStructureTypeRepository,
+        private val companyRepository: CompanyRepository
 ) {
     private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
 
@@ -162,6 +163,7 @@ class DictionaryService(
         val structureIds = initIds(etags)
         val locationIds = initIds(etags)
         val observationNameIds = initIds(etags)
+        val companiesIds = initIds(etags);
 
         etags.forEach {
             val change = try {
@@ -178,6 +180,7 @@ class DictionaryService(
                 change.structures.forEach { if (structureIds?.contains(it) == false) structureIds.add(it) }
                 change.locationIds.forEach { if (locationIds?.contains(it) == false) locationIds.add(it) }
                 change.observationNames.forEach { if (observationNameIds?.contains(it) == false) observationNameIds.add(it) }
+                change.companies.forEach { if (companiesIds?.contains(it) == false) companiesIds.add(it) }
             }
         }
 
@@ -251,12 +254,16 @@ class DictionaryService(
         val structureTypes = structureTypeRepository.findAll().toList()
         val observationTypes = ObservationType.values().map { ObservationTypeDto(it.title, it.name, it.letter) }
         val conditionTypes = ConditionType.values().map { ConditionTypeDto(it.title, it.name, it.csWeight) }
-        val criticalFindings = CriticalFinding.values().map { CriticalFindingDto(it.name.toLowerCase().capitalize(), it.name) }
-
-        // Get dictionaries with ids
+        val criticalFindings =
+            CriticalFinding.values().map { CriticalFindingDto(it.name.toLowerCase().capitalize(), it.name) }
+        val companies: List<Company> =
+            if (user.companyId != null)
+                companyRepository.findAllByDeletedIsFalseAndIdIn(listOf(user.companyId!!))
+            else
+                listOf()
         val structureTypeId = buildType.toStructureTypePart()
         val structures = userStructures
-                .filter { structureTypeId == null || it.structureTypeId == structureTypeId }
+            .filter { structureTypeId == null || it.structureTypeId == structureTypeId }
                 .filter { companyStructureTypes.map { it.structureTypeId }.contains(it.structureTypeId) }
                 .map { s -> s.toDto(userStructureComponents, structureTypes) }
         val components = userComponents
@@ -274,10 +281,19 @@ class DictionaryService(
         val conditions = userConditions
                 .filter { defects.map { it.id }.contains(it.defectId) }
 
-        return DictionaryDto(conditions, defects, subcomponents,
-                components, structures, locations, observationNames,
-                structureTypes.map { t -> t.toDto() },
-                observationTypes, conditionTypes, criticalFindings
+        return DictionaryDto(
+            conditions,
+            defects,
+            subcomponents,
+            components,
+            structures,
+            locations,
+            observationNames,
+            structureTypes.map { t -> t.toDto() },
+            observationTypes,
+            conditionTypes,
+            criticalFindings,
+            companies
         )
     }
 
@@ -428,6 +444,8 @@ class DictionaryService(
             name = name,
             numOfSpansEnabled = numOfSpansEnabled,
             clockPositionEnabled = clockPositionEnabled,
-            deleted = deleted
+            deleted = deleted,
+            hideObservationType = hideObservationType,
+            hideStationMarker = hideStationMarker
     )
 }

@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.uav_recon.app.api.controllers.handlers.AccessDeniedException
 import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.StructureTypeDto
@@ -40,8 +41,8 @@ class StructureTypesService(
     @Transactional
     fun update(authenticatedUser: User, body: StructureTypeDto): StructureTypeDto {
         if (!authenticatedUser.admin) throw AccessDeniedException()
-        val type = getDbType(authenticatedUser, body.id) ?: throw Error(171, "Not found type")
-        etagRepository.save(Etag(0, UUID.randomUUID().toString(), "{}"))
+        val type = structureTypeRepository.findByCodeAndDeletedIsFalse(body.id) ?: throw Error(171, "Not found type");
+        createEtag(listOf(type.code))
         return structureTypeRepository.save(body.toEntity(type.id)).toDto()
     }
 
@@ -77,5 +78,18 @@ class StructureTypesService(
         companyStructureTypeRepository.saveAll(newCompanyTypes.toList())
 
         return getCompanyTypes(authenticatedUser, companyId)
+    }
+
+
+    private fun createEtag(ids: List<String>) {
+        val change = EtagChange()
+        ids.forEach { change.structureTypes.add(it) }
+        etagRepository.save(
+            Etag(
+                id = 0,
+                hash = UUID.randomUUID().toString(),
+                change = ObjectMapper().writeValueAsString(change)
+            )
+        )
     }
 }

@@ -16,6 +16,10 @@ class StructureType(
         var numOfSpansEnabled: Boolean = false,
         @Column(name = "clock_position_enabled")
         var clockPositionEnabled: Boolean = false,
+        @Column(name = "hide_observation_type")
+        var hideObservationType: Boolean = false,
+        @Column(name = "hide_station_marker")
+        var hideStationMarker: Boolean = false,
         var deleted: Boolean = false
 ) : Serializable
 
@@ -24,6 +28,8 @@ fun StructureType.toDto() = StructureTypeDto(
         name = name,
         numOfSpansEnabled = numOfSpansEnabled,
         clockPositionEnabled = clockPositionEnabled,
+        hideObservationType = hideObservationType,
+        hideStationMarker = hideStationMarker,
         deleted = deleted
 )
 
@@ -33,5 +39,7 @@ fun StructureTypeDto.toEntity(typeId: Long) = StructureType(
         name = name,
         numOfSpansEnabled = numOfSpansEnabled,
         clockPositionEnabled = clockPositionEnabled,
+        hideObservationType = hideObservationType,
+        hideStationMarker = hideStationMarker,
         deleted = deleted
 )

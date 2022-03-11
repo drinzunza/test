@@ -100,7 +100,7 @@ class MainDocumentFactory(
         private val DEFECT_PHOTOS_ELEMENT = TextElement.Simple("Inspection Photographs", styles = ITALIC_BOLD_STYLE_LIST)
     }
 
-    override fun generateDocument(report: Report): Document {
+    override fun generateDocument(report: Report, isInverse: Boolean): Document {
         val inspection = report.getInspection()
         logger.info("start fill objects")
         inspectionService.fillObjects(listOf(inspection))
@@ -147,9 +147,9 @@ class MainDocumentFactory(
 
             page { createTitlePage(report, inspection, inspector, structure, company, flavor) }
             page { createGlobalPage(inspection, flavor) }
-            page { createStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor) }
+            page { createStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor, isInverse) }
             if (CustomReportManager.getInstance().isVisible("maintenance_observation_section", flavor)) {
-                page { createNonStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor) }
+                page { createNonStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor, isInverse) }
             }
             page { createObservationSummary(inspection, flavor) }
 
@@ -393,10 +393,12 @@ class MainDocumentFactory(
                     }.filter { it.totalQuantity > 0 }
 
                     if (list.isNotEmpty()) {
-                        val totalHealthIndex: Double = list.sumByDouble { it.healthIndex } / list.size
+                        val totalHealthIndex: Double = list.sumByDouble { it.healthIndex * it.weight }
+                        val totalWeight: Int = list.sumBy { it.weight }
+                        val healthIndex = totalHealthIndex / totalWeight
                         table {
                             width { TABLE_WIDTH_PORTRAIT }
-                            defectSummaryFields.buildHeaderRows(this, component.name, totalHealthIndex)
+                            defectSummaryFields.buildHeaderRows(this, component.name, healthIndex)
                             list.forEach {
                                 row {
                                     defectSummaryFields.buildCells(this, it)
@@ -517,17 +519,17 @@ class MainDocumentFactory(
         lineFeed { SINGLE_LINE_FEED_ELEMENT }
     }
 
-    private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User, isTunnelStructure: Boolean, flavor: String) {
+    private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User, isTunnelStructure: Boolean, flavor: String, isInverse: Boolean) {
         val title = TextElement.Simple(CustomReportManager.getInstance().getString("non_structural_defects_report", flavor), styles = ITALIC_BOLD_STYLE_LIST)
-        createDefectsReport(inspection, inspector, title, StructuralType.MAINTENANCE, isTunnelStructure, flavor)
+        createDefectsReport(inspection, inspector, title, StructuralType.MAINTENANCE, isTunnelStructure, flavor, isInverse)
     }
 
-    private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User, isTunnelStructure: Boolean, flavor: String) {
+    private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User, isTunnelStructure: Boolean, flavor: String, isInverse: Boolean) {
         val title = TextElement.Simple(CustomReportManager.getInstance().getString("structural_defects_report", flavor), styles = ITALIC_BOLD_STYLE_LIST)
-        createDefectsReport(inspection, inspector, title, StructuralType.STRUCTURAL, isTunnelStructure, flavor)
+        createDefectsReport(inspection, inspector, title, StructuralType.STRUCTURAL, isTunnelStructure, flavor, isInverse)
     }
 
-    private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType, isTunnelStructure: Boolean, flavor: String) {
+    private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType, isTunnelStructure: Boolean, flavor: String, isInverse: Boolean) {
         orientation = Page.Orientation.LANDSCAPE
 
         val defectReportFieldFactory = DefectReportFields(flavor, isTunnelStructure)
@@ -540,7 +542,7 @@ class MainDocumentFactory(
         table {
             width { TABLE_WIDTH_LANDSCAPE }
             defectReportFieldFactory.buildHeaderRow(this, type)
-            defectReportFieldFactory.buildRows(this, inspection, inspector, type, configuration.server.host, isTunnelStructure)
+            defectReportFieldFactory.buildRows(this, inspection, inspector, type, configuration.server.host, isTunnelStructure, isInverse)
         }
     }
 

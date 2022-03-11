@@ -5,4 +5,6 @@ import org.springframework.data.repository.CrudRepository
 
 interface StructureTypeRepository : CrudRepository<StructureType, Long> {
     fun findAllByDeletedIsFalse(): List<StructureType>
+
+    fun findByCodeAndDeletedIsFalse(code: String): StructureType?
 }

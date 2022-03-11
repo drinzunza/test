@@ -99,7 +99,8 @@ internal class DefectReportFields(private val flavor: String = "default", privat
     fun buildRows(tableBuilder: Table.Builder,
                   inspection: Inspection, inspector: User,
                   type: StructuralType, server: String,
-                  sortByStationing: Boolean
+                  sortByStationing: Boolean,
+                  isInverse: Boolean
     ) {
         tableBuilder.apply {
             var coloredCell = true
@@ -129,7 +130,7 @@ internal class DefectReportFields(private val flavor: String = "default", privat
                                 cell {
                                     width = field.getCellWidth(this.width)
                                     color = if (coloredCell) ReportConstants.COLOR_GRAY else null
-                                    addParagraph(rows.size, inspection, inspector, defectToObservationMap[defect.id]!!, defect, defectIndex, field.tag, type, server)
+                                    addParagraph(rows.size, inspection, inspector, defectToObservationMap[defect.id]!!, defect, defectIndex, field.tag, type, server, isInverse)
                                 }
                             }
                         }
@@ -147,7 +148,8 @@ internal class DefectReportFields(private val flavor: String = "default", privat
             defectIndex: Int,
             tag: String,
             type: StructuralType,
-            server: String
+            server: String,
+            isInverse: Boolean
     ) {
         paragraph {
             alignment = Alignment.START
@@ -184,7 +186,7 @@ internal class DefectReportFields(private val flavor: String = "default", privat
                     alignment = Alignment.CENTER
                     when (type) {
                         StructuralType.MAINTENANCE -> addCellText(TEXT_NOT_APPLICABLE)
-                        StructuralType.STRUCTURAL -> addCellText(convertCsRating(defect.toStructural()?.condition?.type))
+                        StructuralType.STRUCTURAL -> addCellText(convertCsRating(defect.toStructural()?.condition?.type, isInverse))
                     }
                 }
                 REPAIR_TAG -> {
@@ -239,12 +241,24 @@ internal class DefectReportFields(private val flavor: String = "default", privat
             }
         }
 
-    private fun convertCsRating(conditionType: ConditionType?): String = when (conditionType) {
-        ConditionType.GOOD -> "1"
-        ConditionType.FAIR -> "2"
-        ConditionType.POOR -> "3"
-        ConditionType.SEVERE -> "4"
-        else -> EMPTY_CELL_VALUE
+    private fun convertCsRating(conditionType: ConditionType?, isInverse: Boolean): String {
+        if (isInverse) {
+            return when (conditionType) {
+                ConditionType.GOOD -> "4"
+                ConditionType.FAIR -> "3"
+                ConditionType.POOR -> "2"
+                ConditionType.SEVERE -> "1"
+                else -> EMPTY_CELL_VALUE
+            }
+        }else{
+            return when (conditionType) {
+                ConditionType.GOOD -> "1"
+                ConditionType.FAIR -> "2"
+                ConditionType.POOR -> "3"
+                ConditionType.SEVERE -> "4"
+                else -> EMPTY_CELL_VALUE
+            }
+        }
     }
 
     class DefectReportField(val textElement: TextElement.Simple, private val widthPercent: Float, val tag: String) {
