@@ -87,7 +87,7 @@ class InspectionService(
             status = status,
             termRating = termRating,
             weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
-            observations = observations,
+            observations = observations ?: listOf(),
             spansCount = spansCount,
             projectId = projectId,
             archived = archived,
