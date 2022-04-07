@@ -270,7 +270,7 @@ class InspectionService(
 
     fun updateSgrRating(results: List<Inspection>): Int {
         val sgrChangedInspections = mutableListOf<Inspection>()
-        results.forEach { inspection ->
+        results.parallelStream().forEach { inspection ->
             calculateSgrRating(inspection)?.let { sgrRating ->
                 val roundedSgrRating = (sgrRating * 10).roundToInt() / 10.0
                 if (inspection.sgrRating?.toDoubleOrNull() != roundedSgrRating) {
@@ -359,7 +359,7 @@ class InspectionService(
         val roles = inspectionRoleRepository.findAllByInspectionIdIn(inspectionIds)
             .filter { it.roles?.contains(Role.INSPECTOR) ?: false }
         val users = userRepository.findAllByIdIn(roles.map { it.userId }).map { u -> u.toDto() }
-        inspectionIds.forEach { id ->
+        inspectionIds.parallelStream().forEach { id ->
             map[id] = users.filter { roles.filter { it.inspectionId == id }.map { it.userId }.contains(it.id) }
         }
         return map
@@ -553,15 +553,15 @@ class InspectionService(
         val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
         val locationIds = locationIdRepository.findAll()
 
-        observationDefects.forEach { observationDefect ->
+        observationDefects.parallelStream().forEach { observationDefect ->
             observationDefect.condition = conditions.firstOrNull { it.id == observationDefect.conditionId }
         }
-        observations.forEach { observation ->
+        observations.parallelStream().forEach { observation ->
             observation.subcomponent = subcomponents.firstOrNull { it.id == observation.subComponentId }
             observation.defects = observationDefects.filter { it.observationId == observation.uuid }
             observation.locationIds = locationIds.toList()
         }
-        inspections.forEach { inspection ->
+        inspections.parallelStream().forEach { inspection ->
             inspection.observations = observations.filter { it.inspectionId == inspection.uuid }
         }
     }
