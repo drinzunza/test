@@ -34,6 +34,7 @@ class PhotoService(
     fun Photo.toDto() = PhotoDto(
         uuid = uuid,
         name = name,
+        observationDefectId = observationDefectId,
         createdAt = createdAtClient,
         link = link,
         thumbLink = getThumbnailLink(this),
@@ -62,6 +63,10 @@ class PhotoService(
 
     fun findAllByObservationDefectIdAndNotDeleted(id: String): List<PhotoDto> {
         return photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(id).map { p -> p.toDto() }
+    }
+
+    fun findAllByObservationDefectIdAndNotDeleted(ids: List<String>): List<PhotoDto> {
+        return photoRepository.findAllByObservationDefectIdInAndDeletedIsFalse(ids).map { p -> p.toDto() }
     }
 
     @Throws(Error::class)

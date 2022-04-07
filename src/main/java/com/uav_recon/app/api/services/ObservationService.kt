@@ -1,10 +1,7 @@
 package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.*
-import com.uav_recon.app.api.entities.requests.bridge.InspectionUpdateDto
-import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
-import com.uav_recon.app.api.entities.requests.bridge.ObservationInspectDto
-import com.uav_recon.app.api.entities.requests.bridge.ObservationUpdateDto
+import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.repositories.SubcomponentRepository
@@ -13,14 +10,15 @@ import com.uav_recon.app.api.utils.isEachMeasureUnit
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.transaction.Transactional
+import kotlin.collections.ArrayList
 
 @Service
 class ObservationService(
-        private val inspectionRepository: InspectionRepository,
-        private val observationRepository: ObservationRepository,
-        private val observationDefectService: ObservationDefectService,
-        private val subcomponentAndStructureRepository: SubcomponentAndStructureRepository,
-        private val subcomponentRepository : SubcomponentRepository
+    private val inspectionRepository: InspectionRepository,
+    private val observationRepository: ObservationRepository,
+    private val observationDefectService: ObservationDefectService,
+    private val subcomponentAndStructureRepository: SubcomponentAndStructureRepository,
+    private val subcomponentRepository: SubcomponentRepository
 ) {
     private val MEASURE_TYPE_EACH = "each"
     private val invalidInspectionUuid = Error(101, "Invalid inspection UUID")
@@ -40,31 +38,48 @@ class ObservationService(
         useHealthIndex = null
     )
 
-    fun ObservationDto.toEntity(createdBy: Int, updatedBy: Int, inspectionId: String, currentHealthIndex: Double?) = Observation(
+    fun Observation.toDtoV2(observationDefects: List<ObservationDefectDto>) = ObservationDto(
         id = id,
         uuid = uuid,
-        createdBy = createdBy,
-        updatedBy = updatedBy,
-        subComponentId = subComponentId,
-        structuralComponentId = structuralComponentId,
-        dimensionNumber = dimensionNumber,
-        roomNumber = roomNumber,
-        locationDescription = locationDescription,
         drawingNumber = drawingNumber,
-        inspectionId = inspectionId,
-        healthIndex = if (useHealthIndex == true) healthIndex else currentHealthIndex
+        locationDescription = locationDescription,
+        roomNumber = roomNumber,
+        dimensionNumber = dimensionNumber,
+        structuralComponentId = structuralComponentId,
+        subComponentId = subComponentId,
+        observationDefects = observationDefects.filter { it.observationId == uuid }, //observationDefectService.findAllByObservationIdAndNotDeleted(uuid),
+        inspected = inspected,
+        healthIndex = healthIndex,
+        useHealthIndex = null
     )
+
+    fun ObservationDto.toEntity(createdBy: Int, updatedBy: Int, inspectionId: String, currentHealthIndex: Double?) =
+        Observation(
+            id = id,
+            uuid = uuid,
+            createdBy = createdBy,
+            updatedBy = updatedBy,
+            subComponentId = subComponentId,
+            structuralComponentId = structuralComponentId,
+            dimensionNumber = dimensionNumber,
+            roomNumber = roomNumber,
+            locationDescription = locationDescription,
+            drawingNumber = drawingNumber,
+            inspectionId = inspectionId,
+            healthIndex = if (useHealthIndex == true) healthIndex else currentHealthIndex
+        )
 
     @Throws(Error::class)
     @Transactional
     fun save(dto: ObservationDto, inspectionId: String, updatedBy: Int): ObservationDto {
         val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
-                ?: throw Error(101, "Invalid inspection UUID")
+            ?: throw Error(101, "Invalid inspection UUID")
         val observation = observationRepository.findFirstByUuid(dto.uuid)
         val createdBy = observation?.createdBy ?: updatedBy
 
         // Disabled set value without useHealthIndex = true. Need to support old app and frontend versions.
-        val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId, observation?.healthIndex))
+        val saved =
+            observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId, observation?.healthIndex))
         return saved.toDto()
     }
 
@@ -77,7 +92,8 @@ class ObservationService(
         val createdBy = observation?.createdBy ?: updatedBy
 
         // Disabled set value without useHealthIndex = true. Need to support old app and frontend versions.
-        val saved = observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId, observation?.healthIndex))
+        val saved =
+            observationRepository.save(dto.toEntity(createdBy, updatedBy, inspectionId, observation?.healthIndex))
         dto.observationDefects?.forEach {
             observationDefectService.save(it, inspectionId, saved.uuid, updatedBy)
         }
@@ -91,9 +107,9 @@ class ObservationService(
 
     fun updateInspected(dto: ObservationInspectDto, inspectionId: String, updatedBy: Int): ObservationDto {
         val inspection = inspectionRepository.findFirstByUuid(inspectionId)
-                ?: throw Error(101, "Invalid inspection UUID")
+            ?: throw Error(101, "Invalid inspection UUID")
         val observation = observationRepository.findFirstByUuid(dto.uuid)
-                ?: throw Error(102, "Invalid observation uuid")
+            ?: throw Error(102, "Invalid observation uuid")
         observation.updatedBy = updatedBy
         observation.inspected = dto.inspected
         return observationRepository.save(observation).toDto()
@@ -101,28 +117,52 @@ class ObservationService(
 
     fun updateObservation(user: User, uuid: String, dto: ObservationUpdateDto): ObservationDto {
         val observation = observationRepository.findFirstByUuid(uuid)
-                ?: throw Error(102, "Invalid observation uuid")
+            ?: throw Error(102, "Invalid observation uuid")
         observation.update(dto)
         return observationRepository.save(observation).toDto()
     }
 
-    fun generateObservationsFromTemplate(authenticatedUser: User, structureId: String, inspectionId: String): List<ObservationDto> {
+    fun generateObservationsFromTemplate(
+        authenticatedUser: User,
+        structureId: String,
+        inspectionId: String
+    ): List<ObservationDto> {
         val observationList = mutableListOf<ObservationDto>()
         val subComponentAndStructureList = subcomponentAndStructureRepository.findAllByStructureId(structureId)
-        val subComponents = subcomponentRepository.findAllByDeletedIsFalseAndIdIn(subComponentAndStructureList.map { it.subcomponentId}).map { it.id to it }.toMap()
+        val subComponents =
+            subcomponentRepository.findAllByDeletedIsFalseAndIdIn(subComponentAndStructureList.map { it.subcomponentId })
+                .map { it.id to it }.toMap()
         subComponentAndStructureList.forEach {
-            if(it.subcomponentId in subComponents){
+            if (it.subcomponentId in subComponents) {
                 val generatedUUID = UUID.randomUUID().toString()
-                observationList.add(Observation(
-                        generatedUUID, generatedUUID, authenticatedUser.id.toInt(), authenticatedUser.id.toInt(), inspectionId,
-                        subComponents[it.subcomponentId]?.componentId, it.subcomponentId, dimensionNumber = it.size).toDto())
+                observationList.add(
+                    Observation(
+                        generatedUUID,
+                        generatedUUID,
+                        authenticatedUser.id.toInt(),
+                        authenticatedUser.id.toInt(),
+                        inspectionId,
+                        subComponents[it.subcomponentId]?.componentId,
+                        it.subcomponentId,
+                        dimensionNumber = it.size
+                    ).toDto()
+                )
             }
         }
         return observationList
     }
 
     fun findAllByInspectionUuidAndNotDeleted(uuid: String): List<ObservationDto> {
-        return observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid).map { o -> o.toDto() }
+        val observationDtos = mutableListOf<ObservationDto>();
+        observationRepository.findAllByInspectionIdAndDeletedIsFalse(uuid).parallelStream()
+            .forEach { o -> observationDtos.add(o.toDto()) }
+        return observationDtos
+    }
+
+    fun findAllByInspectionUuidsAndNotDeleted(uuids: List<String>): Map<String, List<ObservationDto>> {
+        val observations = observationRepository.findAllByDeletedIsFalseAndInspectionIdIn(uuids)
+        val observationDefects = observationDefectService.findAllByObservationIdsAndNotDeleted(observations.map { it.uuid })
+        return observations.groupBy ( {it.inspectionId } , { it.toDtoV2(observationDefects) } )
     }
 
     @Throws(Error::class)
@@ -145,9 +185,15 @@ class ObservationService(
 
     fun getCsValue(observation: Observation, conditionType: ConditionType, spansCount: Int): Int {
         return when (conditionType) {
-            ConditionType.GOOD -> getTotalQuantity(observation, spansCount) - ConditionType.LIST_EXCLUDING_GOOD.sumBy { getCsValue(observation, it, spansCount) }
+            ConditionType.GOOD -> getTotalQuantity(
+                observation,
+                spansCount
+            ) - ConditionType.LIST_EXCLUDING_GOOD.sumBy { getCsValue(observation, it, spansCount) }
             else -> when {
-                observation.subcomponent?.isEachMeasureUnit() ?: false -> calculateCsProcessB(observation, conditionType)
+                observation.subcomponent?.isEachMeasureUnit() ?: false -> calculateCsProcessB(
+                    observation,
+                    conditionType
+                )
                 else -> calculateCsProcessA(observation, conditionType)
             }
         }
@@ -155,24 +201,24 @@ class ObservationService(
 
     private fun calculateCsProcessA(observation: Observation, conditionType: ConditionType): Int {
         return observation.defects
-                ?.filter { it.type == StructuralType.STRUCTURAL }
-                ?.filter { conditionType == it.condition?.type }
-                ?.sumBy { it.size?.toIntOrNull() ?: 0 } ?: 0
+            ?.filter { it.type == StructuralType.STRUCTURAL }
+            ?.filter { conditionType == it.condition?.type }
+            ?.sumBy { it.size?.toIntOrNull() ?: 0 } ?: 0
     }
 
     private fun calculateCsProcessB(observation: Observation, conditionType: ConditionType): Int {
         return observation.defects
-                ?.filter { it.type == StructuralType.STRUCTURAL }
-                ?.filter { it.span != null }
-                ?.groupBy(ObservationDefect::span)
-                ?.mapValues {
-                    it.value
-                            .mapNotNull { type -> type.condition?.type }
-                            .max()
-                }
-                ?.count {
-                    it.value == conditionType
-                } ?: 0
+            ?.filter { it.type == StructuralType.STRUCTURAL }
+            ?.filter { it.span != null }
+            ?.groupBy(ObservationDefect::span)
+            ?.mapValues {
+                it.value
+                    .mapNotNull { type -> type.condition?.type }
+                    .max()
+            }
+            ?.count {
+                it.value == conditionType
+            } ?: 0
     }
 
     fun getHealthIndex(observation: Observation, spansCount: Int): Double {
@@ -197,19 +243,19 @@ class ObservationService(
         if (structuralComponentId == null && subComponentId == null) return null
 
         return locationIds?.firstOrNull { locationId ->
-                    var matches = true
-                    structuralComponentId?.let { majorId ->
-                        locationId.majorIds?.let { possibleIds ->
-                            matches = matches and possibleIds.contains(majorId)
-                        }
-                    }
-                    subComponentId?.let { subId ->
-                        locationId.subComponentIds?.let { possibleIds ->
-                            matches = matches and possibleIds.contains(subId)
-                        }
-                    }
-                    matches
+            var matches = true
+            structuralComponentId?.let { majorId ->
+                locationId.majorIds?.let { possibleIds ->
+                    matches = matches and possibleIds.contains(majorId)
                 }
+            }
+            subComponentId?.let { subId ->
+                locationId.subComponentIds?.let { possibleIds ->
+                    matches = matches and possibleIds.contains(subId)
+                }
+            }
+            matches
+        }
     }
 
     private fun LocationId.getAvailableSpans(spanNumber: Int?): List<String> {
@@ -233,10 +279,10 @@ class ObservationService(
         }
         spanNumber?.let { inspectionSpanNumber ->
             iteratedSpanPatterns
-                    ?.count { it == ',' }
-                    ?.let { size ->
-                        result += inspectionSpanNumber * (size + 1)
-                    }
+                ?.count { it == ',' }
+                ?.let { size ->
+                    result += inspectionSpanNumber * (size + 1)
+                }
         }
         return result
     }

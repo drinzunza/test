@@ -48,9 +48,36 @@ class ObservationDefectService(
             stationMarker = stationMarker,
             observationType = observationType,
             size = size,
+            observationId = observationId,
             type = type,
             weather = getWeather(this),
             observationNameId = observationNameId,
+            clockPosition = clockPosition,
+            repairDate = repairDate,
+            repairMethod = repairMethod,
+            previousDefectNumber = previousDefectNumber,
+            createdAt = createdAt,
+            createdAtClient = createdAtClient
+    )
+
+    private fun ObservationDefect.toDtoV2(photo: List<PhotoDto>, createdBy: SimpleUserDto?) = ObservationDefectDto(
+            id = id,
+            uuid = uuid,
+            createdBy = createdBy,
+            criticalFindings = criticalFindings?.toList(),
+            conditionId = conditionId,
+            defectId = defectId,
+            description = description,
+            materialId = materialId,
+            photos = photo.filter { it.observationDefectId == uuid },
+            span = span,
+            stationMarker = stationMarker,
+            observationType = observationType,
+            size = size,
+            type = type,
+            weather = getWeather(this),
+            observationNameId = observationNameId,
+            observationId = observationId,
             clockPosition = clockPosition,
             repairDate = repairDate,
             repairMethod = repairMethod,
@@ -203,6 +230,20 @@ class ObservationDefectService(
                     }
                     o.toDto(createdBy)
                 }
+    }
+
+    fun findAllByObservationIdsAndNotDeleted(ids: List<String>): List<ObservationDefectDto> {
+        val ownersMap = mutableMapOf<Int, SimpleUserDto>()
+        val observationDefects =  observationDefectRepository.findAllByDeletedIsFalseAndObservationIdIn(ids)
+        val observationDefectPhotoDtos = photoService.findAllByObservationDefectIdAndNotDeleted(observationDefects.map { it.uuid })
+        return observationDefects.map { o ->
+            var createdBy = ownersMap[o.createdBy]
+            if (createdBy == null) {
+                createdBy = userService.get(o.createdBy).toDto()
+                ownersMap[o.createdBy] = createdBy
+            }
+            o.toDtoV2(observationDefectPhotoDtos, createdBy)
+        };
     }
 
     fun changeObservationDefectIdType(id: String, type: StructuralType?): String {

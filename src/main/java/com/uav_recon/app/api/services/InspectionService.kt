@@ -67,6 +67,34 @@ class InspectionService(
         inspectors = inspectors ?: getUsers(uuid)
     )
 
+    fun Inspection.toDtoV2(
+        inspectors: List<SimpleUserDto>? = null,
+        structure: Structure? = null,
+        observations: List<ObservationDto>? = null
+    ): InspectionDtoV2 {
+        return InspectionDtoV2(
+            uuid = uuid,
+            location = if (latitude != null) LocationDto(latitude, longitude, altitude) else null,
+            endDate = endDate,
+            startDate = startDate,
+            generalSummary = generalSummary,
+            isEditable = isEditable,
+            sgrRating = sgrRating,
+            structureId = structureId,
+            structureCode = structure?.code ?: structureId?.let { structureRepository.findFirstById(it) }?.code,
+            structureName = structure?.name ?: structureId?.let { structureRepository.findFirstById(it) }?.name,
+            report = if (reportId != null) InspectionReport(reportId, reportLink, reportDate) else null,
+            status = status,
+            termRating = termRating,
+            weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
+            observations = observations,
+            spansCount = spansCount,
+            projectId = projectId,
+            archived = archived,
+            inspectors = inspectors ?: getUsers(uuid)
+        )
+    }
+
     fun saveV1(user: User, dto: InspectionDto) = save(user, dto.toDtoV2()).toDtoV1()
 
     @Transactional
@@ -181,18 +209,28 @@ class InspectionService(
         var inspections = listNotDeleted(user, projectId, structureId, companyId)
 
         // TODO fix for admin inspection android crash (Out Of Memory)
+        var observations: Map<String, List<ObservationDto>>? = null
         if (withObservations) {
             val inspectionRoles = inspectionRoleRepository.findAllByUserId(user.id)
             val assignedInspectionIds = inspectionRoles.map { it.inspectionId }
             inspections =
                 inspections.filter { it.createdBy.toLong() == user.id || assignedInspectionIds.contains(it.uuid) }
+            observations = observationService.findAllByInspectionUuidsAndNotDeleted(inspections.map { it.uuid })
         }
 
         val inspectorsMap = getUsers(inspections.map { it.uuid })
         val structures = structureRepository.findAllByIdIn(inspections.mapNotNull { it.structureId })
-        return inspections.map { i ->
-            i.toDto(withObservations, inspectorsMap[i.uuid], structures.find { it.id == i.structureId })
+        val inspectionDtos = ArrayList<InspectionDtoV2>(inspections.size)
+        inspections.parallelStream().forEach { i ->
+            inspectionDtos.add(
+                i.toDtoV2(
+                    inspectorsMap[i.uuid],
+                    structures.find { it.id == i.structureId },
+                    observations?.get(i.uuid)
+            )
+            )
         }
+        return inspectionDtos;
     }
 
     fun getCompanyIds(user: User, companyId: Long?): List<Long> {
