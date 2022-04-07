@@ -17,6 +17,7 @@ data class ObservationDefectDto(
         val conditionId: String?,
         val description: String?,
         val materialId: String?,
+        val observationId: String?,
         val photos: List<PhotoDto>?,
         val span: String?,
         val stationMarker: String?,
