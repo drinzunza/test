@@ -10,8 +10,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
+import java.util.Collections
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -77,6 +79,15 @@ class InspectionController(private val inspectionService: InspectionService) : B
         @PathVariable uuid: String
     ): ResponseEntity<InspectionDtoV2> {
         return ResponseEntity.ok(inspectionService.getNotDeleted(getAuthenticatedUser(), uuid))
+    }
+
+    @GetMapping("$VERSION2/inspection/{uuid}/opOrd")
+    fun getInspectionOpOrd(
+        @RequestHeader(X_TOKEN) token: String,
+        @PathVariable uuid: String
+    ): ResponseEntity<*> {
+        val opOrdLink = inspectionService.getInspectionOpOrd(uuid)
+        return ResponseEntity.ok(Collections.singletonMap("opOrdLink", opOrdLink))
     }
 
     @PostMapping("$VERSION2/inspection/full")
@@ -181,5 +192,15 @@ class InspectionController(private val inspectionService: InspectionService) : B
         @RequestBody body: InspectionUserIdsDto
     ): ResponseEntity<InspectionUsersDto> {
         return ResponseEntity.ok(inspectionService.assignUsers(getAuthenticatedUser(), body))
+    }
+
+    @PostMapping("$VERSION2/inspection/{uuid}/opOrd")
+    fun attachInspectionOpOrd(
+        @RequestHeader(X_TOKEN) token: String,
+        @PathVariable uuid: String,
+        @RequestParam data: MultipartFile
+    ): ResponseEntity<*> {
+        inspectionService.attachOpOrdToInspection(uuid, data)
+        return ResponseEntity.ok(success)
     }
 }

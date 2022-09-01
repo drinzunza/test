@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
+import java.io.FileNotFoundException
 import java.nio.file.*
 
 class LocalStorageFileService(private val configuration: UavConfiguration) : FileService {
@@ -50,6 +51,15 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         Files.delete(Paths.get(configuration.files.root, path))
         Files.delete(Paths.get(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT)))
         Files.delete(Paths.get(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT_THUMB)))
+    }
+
+    override fun getLink(path: String): String {
+        val absolutePath = getAbsolutePath(path, "", FileService.FileType.NORMAL)
+        if (absolutePath.toFile().exists()) {
+            return "$linkPrefix$path"
+        } else {
+            throw FileNotFoundException()
+        }
     }
 
     override fun regenerateRectImages(photo: Photo) {

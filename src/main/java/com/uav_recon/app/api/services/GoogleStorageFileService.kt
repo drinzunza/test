@@ -21,6 +21,10 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
         storage.delete(BlobId.of(configuration.files.gsBucket, link.replace(linkPrefix, "")))
     }
 
+    override fun getLink(path: String): String {
+        return ""
+    }
+
     override fun get(link: String, drawables: String?, type: FileService.FileType): InputStream {
         return storage.get(BlobId.of(configuration.files.gsBucket, link.replace(linkPrefix, "")))
                 .getContent()
