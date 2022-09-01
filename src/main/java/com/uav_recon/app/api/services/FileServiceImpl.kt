@@ -19,6 +19,10 @@ class FileServiceImpl(configuration: UavConfiguration) : FileService {
         service.delete(link)
     }
 
+    override fun getLink(path: String): String {
+        return service.getLink(path)
+    }
+
     override fun get(link: String, drawables: String?, type: FileService.FileType): InputStream {
         return service.get(link, drawables, type)
     }

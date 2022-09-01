@@ -9,6 +9,7 @@ import com.uav_recon.app.api.entities.responses.bridge.InspectionUsersDto
 import com.uav_recon.app.api.repositories.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
 import java.util.*
 import javax.transaction.Transactional
 import kotlin.math.roundToInt
@@ -183,6 +184,35 @@ class InspectionService(
             throw Error(105, "Inspection not found or inspection does not contain relation to structure")
         }
         return inspectionArchivePhotoDto;
+    }
+
+    @Throws(Error::class)
+    fun getInspectionOpOrd(inspectionId: String): String {
+        val inspection = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId)
+        var link = ""
+        if (inspection.isPresent) {
+            val path = "op_ord_docs/$inspectionId.docx"
+            try {
+                link = fileService.getLink(path)
+            } catch (e: Exception) {
+                throw Error(105, "Operational order document not found in this inspection")
+            }
+        } else {
+            throw Error(105, "Inspection not found")
+        }
+        return link
+    }
+
+    @Throws(Error::class)
+    fun attachOpOrdToInspection(inspectionId: String, data: MultipartFile): String {
+        val inspection = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId)
+        var link = ""
+        if (inspection.isPresent) {
+            link = fileService.save("op_ord_docs/$inspectionId.docx", data.bytes, "docx", null)
+        } else {
+            throw Error(105, "Inspection not found")
+        }
+        return link
     }
 
     fun listNotDeletedDtoV1(
