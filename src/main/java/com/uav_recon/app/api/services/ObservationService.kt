@@ -69,6 +69,27 @@ class ObservationService(
             healthIndex = if (useHealthIndex == true) healthIndex else currentHealthIndex
         )
 
+    fun cloneObservation(sourceObservationDto: ObservationDto, createdBy: Int, updatedBy: Int,
+                         inspectionId: String): ObservationDto {
+        val generatedUuid = UUID.randomUUID().toString()
+        val cloneObservation = Observation(
+            id = generatedUuid,
+            uuid = generatedUuid,
+            createdBy = createdBy,
+            updatedBy = updatedBy,
+            subComponentId = sourceObservationDto.subComponentId,
+            structuralComponentId = sourceObservationDto.structuralComponentId,
+            dimensionNumber = sourceObservationDto.dimensionNumber,
+            roomNumber = sourceObservationDto.roomNumber,
+            locationDescription = sourceObservationDto.locationDescription,
+            drawingNumber = sourceObservationDto.drawingNumber,
+            inspectionId = inspectionId,
+            healthIndex = sourceObservationDto.healthIndex
+        )
+
+        return observationRepository.save(cloneObservation).toDto()
+    }
+
     @Throws(Error::class)
     @Transactional
     fun save(dto: ObservationDto, inspectionId: String, updatedBy: Int): ObservationDto {
