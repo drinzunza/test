@@ -75,7 +75,7 @@ class PhotoService(
             link = sourcePhotoDto.link ?: "",
             createdBy = createdBy,
             updatedBy = updatedBy,
-            createdAtClient = createdAtClient
+            createdAtClient = createdAtClient ?: OffsetDateTime.now()
         )
         return photoRepository.save(clonedPhoto).toDto()
     }
