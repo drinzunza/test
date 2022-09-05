@@ -185,8 +185,6 @@ class InspectionService(
         val existingInspectionDto = existingInspection.toDto()
 
         // clone the observations
-        logger.info("OBSERVATIONS LIST SIZE: ${existingInspection.observations?.size}")
-
         existingInspectionDto.observations?.forEach { currentObservation ->
              val cloneObservation = observationService.cloneObservation(
                 sourceObservationDto = currentObservation,
