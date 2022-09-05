@@ -112,6 +112,36 @@ class ObservationDefectService(
             createdAtClient = createdAtClient
     )
 
+    fun cloneObservationDefect(sourceObservationDefectDto: ObservationDefectDto, createdBy: Int, updatedBy: Int,
+                               observationId: String, createdAtClient: OffsetDateTime?): ObservationDefectDto {
+        val generatedUuid = UUID.randomUUID().toString()
+        val cloneObservationDefect = ObservationDefect(
+            id = generatedUuid,
+            uuid = generatedUuid,
+            createdBy = createdBy,
+            updatedBy = updatedBy,
+            materialId = sourceObservationDefectDto.materialId,
+            description = sourceObservationDefectDto.description,
+            defectId = sourceObservationDefectDto.defectId,
+            conditionId = sourceObservationDefectDto.conditionId,
+            criticalFindings = sourceObservationDefectDto.criticalFindings?.toTypedArray(),
+            observationId = observationId,
+            span = sourceObservationDefectDto.span,
+            stationMarker = sourceObservationDefectDto.stationMarker,
+            observationType = sourceObservationDefectDto.observationType,
+            size = sourceObservationDefectDto.size,
+            type = sourceObservationDefectDto.type,
+            observationNameId = sourceObservationDefectDto.observationNameId,
+            clockPosition = sourceObservationDefectDto.clockPosition,
+            repairMethod = sourceObservationDefectDto.repairMethod,
+            repairDate = sourceObservationDefectDto.repairDate,
+            previousDefectNumber = sourceObservationDefectDto.previousDefectNumber,
+            createdAtClient = createdAtClient
+        )
+        val userDto = userService.get(createdBy).toDto()
+        return observationDefectRepository.save(cloneObservationDefect).toDto(userDto)
+    }
+
     fun User.toDto(): SimpleUserDto = SimpleUserDto(this)
 
     @Throws(Error::class)

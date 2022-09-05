@@ -106,6 +106,14 @@ class InspectionController(private val inspectionService: InspectionService) : B
         return ResponseEntity.ok(inspectionService.save(getAuthenticatedUser(), body))
     }
 
+    @PostMapping("$VERSION2/inspection/clone")
+    fun cloneInspection(
+        @RequestHeader(X_TOKEN) token: String,
+        @RequestBody body: InspectionCloneDto
+    ): ResponseEntity<InspectionDtoV2> {
+        return ResponseEntity.ok(inspectionService.cloneInspection(getAuthenticatedUser(), body))
+    }
+
     @PostMapping("$VERSION2/inspection/summary")
     fun updateSummary(
         @RequestHeader(X_TOKEN) token: String,

@@ -12,14 +12,17 @@ import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
 import javax.transaction.Transactional
+import kotlin.Error
 import kotlin.math.roundToInt
 
 @Service
 class InspectionService(
     private val inspectionRepository: InspectionRepository,
     private val photoRepository: PhotoRepository,
+    private val photoService: PhotoService,
     private val observationRepository: ObservationRepository,
     private val observationDefectRepository: ObservationDefectRepository,
+    private val observationDefectService: ObservationDefectService,
     private val observationService: ObservationService,
     private val weatherService: WeatherService,
     private val userRepository: UserRepository,
@@ -133,6 +136,96 @@ class InspectionService(
             observationService.save(dto.observations, dto.uuid, updatedBy)
         }
         return saved.toDto()
+    }
+
+    fun cloneInspection(user: User, dto: InspectionCloneDto): InspectionDtoV2 {
+        val existingInspection = getInspection(dto.existingInspectionUuid)
+        if (hasCreateDeleteRights(user, existingInspection, dto.projectId)) {
+            // Admins and PMs can create/delete inspection
+            logger.info("Admin/PM inspection ${existingInspection?.uuid}")
+        } else {
+            throw AccessDeniedException()
+        }
+
+        if (existingInspection == null) {
+            throw Error("Inspection does not exist")
+        }
+        
+        // generate clone
+        val userId = user.id.toInt()
+        val cloneInspection = Inspection(
+            uuid = dto.uuid,
+            createdBy = userId,
+            updatedBy = userId,
+            isEditable = existingInspection.isEditable,
+            startDate = dto.startDate,
+            structureId = existingInspection.structureId,
+            temperature = existingInspection.temperature,
+            humidity = existingInspection.humidity,
+            wind = existingInspection.wind,
+            latitude = existingInspection.latitude,
+            longitude = existingInspection.longitude,
+            altitude = existingInspection.altitude,
+            status = existingInspection.status,
+            reportId = existingInspection.reportId,
+            reportDate = existingInspection.reportDate,
+            reportLink = existingInspection.reportLink,
+            generalSummary = existingInspection.generalSummary,
+            sgrRating = existingInspection.sgrRating,
+            termRating = existingInspection.termRating,
+            spansCount = existingInspection.spansCount,
+            deleted = existingInspection.deleted,
+            projectId = dto.projectId,
+            archived = existingInspection.archived
+        )
+        inspectionRepository.save(cloneInspection)
+
+        // convert clone to Dto to fetch related objects
+        val existingInspectionDto = existingInspection.toDto()
+
+        // clone the observations
+        existingInspectionDto.observations?.forEach { currentObservation ->
+             val cloneObservation = observationService.cloneObservation(
+                sourceObservationDto = currentObservation,
+                createdBy = userId,
+                updatedBy = userId,
+                inspectionId = dto.uuid
+            )
+
+            // clone the defects
+            currentObservation.observationDefects?.forEach { currentObservationDefect ->
+                val cloneObservationDefect = observationDefectService.cloneObservationDefect(
+                    sourceObservationDefectDto = currentObservationDefect,
+                    createdBy = userId,
+                    updatedBy = userId,
+                    observationId = cloneObservation.uuid,
+                    createdAtClient = null
+                )
+
+                // clone the photos
+                currentObservationDefect.photos?.forEach {
+                    photoService.clonePhoto(
+                        sourcePhotoDto = it,
+                        observationDefectId = cloneObservationDefect.uuid,
+                        createdBy = userId,
+                        updatedBy = userId,
+                        createdAtClient = null
+                    )
+                }
+            }
+        }
+
+        // assign inspectors to cloned inspection
+        val inspectionRoles = dto.inspectors?.map {
+            InspectionRole(
+                inspectionId = dto.uuid,
+                userId = it.id,
+                roles = arrayOf(Role.INSPECTOR)
+            )
+        }
+        inspectionRoleRepository.saveAll(inspectionRoles)
+
+        return cloneInspection.toDto()
     }
 
     @Throws(Error::class)

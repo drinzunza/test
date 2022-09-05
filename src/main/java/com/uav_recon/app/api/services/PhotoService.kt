@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.time.OffsetDateTime
+import java.util.UUID
 
 @Service
 class PhotoService(
@@ -60,6 +61,24 @@ class PhotoService(
         updatedBy = updatedBy,
         createdAtClient = createdAtClient
     )
+
+    fun clonePhoto(sourcePhotoDto: PhotoDto, observationDefectId: String, createdBy: Int, updatedBy: Int,
+                   createdAtClient: OffsetDateTime?): PhotoDto {
+        val clonedPhoto = Photo(
+            uuid = UUID.randomUUID().toString(),
+            name = sourcePhotoDto.name,
+            altitude = sourcePhotoDto.location?.altitude,
+            longitude = sourcePhotoDto.location?.longitude,
+            latitude = sourcePhotoDto.location?.latitude,
+            drawables = sourcePhotoDto.drawables,
+            observationDefectId = observationDefectId,
+            link = sourcePhotoDto.link ?: "",
+            createdBy = createdBy,
+            updatedBy = updatedBy,
+            createdAtClient = createdAtClient
+        )
+        return photoRepository.save(clonedPhoto).toDto()
+    }
 
     fun findAllByObservationDefectIdAndNotDeleted(id: String): List<PhotoDto> {
         return photoRepository.findAllByObservationDefectIdAndDeletedIsFalse(id).map { p -> p.toDto() }
