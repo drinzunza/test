@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
-import javax.persistence.EntityNotFoundException
 import javax.transaction.Transactional
 import kotlin.Error
 import kotlin.math.roundToInt
