@@ -4,6 +4,7 @@ import com.uav_recon.app.api.entities.db.StructuralType
 import com.uav_recon.app.api.entities.db.StructureType
 import com.uav_recon.app.api.entities.db.toDto
 import com.uav_recon.app.api.entities.requests.bridge.ReportDto
+import com.uav_recon.app.api.entities.requests.bridge.ReportGenerateDto
 import com.uav_recon.app.api.entities.responses.bridge.ComponentTypesUsageDto
 import com.uav_recon.app.api.entities.responses.bridge.ComponentUsageDto
 import com.uav_recon.app.api.entities.responses.bridge.ObservationDefectReportDto
@@ -34,8 +35,12 @@ class ReportController(
     }
 
     @PostMapping("/inspection/{inspectionId}/report")
-    fun generate(@RequestHeader(X_TOKEN) token: String, @PathVariable inspectionId: String): ResponseEntity<ReportDto>  {
-        return ResponseEntity.ok(reportService.generate(getAuthenticatedUserId(), inspectionId))
+    fun generate(
+        @RequestHeader(X_TOKEN) token: String,
+        @PathVariable inspectionId: String,
+        @RequestBody body: ReportGenerateDto
+    ): ResponseEntity<ReportDto>  {
+        return ResponseEntity.ok(reportService.generate(getAuthenticatedUserId(), inspectionId, body))
     }
 
     @GetMapping("/subcomponents/structure/{structureId}")
