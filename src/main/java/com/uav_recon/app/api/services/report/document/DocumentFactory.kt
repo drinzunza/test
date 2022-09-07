@@ -4,5 +4,10 @@ import com.uav_recon.app.api.entities.db.Report
 import com.uav_recon.app.api.services.report.document.models.Document
 
 interface DocumentFactory {
-    fun generateDocument(report: Report, isInverse: Boolean = false) : Document
+    fun generateDocument(
+        report: Report,
+        isInverse: Boolean = false,
+        defectsOrder: HashMap<String, Int>,
+        maintenanceOrder: HashMap<String, Int>
+    ) : Document
 }
