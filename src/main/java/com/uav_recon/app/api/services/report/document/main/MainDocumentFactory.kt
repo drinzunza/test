@@ -100,7 +100,12 @@ class MainDocumentFactory(
         private val DEFECT_PHOTOS_ELEMENT = TextElement.Simple("Inspection Photographs", styles = ITALIC_BOLD_STYLE_LIST)
     }
 
-    override fun generateDocument(report: Report, isInverse: Boolean): Document {
+    override fun generateDocument(
+        report: Report,
+        isInverse: Boolean,
+        defectsOrder: HashMap<String, Int>,
+        maintenanceOrder: HashMap<String, Int>
+    ): Document {
         val inspection = report.getInspection()
         logger.info("start fill objects")
         inspectionService.fillObjects(listOf(inspection))
@@ -120,23 +125,32 @@ class MainDocumentFactory(
         // Put all defects in one list.
         var defectList: MutableList<ObservationDefect> = ArrayList()
         var maintenanceList: MutableList<ObservationDefect> = ArrayList()
+
+        // Also put all defects in a map for sorting purposes
+        var defectMap: HashMap<String, ObservationDefect> = HashMap()
+        var maintenanceMap: HashMap<String, ObservationDefect> = HashMap()
+
         // Create a map of defect id to observation for faster access.
         val defectToObservationMap: HashMap<String, Observation> = HashMap()
         inspection.observations?.forEach { observation ->
             observation.defects?.forEach {
                 if (it.type == StructuralType.STRUCTURAL) {
-                    defectList.add(it)
+                    defectMap[it.id] = it
                 } else {
-                    maintenanceList.add(it)
+                    maintenanceMap[it.id] = it
                 }
                 defectToObservationMap[it.id] = observation
             }
         }
 
-        // If structure is of type tunnel, sort defects by station marker.
-        if (structureType == 4L) {
-            defectList = defectList.sortedWith(compareBy { it.stationMarker }).toMutableList()
-            maintenanceList = maintenanceList.sortedWith(compareBy { it.stationMarker }).toMutableList()
+        val sortedDefectsOrder = defectsOrder.toList().sortedBy { (_, value) -> value }.toMap()
+        sortedDefectsOrder.forEach {
+            defectMap[it.key]?.let { defect -> defectList.add(defect) }
+        }
+
+        val sortedMaintenanceOrder = maintenanceOrder.toList().sortedBy { (_, value) -> value }.toMap()
+        sortedMaintenanceOrder.forEach {
+            maintenanceMap[it.key]?.let { maintenance -> maintenanceList.add(maintenance) }
         }
 
         val infraStructureTypes = arrayOf(1, 2, 3, 4, 6, 7)

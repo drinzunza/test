@@ -1,13 +1,17 @@
 package com.uav_recon.app.api.services.report
 
 import com.uav_recon.app.api.entities.db.Report
+import com.uav_recon.app.api.entities.db.StructuralType
 import com.uav_recon.app.api.entities.requests.bridge.ReportDto
+import com.uav_recon.app.api.entities.requests.bridge.ReportGenerateDto
 import com.uav_recon.app.api.repositories.CompanyRepository
 import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ReportRepository
 import com.uav_recon.app.api.repositories.UserRepository
 import com.uav_recon.app.api.services.Error
 import com.uav_recon.app.api.services.FileService
+import com.uav_recon.app.api.services.InspectionService
+import com.uav_recon.app.api.services.ObservationDefectService
 import com.uav_recon.app.api.services.report.document.DocumentFactory
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
@@ -16,9 +20,11 @@ import java.util.*
 @Service
 class ReportService(
         private val inspectionRepository: InspectionRepository,
+        private val inspectionService: InspectionService,
         private val companyRepository: CompanyRepository,
         private val reportRepository: ReportRepository,
         private val userRepository: UserRepository,
+        private val observationDefectService: ObservationDefectService,
         private val documentWriter: DocumentWriter,
         private val documentFactory: DocumentFactory,
         private val fileService: FileService
@@ -41,11 +47,37 @@ class ReportService(
         return reports.last().toDto()
     }
 
-    fun generate(userId: Int, inspectionId: String): ReportDto {
+    fun generate(userId: Int, inspectionId: String, dto: ReportGenerateDto): ReportDto {
         inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
                 ?: throw Error(101, "Invalid inspection UUID")
+
         val user = userRepository.findFirstById(userId.toLong())
         if (user != null) {
+            // check if defects and maintenances exist
+            val inspection = inspectionService.getNotDeleted(user, inspectionId)
+            val observationDefects = inspection.observations?.map { it.id }?.let {
+                observationDefectService.findAllByObservationIdsAndNotDeleted(
+                    it
+                )
+            }
+            if (observationDefects != null) {
+                if (dto.defectsOrder.size + dto.maintenancesOrder.size != observationDefects.size) {
+                    throw Error("Specify an order for exactly all defects and maintenances assigned to this inspection")
+                }
+
+                dto.defectsOrder.forEach { (uuid, _) ->
+                    if (!observationDefects.filter { it.type == StructuralType.STRUCTURAL }.any { it.id == uuid }) {
+                        throw Error("No defect with uuid $uuid is assigned to this inspection")
+                    }
+                }
+
+                dto.maintenancesOrder.forEach { (uuid, _) ->
+                    if (!observationDefects.filter { it.type == StructuralType.MAINTENANCE }.any { it.id == uuid }) {
+                        throw Error("No maintenance with uuid $uuid is assigned to this inspection")
+                    }
+                }
+            }
+
             val company = user.companyId?.let { companyRepository.findFirstById(it) }
             val id = generateDisplayId(userId)
             val uuid = UUID.randomUUID().toString()
@@ -59,7 +91,12 @@ class ReportService(
                 updatedBy = userId
             )
 
-            val document = documentFactory.generateDocument(report,  isInverse = company?.ratingInverse ?: false)
+            val document = documentFactory.generateDocument(
+                report,
+                isInverse = company?.ratingInverse ?: false,
+                defectsOrder = dto.defectsOrder,
+                maintenanceOrder = dto.maintenancesOrder
+            )
             documentWriter.writeDocument(document, fileService.getPath(link))
 
             val savedReport = reportRepository.save(report)
