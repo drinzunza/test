@@ -40,7 +40,9 @@ class Observation(
         @Transient
         var defects: List<ObservationDefect>? = null,
         @Transient
-        var locationIds: List<LocationId>? = null
+        var locationIds: List<LocationId>? = null,
+        @Transient
+        var computedHealthIndex: Double? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
 
 fun Observation.update(dto: ObservationUpdateDto): Observation {

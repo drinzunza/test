@@ -5,6 +5,8 @@ import com.uav_recon.app.api.services.report.document.main.DefectFields
 import com.uav_recon.app.api.utils.DateExtensions.Companion.DEFAULT_FORMAT
 import org.springframework.core.io.Resource
 import java.io.IOException
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -45,6 +47,8 @@ class DateExtensions {
     }
 
 }
+
+fun Double.round(decimals: Int): Double = BigDecimal(this).setScale(decimals, RoundingMode.HALF_EVEN).toDouble()
 
 fun Date?.formatDate(formatter: DateFormat = DEFAULT_FORMAT): String? {
     this?.let {
