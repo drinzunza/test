@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.services
 
+import com.uav_recon.app.api.controllers.handlers.ExceptionsHandler
 import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.repositories.InspectionRepository
@@ -7,6 +8,8 @@ import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.repositories.SubcomponentRepository
 import com.uav_recon.app.api.repositories.templates.SubcomponentAndStructureRepository
 import com.uav_recon.app.api.utils.isEachMeasureUnit
+import com.uav_recon.app.api.utils.round
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.transaction.Transactional
@@ -22,6 +25,7 @@ class ObservationService(
 ) {
     private val MEASURE_TYPE_EACH = "each"
     private val invalidInspectionUuid = Error(101, "Invalid inspection UUID")
+    private val logger = LoggerFactory.getLogger(ExceptionsHandler::class.java)
 
     fun Observation.toDto() = ObservationDto(
         id = id,
@@ -35,6 +39,7 @@ class ObservationService(
         observationDefects = observationDefectService.findAllByObservationIdAndNotDeleted(uuid),
         inspected = inspected,
         healthIndex = healthIndex,
+        computedHealthIndex = calculateObservationHealthIndex(this),
         useHealthIndex = null
     )
 
@@ -50,6 +55,7 @@ class ObservationService(
         observationDefects = observationDefects.filter { it.observationId == uuid }, //observationDefectService.findAllByObservationIdAndNotDeleted(uuid),
         inspected = inspected,
         healthIndex = healthIndex,
+        computedHealthIndex = calculateObservationHealthIndex(this),
         useHealthIndex = null
     )
 
@@ -218,6 +224,59 @@ class ObservationService(
                 else -> calculateCsProcessA(observation, conditionType)
             }
         }
+    }
+
+    fun calculateObservationHealthIndex(observation: Observation): Double? {
+        val measureUnit = observation.subcomponent?.measureUnit
+        val componentSize = observation.dimensionNumber
+        val defects = observation.defects
+        val totalDefectSizeQtyCS1: Double
+        val totalDefectSizeQtyCS2: Double
+        val totalDefectSizeQtyCS3: Double
+        val totalDefectSizeQtyCS4: Double
+        var subcomponentHI = 0.0
+        if (componentSize == null || defects == null || measureUnit == null) {
+            return null
+        }
+        return when {
+            // Calculate HI for each sub-component with EA (each)
+//            measureUnit.equals("ea", true) -> {
+//                val distinctLocations = defects.mapNotNull { it.span }.distinct()
+//                distinctLocations.forEach { locationSpan -> run {
+//                        val locationDefects = defects.filter { defect -> defect.span == locationSpan }
+//                        val locationDefectsConditions = locationDefects.mapNotNull { it.condition?.type }.distinct()
+//                        logger.info("locationDefects: $locationDefects")
+//                        logger.info("locationDefectsConditions: $locationDefectsConditions")
+//                } }
+//                logger.info("uuid: ${observation.uuid}")
+//                logger.info("distinctLocations: $distinctLocations")
+//                logger.info("totalDefectSizeCS2toCS4: $totalDefectSizeCS2toCS4")
+//                logger.info("totalDefectSizeQtyCS1: $totalDefectSizeQtyCS1")
+//                logger.info("subcomponentHI: $subcomponentHI")
+//                return subcomponentHI
+//            }
+            // Calculate HI for each sub-component with LF & SF
+            measureUnit.equals("lf", true) || measureUnit.equals("sf", true) || measureUnit.equals("ea", true) -> {
+                val totalDefectSizeCS2toCS4: Double = defects
+                    .filter { it.type == StructuralType.STRUCTURAL }
+                    .filter { it.condition?.type != ConditionType.GOOD || it.condition?.type != null}
+                    .sumByDouble { it.size?.toDoubleOrNull() ?: 0.0 }
+                totalDefectSizeQtyCS1 = componentSize - totalDefectSizeCS2toCS4
+                totalDefectSizeQtyCS2 = getTotalDefectSizeForCondition(defects, ConditionType.FAIR)
+                totalDefectSizeQtyCS3 = getTotalDefectSizeForCondition(defects, ConditionType.POOR)
+                totalDefectSizeQtyCS4 = getTotalDefectSizeForCondition(defects, ConditionType.SEVERE)
+                subcomponentHI = (totalDefectSizeQtyCS1 + totalDefectSizeQtyCS2 + totalDefectSizeQtyCS3 + totalDefectSizeQtyCS4) / componentSize
+                return subcomponentHI
+            }
+            else -> null
+        }
+    }
+
+    private fun getTotalDefectSizeForCondition(defects: List<ObservationDefect>, conditionType: ConditionType): Double {
+        return defects
+            .filter { it.type == StructuralType.STRUCTURAL }
+            .filter { it.condition?.type == conditionType }
+            .sumByDouble { it.size?.toDoubleOrNull() ?: 0.0 } * conditionType.csWeight
     }
 
     private fun calculateCsProcessA(observation: Observation, conditionType: ConditionType): Int {
