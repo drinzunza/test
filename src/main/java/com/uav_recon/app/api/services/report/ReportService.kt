@@ -66,13 +66,13 @@ class ReportService(
                 }
 
                 dto.defectsOrder.forEach { (uuid, _) ->
-                    if (!observationDefects.filter { it.type == StructuralType.STRUCTURAL }.any { it.id == uuid }) {
+                    if (!observationDefects.filter { it.type == StructuralType.STRUCTURAL }.any { it.uuid == uuid }) {
                         throw Error("No defect with uuid $uuid is assigned to this inspection")
                     }
                 }
 
                 dto.maintenancesOrder.forEach { (uuid, _) ->
-                    if (!observationDefects.filter { it.type == StructuralType.MAINTENANCE }.any { it.id == uuid }) {
+                    if (!observationDefects.filter { it.type == StructuralType.MAINTENANCE }.any { it.uuid == uuid }) {
                         throw Error("No maintenance with uuid $uuid is assigned to this inspection")
                     }
                 }
