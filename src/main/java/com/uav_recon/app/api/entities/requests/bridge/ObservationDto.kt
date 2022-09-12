@@ -15,6 +15,7 @@ data class ObservationDto(
         val dimensionNumber: Int?,
         val locationDescription: String?,
         val inspected: Boolean?,
+        val generalSummary: String?,
         val useHealthIndex: Boolean?,
         val computedHealthIndex: Double?,
         val healthIndex: Double?

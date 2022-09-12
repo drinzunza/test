@@ -33,6 +33,8 @@ class Observation(
         var inspected: Boolean? = false,
         @Column(name = "health_index")
         var healthIndex: Double? = null,
+        @Column(name = "general_summary")
+        var generalSummary: String? = null,
         @Transient
         var component: Component? = null,
         @Transient
@@ -55,5 +57,6 @@ fun Observation.update(dto: ObservationUpdateDto): Observation {
         if (dto.fields.contains(::locationDescription.name)) locationDescription = dto.locationDescription
         if (dto.fields.contains(::inspected.name)) inspected = dto.inspected
         if (dto.fields.contains(::healthIndex.name)) healthIndex = dto.healthIndex
+        if (dto.fields.contains(::generalSummary.name)) generalSummary = dto.generalSummary
         return this
 }
