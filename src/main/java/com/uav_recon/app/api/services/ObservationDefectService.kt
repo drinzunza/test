@@ -116,7 +116,7 @@ class ObservationDefectService(
                                observationId: String, createdAtClient: OffsetDateTime?): ObservationDefectDto {
         val generatedUuid = UUID.randomUUID().toString()
         val cloneObservationDefect = ObservationDefect(
-            id = generatedUuid,
+            id = sourceObservationDefectDto.id,
             uuid = generatedUuid,
             createdBy = createdBy,
             updatedBy = updatedBy,
