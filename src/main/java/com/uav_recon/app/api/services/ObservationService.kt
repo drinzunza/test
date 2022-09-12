@@ -40,6 +40,7 @@ class ObservationService(
         inspected = inspected,
         healthIndex = healthIndex,
         computedHealthIndex = calculateObservationHealthIndex(this),
+        generalSummary = generalSummary,
         useHealthIndex = null
     )
 
@@ -56,6 +57,7 @@ class ObservationService(
         inspected = inspected,
         healthIndex = healthIndex,
         computedHealthIndex = calculateObservationHealthIndex(this),
+        generalSummary = generalSummary,
         useHealthIndex = null
     )
 
@@ -72,6 +74,7 @@ class ObservationService(
             locationDescription = locationDescription,
             drawingNumber = drawingNumber,
             inspectionId = inspectionId,
+            generalSummary = generalSummary,
             healthIndex = if (useHealthIndex == true) healthIndex else currentHealthIndex
         )
 
@@ -90,6 +93,7 @@ class ObservationService(
             locationDescription = sourceObservationDto.locationDescription,
             drawingNumber = sourceObservationDto.drawingNumber,
             inspectionId = inspectionId,
+            generalSummary = sourceObservationDto.generalSummary,
             healthIndex = sourceObservationDto.healthIndex
         )
 

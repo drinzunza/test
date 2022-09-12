@@ -16,5 +16,6 @@ data class ObservationUpdateDto(
         val locationDescription: String?,
         val inspected: Boolean?,
         val healthIndex: Double?,
+        val generalSummary: String?,
         val fields: List<String>
 ) : Serializable
