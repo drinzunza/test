@@ -1,6 +1,7 @@
 package com.uav_recon.app.api.services
 
 import com.google.common.io.Files
+import com.uav_recon.app.api.entities.db.ObservationDefectCloneStatus
 import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.db.User
 import com.uav_recon.app.api.entities.db.update
@@ -105,6 +106,13 @@ class PhotoService(
         fileService.regenerateRectImages(photo)
         photoRepository.save(photo)
         saveWeather(photo)
+
+        // set unchanged cloned observation defects to changed
+        val observationDefect = observationDefectRepository.findFirstByUuid(observationDefectId)
+        if (observationDefect?.cloneStatus == ObservationDefectCloneStatus.UNCHANGED) {
+            observationDefect.cloneStatus = ObservationDefectCloneStatus.CHANGED
+        }
+        observationDefectRepository.save(observationDefect)
     }
 
     fun updatePhoto(user: User, uuid: String, dto: PhotoUpdateDto): PhotoDto {
@@ -112,6 +120,14 @@ class PhotoService(
             ?: throw Error(105, "Invalid photo uuid")
         photo.update(dto)
         fileService.regenerateRectImages(photo)
+
+        // set unchanged cloned observation defects to changed
+        val observationDefect = observationDefectRepository.findFirstByUuid(photo.observationDefectId)
+        if (observationDefect?.cloneStatus == ObservationDefectCloneStatus.UNCHANGED) {
+            observationDefect.cloneStatus = ObservationDefectCloneStatus.CHANGED
+        }
+        observationDefectRepository.save(observationDefect)
+
         return photoRepository.save(photo).toDto()
     }
 
@@ -161,6 +177,14 @@ class PhotoService(
         dto.name = name
         val photo = dto.toEntity(createdBy, updatedBy, observationDefectId, link, createdAtClient)
         saveWeather(photo)
+
+        // set unchanged cloned observation defects to changed
+        val observationDefect = observationDefectRepository.findFirstByUuid(observationDefectId)
+        if (observationDefect?.cloneStatus == ObservationDefectCloneStatus.UNCHANGED) {
+            observationDefect.cloneStatus = ObservationDefectCloneStatus.CHANGED
+        }
+        observationDefectRepository.save(observationDefect)
+
         return photoRepository.save(photo).toDto()
     }
 
