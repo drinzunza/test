@@ -166,7 +166,7 @@ class InspectionService(
             latitude = existingInspection.latitude,
             longitude = existingInspection.longitude,
             altitude = existingInspection.altitude,
-            status = existingInspection.status,
+            status = InspectionStatus.IN_PROGRESS,
             reportId = existingInspection.reportId,
             reportDate = existingInspection.reportDate,
             reportLink = existingInspection.reportLink,
