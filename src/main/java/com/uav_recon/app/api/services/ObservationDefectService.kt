@@ -57,7 +57,8 @@ class ObservationDefectService(
             repairMethod = repairMethod,
             previousDefectNumber = previousDefectNumber,
             createdAt = createdAt,
-            createdAtClient = createdAtClient
+            createdAtClient = createdAtClient,
+            cloneStatus = cloneStatus
     )
 
     private fun ObservationDefect.toDtoV2(photo: List<PhotoDto>, createdBy: SimpleUserDto?) = ObservationDefectDto(
@@ -83,7 +84,8 @@ class ObservationDefectService(
             repairMethod = repairMethod,
             previousDefectNumber = previousDefectNumber,
             createdAt = createdAt,
-            createdAtClient = createdAtClient
+            createdAtClient = createdAtClient,
+            cloneStatus = cloneStatus
     )
 
     fun ObservationDefectDto.toEntity(
@@ -109,7 +111,8 @@ class ObservationDefectService(
             repairMethod = repairMethod,
             repairDate = repairDate,
             previousDefectNumber = previousDefectNumber,
-            createdAtClient = createdAtClient
+            createdAtClient = createdAtClient,
+            cloneStatus = cloneStatus
     )
 
     fun cloneObservationDefect(sourceObservationDefectDto: ObservationDefectDto, createdBy: Int, updatedBy: Int,
@@ -135,8 +138,9 @@ class ObservationDefectService(
             clockPosition = sourceObservationDefectDto.clockPosition,
             repairMethod = sourceObservationDefectDto.repairMethod,
             repairDate = sourceObservationDefectDto.repairDate,
-            previousDefectNumber = sourceObservationDefectDto.previousDefectNumber,
-            createdAtClient = createdAtClient
+            previousDefectNumber = sourceObservationDefectDto.uuid,
+            createdAtClient = createdAtClient,
+            cloneStatus = ObservationDefectCloneStatus.UNCHANGED
         )
         val userDto = userService.get(createdBy).toDto()
         return observationDefectRepository.save(cloneObservationDefect).toDto(userDto)
@@ -169,6 +173,12 @@ class ObservationDefectService(
             entity.id = changeObservationDefectIdType(entity.id, entity.type)
             logger.info("Changed observation defect id by type ${entity.type}")
         }
+
+        // Set unchanged observation defect clones to changed upon update
+        if (entity.cloneStatus == ObservationDefectCloneStatus.UNCHANGED) {
+            entity.cloneStatus = ObservationDefectCloneStatus.CHANGED
+        }
+
         val saved = observationDefectRepository.save(entity)
         return saveWeather(saved).toDto(createdByUser)
     }
@@ -225,6 +235,12 @@ class ObservationDefectService(
             ?: throw Error(103, "Invalid observation defect UUID")
         observationDefect.update(dto)
         val createdByUser = userService.get(observationDefect.createdBy).toDto()
+
+        // Set unchanged observation defect clones to changed upon update
+        if (observationDefect.cloneStatus == ObservationDefectCloneStatus.UNCHANGED) {
+            observationDefect.cloneStatus = ObservationDefectCloneStatus.CHANGED
+        }
+
         return observationDefectRepository.save(observationDefect).toDto(createdByUser)
     }
 
