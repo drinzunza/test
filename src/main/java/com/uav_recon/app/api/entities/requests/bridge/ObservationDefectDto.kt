@@ -31,6 +31,7 @@ data class ObservationDefectDto(
         val repairDate: String?,
         val repairMethod: String?,
         val previousDefectNumber: String?,
+        val done: Boolean?,
         var createdAt: OffsetDateTime?,
         var createdAtClient: OffsetDateTime?,
         var cloneStatus: ObservationDefectCloneStatus?

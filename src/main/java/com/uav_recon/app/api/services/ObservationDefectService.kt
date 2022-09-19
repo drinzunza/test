@@ -58,6 +58,7 @@ class ObservationDefectService(
             previousDefectNumber = previousDefectNumber,
             createdAt = createdAt,
             createdAtClient = createdAtClient,
+            done = done,
             cloneStatus = cloneStatus
     )
 
@@ -85,6 +86,7 @@ class ObservationDefectService(
             previousDefectNumber = previousDefectNumber,
             createdAt = createdAt,
             createdAtClient = createdAtClient,
+            done = done,
             cloneStatus = cloneStatus
     )
 
@@ -112,6 +114,7 @@ class ObservationDefectService(
             repairDate = repairDate,
             previousDefectNumber = previousDefectNumber,
             createdAtClient = createdAtClient,
+            done = done,
             cloneStatus = cloneStatus
     )
 

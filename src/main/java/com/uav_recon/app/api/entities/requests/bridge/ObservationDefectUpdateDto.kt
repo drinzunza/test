@@ -1,10 +1,7 @@
 package com.uav_recon.app.api.entities.requests.bridge
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.uav_recon.app.api.entities.db.CriticalFinding
-import com.uav_recon.app.api.entities.db.InspectionStatus
-import com.uav_recon.app.api.entities.db.ObservationType
-import com.uav_recon.app.api.entities.db.StructuralType
+import com.uav_recon.app.api.entities.db.*
 import java.io.Serializable
 import java.time.OffsetDateTime
 
@@ -25,5 +22,7 @@ data class ObservationDefectUpdateDto(
         val repairDate: String?,
         val repairMethod: String?,
         val previousDefectNumber: String?,
+        val cloneStatus: ObservationDefectCloneStatus?,
+        val done: Boolean?,
         val fields: List<String>
 ) : Serializable
