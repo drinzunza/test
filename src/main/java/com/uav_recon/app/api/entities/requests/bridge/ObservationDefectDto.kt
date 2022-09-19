@@ -27,7 +27,7 @@ data class ObservationDefectDto(
         val type: StructuralType?,
         val weather: Weather?,
         val observationNameId: String?,
-        val clockPosition: Int?,
+        val clockPosition: String?,
         val repairDate: String?,
         val repairMethod: String?,
         val previousDefectNumber: String?,

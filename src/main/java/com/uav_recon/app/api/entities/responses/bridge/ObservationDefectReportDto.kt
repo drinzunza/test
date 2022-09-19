@@ -15,7 +15,7 @@ data class ObservationDefectReportDto(
         val classification: StructuralType?,
         val locationId: String?,
         val stationMarker: String?,
-        val clockPosition: Int?,
+        val clockPosition: String?,
         val observationType: ObservationType?,
         val repairMethod: String?,
         val repairDate: String?,

@@ -18,7 +18,7 @@ data class ObservationDefectUpdateDto(
         val size: String?,
         val type: StructuralType?,
         val observationNameId: String?,
-        val clockPosition: Int?,
+        val clockPosition: String?,
         val repairDate: String?,
         val repairMethod: String?,
         val previousDefectNumber: String?,

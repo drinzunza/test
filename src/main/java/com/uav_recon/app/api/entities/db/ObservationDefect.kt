@@ -57,7 +57,7 @@ class ObservationDefect(
         @Column(name = "observation_name_id")
         var observationNameId: String? = null,
         @Column(name = "clock_position")
-        var clockPosition: Int? = null,
+        var clockPosition: String? = null,
         @Column(name = "repair_date")
         var repairDate: String? = null,
         @Column(name = "repair_method")
