@@ -24,5 +24,6 @@ data class ObservationDefectUpdateDto(
         val previousDefectNumber: String?,
         val cloneStatus: ObservationDefectCloneStatus?,
         val done: Boolean?,
+        val structureSubdivisionId: String?,
         val fields: List<String>
 ) : Serializable
