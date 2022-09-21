@@ -23,7 +23,8 @@ class ObservationDefectService(
         private val photoRepository: PhotoRepository,
         private val photoService: PhotoService,
         private val weatherService: WeatherService,
-        private val userService: UserService
+        private val userService: UserService,
+        private val structureSubdivisionService: StructureSubdivisionService
 ) {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
@@ -59,7 +60,9 @@ class ObservationDefectService(
             createdAt = createdAt,
             createdAtClient = createdAtClient,
             done = done,
-            cloneStatus = cloneStatus
+            cloneStatus = cloneStatus,
+            structureSubdivisionId = structureSubdivisionId,
+            structureSubdivision = structureSubdivisionId?.let { structureSubdivisionService.getByUuid(it) }
     )
 
     private fun ObservationDefect.toDtoV2(photo: List<PhotoDto>, createdBy: SimpleUserDto?) = ObservationDefectDto(
@@ -87,7 +90,9 @@ class ObservationDefectService(
             createdAt = createdAt,
             createdAtClient = createdAtClient,
             done = done,
-            cloneStatus = cloneStatus
+            cloneStatus = cloneStatus,
+            structureSubdivisionId = structureSubdivisionId,
+            structureSubdivision = structureSubdivisionId?.let { structureSubdivisionService.getByUuid(it) }
     )
 
     fun ObservationDefectDto.toEntity(
@@ -115,7 +120,9 @@ class ObservationDefectService(
             previousDefectNumber = previousDefectNumber,
             createdAtClient = createdAtClient,
             done = done,
-            cloneStatus = cloneStatus
+            cloneStatus = cloneStatus,
+            structureSubdivisionId = structureSubdivisionId,
+            structureSubdivision = structureSubdivisionId?.let { structureSubdivisionService.getByUuid(it) }?.toEntity()
     )
 
     fun cloneObservationDefect(sourceObservationDefectDto: ObservationDefectDto, createdBy: Int, updatedBy: Int,
