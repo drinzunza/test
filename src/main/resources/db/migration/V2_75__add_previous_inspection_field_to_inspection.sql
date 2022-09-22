@@ -1,0 +1,1 @@
+alter table inspections add column if not exists previous_inspection_id VARCHAR(50);

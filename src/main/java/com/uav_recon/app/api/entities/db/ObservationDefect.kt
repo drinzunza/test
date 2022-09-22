@@ -72,6 +72,10 @@ class ObservationDefect(
         var cloneStatus: ObservationDefectCloneStatus? = null,
         @Column(name = "is_done")
         var done: Boolean? = false,
+        @Column(name = "structure_subdivision_id")
+        var structureSubdivisionId: String? = null,
+        @Transient
+        var structureSubdivision: StructureSubdivision? = null,
         @Transient
         var defect: Defect? = null,
         @Transient
@@ -100,5 +104,6 @@ fun ObservationDefect.update(dto: ObservationDefectUpdateDto): ObservationDefect
         if (dto.fields.contains(::previousDefectNumber.name)) previousDefectNumber = dto.previousDefectNumber
         if (dto.fields.contains(::cloneStatus.name)) cloneStatus = dto.cloneStatus
         if (dto.fields.contains(::done.name)) done = dto.done
+        if (dto.fields.contains(::structureSubdivisionId.name)) structureSubdivisionId = dto.structureSubdivisionId
         return this
 }

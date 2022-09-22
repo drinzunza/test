@@ -48,8 +48,12 @@ class Inspection(
         var projectId: Long? = null,
         @Column(name = "is_archived")
         var archived: Boolean? = false,
+        @Column(name = "previous_inspection_id")
+        var previousInspectionId: String? = null,
         @Transient
-        var observations: List<Observation>? = null
+        var observations: List<Observation>? = null,
+        @Transient
+        var structureSubdivisions: List<StructureSubdivision>? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy) {
         override fun toString(): String {
                 return "Inspection(isEditable=$isEditable, startDate=$startDate, endDate=$endDate, structureId=$structureId, temperature=$temperature, humidity=$humidity, wind=$wind, latitude=$latitude, longitude=$longitude, altitude=$altitude, status=$status, reportId=$reportId, reportDate=$reportDate, reportLink=$reportLink, generalSummary=$generalSummary, sgrRating=$sgrRating, termRating=$termRating, spansCount=$spansCount, deleted=$deleted, projectId=$projectId, archived=$archived, observations=$observations)"

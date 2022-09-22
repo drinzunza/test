@@ -3,6 +3,8 @@ package com.uav_recon.app.api.controllers
 import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.entities.responses.bridge.InspectionUsersDto
 import com.uav_recon.app.api.services.InspectionService
+import com.uav_recon.app.api.services.ObservationStructureSubdivisionService
+import com.uav_recon.app.api.services.StructureSubdivisionService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION2
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
@@ -22,7 +24,11 @@ import javax.servlet.http.HttpServletResponse
 
 
 @RestController
-class InspectionController(private val inspectionService: InspectionService) : BaseController() {
+class InspectionController(
+    private val inspectionService: InspectionService,
+    private val structureSubdivisionService: StructureSubdivisionService,
+    private val observationStructureSubdivisionService: ObservationStructureSubdivisionService
+    ) : BaseController() {
     private val APPLICATION_ZIP_CONTENT_TYPE = "application/zip"
     // V2
 
@@ -128,6 +134,41 @@ class InspectionController(private val inspectionService: InspectionService) : B
         @RequestBody body: InspectionArchiveDto
     ): ResponseEntity<InspectionDtoV2> {
         return ResponseEntity.ok(inspectionService.updateArchive(body))
+    }
+
+    @PostMapping("$VERSION2/inspection/{uuid}/structureSubdivision")
+    fun createStructureSubdivision(
+        @RequestHeader(X_TOKEN) token: String,
+        @PathVariable uuid: String,
+        @RequestBody body: StructureSubdivisionDto
+    ): ResponseEntity<StructureSubdivisionDto> {
+        return ResponseEntity.ok(structureSubdivisionService.save(uuid, body))
+    }
+
+    @DeleteMapping("$VERSION2/structureSubdivision/{uuid}")
+    fun deleteStructureSubdivision(
+        @RequestHeader(X_TOKEN) token: String,
+        @PathVariable uuid: String
+    ): ResponseEntity<*> {
+        return ResponseEntity.ok(structureSubdivisionService.delete(uuid))
+    }
+
+    @PostMapping("$VERSION2/inspection/{uuid}/structureSubdivision/{strucSubdvUuid}")
+    fun allocateToStructureSubdivision(
+        @RequestHeader(X_TOKEN) token: String,
+        @PathVariable uuid: String,
+        @PathVariable strucSubdvUuid: String,
+        @RequestBody body: ObservationStructureSubdivisionDto
+    ): ResponseEntity<ObservationStructureSubdivisionDto> {
+        return ResponseEntity.ok(observationStructureSubdivisionService.save(uuid, strucSubdvUuid, body))
+    }
+
+    @DeleteMapping("$VERSION2/observationStructureSubdivision/{uuid}")
+    fun deleteStructureSubdivisionAllocation(
+        @RequestHeader(X_TOKEN) token: String,
+        @PathVariable uuid: String
+    ): ResponseEntity<*> {
+        return ResponseEntity.ok(observationStructureSubdivisionService.delete(uuid))
     }
 
     @PatchMapping("$VERSION2/inspection/{uuid}")

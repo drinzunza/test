@@ -37,7 +37,8 @@ class InspectionService(
     private val conditionRepository: ConditionRepository,
     private val observationNameRepository: ObservationNameRepository,
     private val locationIdRepository: LocationIdRepository,
-    private val fileService: FileService
+    private val fileService: FileService,
+    private val structureSubdivisionService: StructureSubdivisionService
 ) : BaseService() {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
@@ -68,7 +69,9 @@ class InspectionService(
         spansCount = spansCount,
         projectId = projectId,
         archived = archived,
-        inspectors = inspectors ?: getUsers(uuid)
+        previousInspectionId = previousInspectionId,
+        inspectors = inspectors ?: getUsers(uuid),
+        structureSubdivisions = structureSubdivisionService.getAllByInspectionId(uuid).map { it.toEntity() }
     )
 
     fun Inspection.toDtoV2(
@@ -95,7 +98,9 @@ class InspectionService(
             spansCount = spansCount,
             projectId = projectId,
             archived = archived,
-            inspectors = inspectors ?: getUsers(uuid)
+            previousInspectionId = previousInspectionId,
+            inspectors = inspectors ?: getUsers(uuid),
+            structureSubdivisions = structureSubdivisionService.getAllByInspectionId(uuid).map { it.toEntity() }
         )
     }
 
@@ -176,7 +181,8 @@ class InspectionService(
             spansCount = existingInspection.spansCount,
             deleted = existingInspection.deleted,
             projectId = dto.projectId,
-            archived = existingInspection.archived
+            archived = false,
+            previousInspectionId = existingInspection.uuid
         )
         inspectionRepository.save(cloneInspection)
 

@@ -3,6 +3,7 @@ package com.uav_recon.app.api.entities.requests.bridge
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.uav_recon.app.api.entities.db.Inspection
 import com.uav_recon.app.api.entities.db.InspectionStatus
+import com.uav_recon.app.api.entities.db.StructureSubdivision
 import com.uav_recon.app.api.entities.db.toInspectionTermRating
 import java.io.Serializable
 import java.time.OffsetDateTime
@@ -26,8 +27,10 @@ data class InspectionDtoV2(
         val termRating: Double?,
         val spansCount: Int?,
         val projectId: Long?,
-        val archived: Boolean?,        
-        val inspectors: List<SimpleUserDto>?
+        val archived: Boolean?,
+        val previousInspectionId: String?,
+        val inspectors: List<SimpleUserDto>?,
+        val structureSubdivisions: List<StructureSubdivision>? = null
 ) : Serializable
 
 fun InspectionDtoV2.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) = Inspection(
@@ -48,6 +51,7 @@ fun InspectionDtoV2.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) 
         wind = weather?.wind,
         projectId = projectId,
         archived = archived,
+        previousInspectionId = previousInspectionId,
         createdBy = createdBy,
         updatedBy = updatedBy
 )
@@ -93,5 +97,6 @@ fun InspectionDto.toDtoV2() = InspectionDtoV2(
         spansCount = spansCount,
         projectId = projectId,
         archived = archived,
-        inspectors = inspectors
+        inspectors = inspectors,
+        previousInspectionId = null
 )
