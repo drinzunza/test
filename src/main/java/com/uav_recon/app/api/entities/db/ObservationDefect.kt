@@ -66,7 +66,7 @@ class ObservationDefect(
         var previousDefectNumber: String? = null,
         @Column(name = "created_at_client")
         var createdAtClient: OffsetDateTime? = null,
-        @Column(name = "clone_status")
+        @Column(name = "defect_status")
         @Enumerated(EnumType.STRING)
         @Type(type = "pgsql_enum")
         var status: ObservationDefectStatus? = null,
