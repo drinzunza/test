@@ -369,9 +369,9 @@ class MainDocumentFactory(
 
     private fun CriticalFinding.formatToValueCount(inspection: Inspection): String {
         val prefix = when (this) {
-            CriticalFinding.STRUCTURAL -> "Structural"
-            CriticalFinding.SAFETY -> "Safety"
-            CriticalFinding.OTHER -> "Other"
+            CriticalFinding.STRUCTURAL_CRITICAL -> CriticalFinding.STRUCTURAL_CRITICAL.finding
+            CriticalFinding.SAFETY_CRITICAL -> CriticalFinding.SAFETY_CRITICAL.finding
+            CriticalFinding.SAFETY_ITEM -> CriticalFinding.SAFETY_ITEM.finding
         }
         val count = inspection.getCriticalFindingCount(this).toString()
 

@@ -11,6 +11,7 @@ data class ObservationDefectDto(
         val uuid: String,
         val createdBy: SimpleUserDto?,
         val criticalFindings: List<CriticalFinding>?,
+        val criticalFindingsValues: List<String>?,
         val defectId: String?,
         val conditionId: String?,
         val description: String?,
@@ -31,7 +32,7 @@ data class ObservationDefectDto(
         val done: Boolean?,
         var createdAt: OffsetDateTime?,
         var createdAtClient: OffsetDateTime?,
-        var cloneStatus: ObservationDefectCloneStatus?,
+        var status: ObservationDefectStatus?,
         var structureSubdivisionId: String?,
         val structureSubdivision: StructureSubdivisionDto? = null
 ) : Serializable

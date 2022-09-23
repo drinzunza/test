@@ -199,7 +199,7 @@ internal class DefectReportFields(private val flavor: String = "default", privat
                 }
                 CRITICAL_FINDING_TAG -> {
                     alignment = Alignment.CENTER
-                    addCellText(defect.criticalFindings?.joinToString(",\n") { it.name.toLowerCase().capitalize() })
+                    addCellText(defect.criticalFindings?.joinToString(",\n") { it.finding.toLowerCase().capitalize() })
                 }
                 PREV_DEF_ID_TAG -> {
                     alignment = Alignment.CENTER
