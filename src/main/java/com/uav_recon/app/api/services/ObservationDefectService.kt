@@ -8,10 +8,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Service
@@ -40,6 +37,7 @@ class ObservationDefectService(
             uuid = uuid,
             createdBy = createdBy,
             criticalFindings = criticalFindings?.toList(),
+            criticalFindingsValues = criticalFindings?.map { it.finding },
             conditionId = conditionId,
             defectId = defectId,
             description = description,
@@ -60,7 +58,7 @@ class ObservationDefectService(
             createdAt = createdAt,
             createdAtClient = createdAtClient,
             done = done,
-            cloneStatus = cloneStatus,
+            status = status,
             structureSubdivisionId = structureSubdivisionId,
             structureSubdivision = structureSubdivisionId?.let { structureSubdivisionService.getByUuid(it) }
     )
@@ -70,6 +68,7 @@ class ObservationDefectService(
             uuid = uuid,
             createdBy = createdBy,
             criticalFindings = criticalFindings?.toList(),
+            criticalFindingsValues = criticalFindings?.map { it.finding },
             conditionId = conditionId,
             defectId = defectId,
             description = description,
@@ -90,7 +89,7 @@ class ObservationDefectService(
             createdAt = createdAt,
             createdAtClient = createdAtClient,
             done = done,
-            cloneStatus = cloneStatus,
+            status = status,
             structureSubdivisionId = structureSubdivisionId,
             structureSubdivision = structureSubdivisionId?.let { structureSubdivisionService.getByUuid(it) }
     )
@@ -120,7 +119,7 @@ class ObservationDefectService(
             previousDefectNumber = previousDefectNumber,
             createdAtClient = createdAtClient,
             done = done,
-            cloneStatus = cloneStatus,
+            status = status,
             structureSubdivisionId = structureSubdivisionId,
             structureSubdivision = structureSubdivisionId?.let { structureSubdivisionService.getByUuid(it) }?.toEntity()
     )
@@ -150,7 +149,7 @@ class ObservationDefectService(
             repairDate = sourceObservationDefectDto.repairDate,
             previousDefectNumber = sourceObservationDefectDto.uuid,
             createdAtClient = createdAtClient,
-            cloneStatus = ObservationDefectCloneStatus.UNCHANGED
+            status = ObservationDefectStatus.UNCHANGED
         )
         val userDto = userService.get(createdBy).toDto()
         return observationDefectRepository.save(cloneObservationDefect).toDto(userDto)
@@ -185,8 +184,8 @@ class ObservationDefectService(
         }
 
         // Set unchanged observation defect clones to changed upon update
-        if (entity.cloneStatus == ObservationDefectCloneStatus.UNCHANGED) {
-            entity.cloneStatus = ObservationDefectCloneStatus.CHANGED
+        if (entity.status == ObservationDefectStatus.UNCHANGED) {
+            entity.status = ObservationDefectStatus.CHANGED
         }
 
         val saved = observationDefectRepository.save(entity)
@@ -247,8 +246,8 @@ class ObservationDefectService(
         val createdByUser = userService.get(observationDefect.createdBy).toDto()
 
         // Set unchanged observation defect clones to changed upon update
-        if (observationDefect.cloneStatus == ObservationDefectCloneStatus.UNCHANGED) {
-            observationDefect.cloneStatus = ObservationDefectCloneStatus.CHANGED
+        if (observationDefect.status == ObservationDefectStatus.UNCHANGED) {
+            observationDefect.status = ObservationDefectStatus.CHANGED
         }
 
         return observationDefectRepository.save(observationDefect).toDto(createdByUser)

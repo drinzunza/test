@@ -69,7 +69,7 @@ class ObservationDefect(
         @Column(name = "clone_status")
         @Enumerated(EnumType.STRING)
         @Type(type = "pgsql_enum")
-        var cloneStatus: ObservationDefectCloneStatus? = null,
+        var status: ObservationDefectStatus? = null,
         @Column(name = "is_done")
         var done: Boolean? = false,
         @Column(name = "structure_subdivision_id")
@@ -102,7 +102,7 @@ fun ObservationDefect.update(dto: ObservationDefectUpdateDto): ObservationDefect
         if (dto.fields.contains(::repairDate.name)) repairDate = dto.repairDate
         if (dto.fields.contains(::repairMethod.name)) repairMethod = dto.repairMethod
         if (dto.fields.contains(::previousDefectNumber.name)) previousDefectNumber = dto.previousDefectNumber
-        if (dto.fields.contains(::cloneStatus.name)) cloneStatus = dto.cloneStatus
+        if (dto.fields.contains(::status.name)) status = dto.status
         if (dto.fields.contains(::done.name)) done = dto.done
         if (dto.fields.contains(::structureSubdivisionId.name)) structureSubdivisionId = dto.structureSubdivisionId
         return this
