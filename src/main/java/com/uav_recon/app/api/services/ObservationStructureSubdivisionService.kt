@@ -63,4 +63,11 @@ class ObservationStructureSubdivisionService(
 
         return observationStructureSubdivisionRepository.delete(observationStructureSubdivision)
     }
+
+    fun getAllByStructureSubdivisionId(structureSubdivisionId: String): List<ObservationStructureSubdivisionDto> {
+        val observationStructureSubdivisions =
+            observationStructureSubdivisionRepository.findAllByStructureSubdivisionId(structureSubdivisionId)
+
+        return observationStructureSubdivisions.map { it.toDto() }
+    }
 }

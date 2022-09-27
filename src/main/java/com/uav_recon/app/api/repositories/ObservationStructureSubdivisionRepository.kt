@@ -7,4 +7,6 @@ interface ObservationStructureSubdivisionRepository : CrudRepository<Observation
     fun findAllByObservationId(observationId: String): List<ObservationStructureSubdivision>
 
     fun findFirstByUuid(uuid: String): ObservationStructureSubdivision?
+
+    fun findAllByStructureSubdivisionId(structureSubdivisionId: String): List<ObservationStructureSubdivision>
 }

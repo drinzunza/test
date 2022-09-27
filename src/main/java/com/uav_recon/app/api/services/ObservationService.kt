@@ -53,7 +53,7 @@ class ObservationService(
         dimensionNumber = dimensionNumber,
         structuralComponentId = structuralComponentId,
         subComponentId = subComponentId,
-        observationDefects = observationDefects.filter { it.observationId == uuid }, //observationDefectService.findAllByObservationIdAndNotDeleted(uuid),
+        observationDefects = observationDefects.filter { it.observationId == uuid },
         inspected = inspected,
         healthIndex = healthIndex,
         computedHealthIndex = calculateObservationHealthIndex(this),

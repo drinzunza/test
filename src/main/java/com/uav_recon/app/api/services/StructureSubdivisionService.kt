@@ -12,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class StructureSubdivisionService(
-    private val structureSubdivisionRepository: StructureSubdivisionRepository
+    private val structureSubdivisionRepository: StructureSubdivisionRepository,
+    private val observationStructureSubdivisionService: ObservationStructureSubdivisionService
 ) : BaseService() {
 
     @Transactional
@@ -27,13 +28,27 @@ class StructureSubdivisionService(
     fun getByUuid(uuid: String): StructureSubdivisionDto? {
         val structureSubdivision = structureSubdivisionRepository.findFirstByUuid(uuid)
 
-        return structureSubdivision?.toDto()
+        val structureSubdivisionDto = structureSubdivision?.toDto()
+        structureSubdivisionDto?.observationStructureSubdivisions = structureSubdivisionDto?.uuid?.let {
+            observationStructureSubdivisionService.getAllByStructureSubdivisionId(
+                it
+            )
+        }
+
+        return structureSubdivisionDto
     }
 
     fun getAllByInspectionId(inspectionId: String): List<StructureSubdivisionDto> {
         val structureSubdivisions = structureSubdivisionRepository.findAllByInspectionId(inspectionId)
 
-        return structureSubdivisions.map { it.toDto() }
+        var structureSubdivisionsDto = structureSubdivisions.map { it.toDto() }
+
+        structureSubdivisionsDto.forEach {
+            it.observationStructureSubdivisions =
+                observationStructureSubdivisionService.getAllByStructureSubdivisionId(it.uuid)
+        }
+
+        return structureSubdivisionsDto
     }
 
     fun delete(uuid: String) {
