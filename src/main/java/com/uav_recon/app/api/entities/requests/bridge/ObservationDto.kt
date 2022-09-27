@@ -7,7 +7,7 @@ import java.io.Serializable
 data class ObservationDto(
         val id: String,
         val uuid: String,
-        val observationDefects: List<ObservationDefectDto>?,
+        var observationDefects: List<ObservationDefectDto>?,
         val structuralComponentId: String?,
         val subComponentId: String?,
         val drawingNumber: String?,

@@ -83,6 +83,8 @@ class ObservationDefect(
         @Transient
         var observationName: ObservationName? = null,
         @Transient
+        var observation: Observation? = null,
+        @Transient
         var photos: List<Photo>? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
 

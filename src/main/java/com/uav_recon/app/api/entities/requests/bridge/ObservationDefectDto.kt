@@ -34,5 +34,6 @@ data class ObservationDefectDto(
         var createdAtClient: OffsetDateTime?,
         var status: ObservationDefectStatus?,
         var structureSubdivisionId: String?,
-        val structureSubdivision: StructureSubdivisionDto? = null
+        val structureSubdivision: StructureSubdivisionDto? = null,
+        val observation: ObservationDto? = null
 ) : Serializable

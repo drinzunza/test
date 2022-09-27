@@ -10,7 +10,8 @@ data class StructureSubdivisionDto(
         var inspectionId: String,
         val name: String?,
         val number: Int?,
-        val sgrRating: String?
+        val sgrRating: String?,
+        var observationStructureSubdivisions: List<ObservationStructureSubdivisionDto>? = null
 ) : Serializable
 
 fun StructureSubdivisionDto.toEntity() = StructureSubdivision(

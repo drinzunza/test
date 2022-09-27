@@ -1,5 +1,7 @@
 package com.uav_recon.app.api.entities.db
 
+import com.uav_recon.app.api.entities.requests.bridge.ObservationDefectDto
+import com.uav_recon.app.api.entities.requests.bridge.ObservationDto
 import com.uav_recon.app.api.entities.requests.bridge.ObservationUpdateDto
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -46,6 +48,26 @@ class Observation(
         @Transient
         var computedHealthIndex: Double? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
+
+fun Observation.toDtoBase(
+        observationDefects: List<ObservationDefectDto>? = null,
+        computedHealthIndex: Double? = null
+) = ObservationDto(
+        id = id,
+        uuid = uuid,
+        drawingNumber = drawingNumber,
+        locationDescription = locationDescription,
+        roomNumber = roomNumber,
+        dimensionNumber = dimensionNumber,
+        structuralComponentId = structuralComponentId,
+        subComponentId = subComponentId,
+        observationDefects = observationDefects,
+        inspected = inspected,
+        healthIndex = healthIndex,
+        computedHealthIndex = computedHealthIndex,
+        generalSummary = generalSummary,
+        useHealthIndex = null
+)
 
 fun Observation.update(dto: ObservationUpdateDto): Observation {
         if (dto.fields.contains(::id.name)) dto.id?.let { id = it }

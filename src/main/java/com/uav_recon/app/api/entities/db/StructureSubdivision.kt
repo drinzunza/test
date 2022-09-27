@@ -18,7 +18,9 @@ class StructureSubdivision(
     @Column(name = "number")
     var number: Int? = null,
     @Column(name = "sgr_rating")
-    var sgrRating: String? = null
+    var sgrRating: String? = null,
+    @Transient
+    var observationStructureSubdivisions: List<ObservationStructureSubdivision>? = null
 )
 
 fun StructureSubdivision.toDto() = StructureSubdivisionDto(
