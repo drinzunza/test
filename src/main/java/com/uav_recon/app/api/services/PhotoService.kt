@@ -40,6 +40,7 @@ class PhotoService(
         createdAt = createdAtClient,
         link = link,
         thumbLink = getThumbnailLink(this),
+        annotatedLink = getAnnotatedLink(this),
         location = LocationDto(
             latitude,
             longitude,
@@ -131,9 +132,45 @@ class PhotoService(
         return photoRepository.save(photo).toDto()
     }
 
+    fun updateAnnotatedPhoto(
+        uuid: String,
+        data: MultipartFile,
+        updatedBy: Int
+    ): PhotoDto {
+        val photo = photoRepository.findFirstByUuid(uuid)
+            ?: throw Error(105, "Invalid photo uuid")
+        val observationDefectId = photo.observationDefectId
+        val observationDefect = observationDefectRepository.findFirstByUuid(observationDefectId)
+            ?: throw Error(105, "Observation defect not found")
+        val observation = observationRepository.findFirstByUuid(observationDefect.observationId)
+            ?: throw Error(105, "Observation not found")
+
+        val format = getFileFormat(data!!.contentType)
+        val annotatedPhotoFormat = getFileFormat(data!!.contentType)
+        val annotatedPhotoLink = fileService.saveAnnotatedPhoto(
+            updatedBy,
+            observation.inspectionId,
+            observationDefect.observationId,
+            observationDefectId,
+            uuid,
+            annotatedPhotoFormat,
+            data.bytes
+        )
+
+        // set unchanged cloned observation defects to changed
+        if (observationDefect?.status == ObservationDefectStatus.UNCHANGED) {
+            observationDefect.status = ObservationDefectStatus.CHANGED
+        }
+        observationDefectRepository.save(observationDefect)
+
+        val photoDto = photo.toDto()
+        photoDto.annotatedLink = annotatedPhotoLink
+        return photoDto
+    }
+
     @Throws(Error::class)
     fun save(dto: PhotoDto,
-             data: MultipartFile,
+             data: Array<MultipartFile>,
              inspectionId: String,
              observationId: String,
              observationDefectId: String,
@@ -141,9 +178,13 @@ class PhotoService(
     ): PhotoDto {
         logger.info("Saving photo ${dto.uuid}, ${dto.name}, ${dto.drawables}, ${dto.location?.latitude}x${dto.location?.longitude}")
 
+        val originalPhotoData = data.getOrNull(0)
+        val annotatedPhotoData = data.getOrNull(1)
+
         //checkRelationship(inspectionId, observationId, observationDefectId)
         var createdBy = updatedBy
         val link: String?
+        val annotatedPhotoLink: String?
         val createdAtClient: OffsetDateTime?
         var name = dto.name
         val optional = photoRepository.findById(dto.uuid)
@@ -167,9 +208,12 @@ class PhotoService(
                 }
             }
 
-            val format = getFileFormat(data.contentType)
+            val format = getFileFormat(originalPhotoData!!.contentType)
+            val annotatedPhotoFormat = getFileFormat(annotatedPhotoData!!.contentType)
             link = fileService.save(updatedBy, inspectionId, observationId, observationDefectId,
-                    dto.uuid, dto.drawables, format, data.bytes)
+                    dto.uuid, dto.drawables, format, originalPhotoData.bytes)
+            annotatedPhotoLink = fileService.saveAnnotatedPhoto(updatedBy, inspectionId, observationId,
+                observationDefectId, dto.uuid, annotatedPhotoFormat, annotatedPhotoData.bytes)
             logger.info("Photo ${dto.uuid} saved with link $link")
         }
 
@@ -261,6 +305,12 @@ class PhotoService(
         val splitted = photo.link.split('.')
         val name = splitted.getOrNull(splitted.size - 2)
         return name?.let { photo.link.replace(name, "${name}_rect_thumb") } ?: photo.link
+    }
+
+    fun getAnnotatedLink(photo: Photo): String {
+        val splitted = photo.link.split('.')
+        val name = splitted.getOrNull(splitted.size - 2)
+        return name?.let { photo.link.replace(name, "${name}_rect") } ?: photo.link
     }
 
     private fun getFileFormat(contentType: String?) =

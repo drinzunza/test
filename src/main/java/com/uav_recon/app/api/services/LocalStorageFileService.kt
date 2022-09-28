@@ -2,6 +2,7 @@ package com.uav_recon.app.api.services
 
 import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.db.Rect
+import com.uav_recon.app.api.utils.saveThumb
 import com.uav_recon.app.api.utils.saveWithRect
 import com.uav_recon.app.configurations.UavConfiguration
 import org.apache.commons.lang3.StringUtils
@@ -20,8 +21,8 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
 
     override fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String {
         val absolutePath = getAbsolutePath(path, format, FileService.FileType.NORMAL)
-        val absolutePathWithRect = getAbsolutePath(path, format, FileService.FileType.WITH_RECT)
-        val absolutePathWithRectThumb = getAbsolutePath(path, format, FileService.FileType.WITH_RECT_THUMB)
+//        val absolutePathWithRect = getAbsolutePath(path, format, FileService.FileType.WITH_RECT)
+//        val absolutePathWithRectThumb = getAbsolutePath(path, format, FileService.FileType.WITH_RECT_THUMB)
 
         val parentFile = absolutePath.toFile().parentFile
         if (!parentFile.exists()) {
@@ -34,7 +35,25 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         }
         logger.info("File $absolutePath (${absolutePath.toFile().exists()})")
 
-        generateRectImages(bytes, getRect(drawables), absolutePathWithRect.toFile(), absolutePathWithRectThumb.toFile(), format)
+//        generateRectImages(bytes, getRect(drawables), absolutePathWithRect.toFile(), absolutePathWithRectThumb.toFile(), format)
+        return "$linkPrefix$path"
+    }
+
+    override fun saveAnnotatedPhoto(path: String, bytes: ByteArray, format: String): String {
+        val absolutePathWithRect = getAbsolutePath(path, format, FileService.FileType.WITH_RECT)
+        val absolutePathWithRectThumb = getAbsolutePath(path, format, FileService.FileType.WITH_RECT_THUMB)
+
+        val parentFile = absolutePathWithRect.toFile().parentFile
+        if (!parentFile.exists()) {
+            Files.createDirectories(parentFile.toPath())
+        }
+        if (absolutePathWithRect.toFile().exists()) {
+            Files.copy(ByteArrayInputStream(bytes), absolutePathWithRect, StandardCopyOption.REPLACE_EXISTING)
+        } else {
+            Files.write(absolutePathWithRect, bytes, StandardOpenOption.CREATE_NEW)
+        }
+
+        generateThumbImageForFile(bytes, absolutePathWithRect.toFile(), absolutePathWithRectThumb.toFile(), format)
         return "$linkPrefix$path"
     }
 
@@ -63,6 +82,7 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
     }
 
     override fun regenerateRectImages(photo: Photo) {
+        return
         val path = photo.link.replace(linkPrefix, "")
         val clearPath = File(configuration.files.root, path)
         val rectPath = File(configuration.files.root, getImagePath(path, null, FileService.FileType.WITH_RECT))
@@ -118,6 +138,15 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
             bytes.saveWithRect(rect, file, thumbFile, format)
             logger.info("Saved image with rect ${file.absolutePath}")
             logger.info("Saved thumb image with rect ${thumbFile.absolutePath}")
+        } catch (e: Exception) {
+            logger.error("Invalid image data ${file.absoluteFile}", e)
+        }
+    }
+
+    fun generateThumbImageForFile(bytes: ByteArray, file: File, thumbFile: File, format: String) {
+        try {
+            if (format == "docx") return
+            bytes.saveThumb(file, thumbFile, format)
         } catch (e: Exception) {
             logger.error("Invalid image data ${file.absoluteFile}", e)
         }

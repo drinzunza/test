@@ -21,6 +21,17 @@ interface FileService {
         return save("$userId/$inspectionUuid/$defectUuid/$photoUuid.$format", bytes, format, drawables)
     }
 
+    fun saveAnnotatedPhoto(path: String, bytes: ByteArray, format: String): String
+    fun saveAnnotatedPhoto(userId: Int,
+                         inspectionUuid: String,
+                         observationUuid: String,
+                         defectUuid: String,
+                         photoUuid: String,
+                         format: String,
+                         bytes: ByteArray): String {
+        return saveAnnotatedPhoto("$userId/$inspectionUuid/$defectUuid/$photoUuid.$format", bytes, format)
+    }
+
     fun delete(link: String)
     fun getLink(path: String): String
     fun get(link: String, drawables: String? = null, type: FileType = FileType.NORMAL): InputStream
