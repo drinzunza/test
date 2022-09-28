@@ -21,7 +21,9 @@ class ObservationDefectService(
         private val photoService: PhotoService,
         private val weatherService: WeatherService,
         private val userService: UserService,
-        private val structureSubdivisionService: StructureSubdivisionService
+        private val structureSubdivisionService: StructureSubdivisionService,
+        private val componentRepository: ComponentRepository,
+        private val subcomponentRepository: SubcomponentRepository
 ) {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
@@ -299,6 +301,68 @@ class ObservationDefectService(
             }
             o.toDtoV2(observationDefectPhotoDtos, createdBy)
         };
+    }
+
+    fun findAllByInspectionIdAndNotDeleted(
+        id: String,
+        sort: ObservationDefectFilters = ObservationDefectFilters.COMPONENT_SUBCOMPONENT,
+        descending: Boolean = false
+    ): List<ObservationDefectDto> {
+        // get all observations first
+        var observations = observationRepository.findAllByInspectionIdAndDeletedIsFalse(id)
+
+        // then get all defects of the observations
+        var observationDefects: List<ObservationDefectDto> = ArrayList()
+        if (sort != ObservationDefectFilters.COMPONENT_SUBCOMPONENT) {
+            observationDefects = findAllByObservationIdsAndNotDeleted(observations.map { it.uuid })
+        }
+
+        // sort the defects
+        when (sort) {
+            ObservationDefectFilters.CLASS -> {
+                observationDefects = observationDefects.sortedBy { it.type }
+            }
+            ObservationDefectFilters.STATIONING -> {
+                observationDefects = observationDefects.sortedBy { it.stationMarker }
+            }
+            ObservationDefectFilters.LOCATION -> {
+                observationDefects = observationDefects.sortedBy { it.span }
+            }
+            ObservationDefectFilters.INSPECTED_DATE -> {
+                observationDefects = observationDefects.sortedBy { it.createdAtClient }
+            }
+            ObservationDefectFilters.COMPONENT_SUBCOMPONENT -> {
+                // fetch subcomponents, components, and defects and assign to corresponding observations
+                observations.forEach {
+                    val subcomponent = it.subComponentId?.let { id -> subcomponentRepository.findFirstById(id) }
+                    val component = subcomponent?.let { subcomponent -> componentRepository.findFirstById(subcomponent.componentId) }
+
+                    it.subcomponent = subcomponent
+                    it.component = component
+                }
+                observations = observations.sortedWith(compareBy({ it.component?.name }, { it.subcomponent?.name }))
+
+                var observationsDto = observations.map {
+                    it.toDtoBase(findAllByObservationIdAndNotDeleted(it.uuid))
+                }
+
+                observationsDto.forEach { observationDto ->
+                    observationDto.observationDefects = observationDto.observationDefects?.sortedWith(compareBy { it.stationMarker })
+                }
+
+                observationsDto.forEach { observationDto ->
+                    observationDto.observationDefects?.forEach {
+                        (observationDefects as MutableList<ObservationDefectDto>).add(it)
+                    }
+                }
+            }
+        }
+
+        if (descending) {
+            observationDefects = observationDefects.reversed()
+        }
+
+        return observationDefects
     }
 
     fun changeObservationDefectIdType(id: String, type: StructuralType?): String {

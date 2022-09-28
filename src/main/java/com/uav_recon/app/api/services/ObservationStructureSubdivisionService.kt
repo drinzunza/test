@@ -17,6 +17,7 @@ class ObservationStructureSubdivisionService(
     private val structureSubdivisionRepository: StructureSubdivisionRepository
 ) : BaseService() {
 
+    @Throws(Error::class)
     fun save(
         inspectionId: String,
         structureSubdivisionId: String,
@@ -24,22 +25,22 @@ class ObservationStructureSubdivisionService(
     ): ObservationStructureSubdivisionDto {
         // check if structure subdivision and observation are under the same inspection
         val inspection = inspectionRepository.findFirstByUuid(inspectionId)
-            ?: throw Error("Inspection does not exist")
+            ?: throw Error(400, "Inspection does not exist")
         val observation = observationRepository.findFirstByUuid(dto.observationId)
-            ?: throw Error("Observation does not exist")
+            ?: throw Error(400, "Observation does not exist")
         val structureSubdivision = structureSubdivisionRepository.findFirstByUuid(structureSubdivisionId)
-            ?: throw Error("Structure subdivision does not exist")
+            ?: throw Error(400, "Structure subdivision does not exist")
 
         if (observation.inspectionId != inspection.uuid) {
-            throw Error("Observation is not under specified inspection")
+            throw Error(400, "Observation is not under specified inspection")
         }
 
         if (structureSubdivision.inspectionId != inspection.uuid) {
-            throw Error("Structure subdivision is not under specified inspection")
+            throw Error(400, "Structure subdivision is not under specified inspection")
         }
 
         if (observation.dimensionNumber == null) {
-            throw Error("Observation has no dimension number")
+            throw Error(400, "Observation has no dimension number")
         }
 
         // check if observation structure subdivision dimension is acceptable
@@ -51,7 +52,7 @@ class ObservationStructureSubdivisionService(
         }
 
         if (currentDimensionTotal + dto.dimensionNumber > observation.dimensionNumber!!) {
-            throw Error("The specified dimension number is greater than the available dimension number")
+            throw Error(400, "The specified dimension number is greater than the available dimension number")
         }
 
         return observationStructureSubdivisionRepository.save(dto.toEntity()).toDto()
@@ -59,8 +60,15 @@ class ObservationStructureSubdivisionService(
 
     fun delete(uuid: String) {
         val observationStructureSubdivision = observationStructureSubdivisionRepository.findFirstByUuid(uuid)
-            ?: throw Error("Specified observation structure subdivision does not exist")
+            ?: throw Error(400, "Specified observation structure subdivision does not exist")
 
         return observationStructureSubdivisionRepository.delete(observationStructureSubdivision)
+    }
+
+    fun getAllByStructureSubdivisionId(structureSubdivisionId: String): List<ObservationStructureSubdivisionDto> {
+        val observationStructureSubdivisions =
+            observationStructureSubdivisionRepository.findAllByStructureSubdivisionId(structureSubdivisionId)
+
+        return observationStructureSubdivisions.map { it.toDto() }
     }
 }

@@ -1,8 +1,10 @@
 package com.uav_recon.app.api.controllers
 
+import com.uav_recon.app.api.entities.db.ObservationDefectFilters
 import com.uav_recon.app.api.entities.requests.bridge.*
 import com.uav_recon.app.api.entities.responses.bridge.InspectionUsersDto
 import com.uav_recon.app.api.services.InspectionService
+import com.uav_recon.app.api.services.ObservationDefectService
 import com.uav_recon.app.api.services.ObservationStructureSubdivisionService
 import com.uav_recon.app.api.services.StructureSubdivisionService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
@@ -26,6 +28,7 @@ import javax.servlet.http.HttpServletResponse
 @RestController
 class InspectionController(
     private val inspectionService: InspectionService,
+    private val observationDefectService: ObservationDefectService,
     private val structureSubdivisionService: StructureSubdivisionService,
     private val observationStructureSubdivisionService: ObservationStructureSubdivisionService
     ) : BaseController() {
@@ -51,6 +54,21 @@ class InspectionController(
         return ResponseEntity.ok(inspections)
     }
 
+    @GetMapping("$VERSION2/inspection/{uuid}/defects")
+    fun getInspectionObservationDefects(
+        @RequestHeader(X_TOKEN) token: String,
+        @PathVariable uuid: String,
+        @RequestParam(required = false) filter: ObservationDefectFilters?,
+        @RequestParam(required = false) descending: Boolean?
+    ): ResponseEntity<List<ObservationDefectDto>> {
+        return ResponseEntity.ok(
+            observationDefectService.findAllByInspectionIdAndNotDeleted(
+                uuid,
+                filter ?: ObservationDefectFilters.COMPONENT_SUBCOMPONENT,
+                descending ?: false
+            )
+        )
+    }
 
     @GetMapping(
         value = ["$VERSION2/downloadInspectionPhotosZip"],

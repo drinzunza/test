@@ -71,7 +71,7 @@ class InspectionService(
         archived = archived,
         previousInspectionId = previousInspectionId,
         inspectors = inspectors ?: getUsers(uuid),
-        structureSubdivisions = structureSubdivisionService.getAllByInspectionId(uuid).map { it.toEntity() }
+        structureSubdivisions = structureSubdivisionService.getAllByInspectionId(uuid)
     )
 
     fun Inspection.toDtoV2(
@@ -100,7 +100,7 @@ class InspectionService(
             archived = archived,
             previousInspectionId = previousInspectionId,
             inspectors = inspectors ?: getUsers(uuid),
-            structureSubdivisions = structureSubdivisionService.getAllByInspectionId(uuid).map { it.toEntity() }
+            structureSubdivisions = structureSubdivisionService.getAllByInspectionId(uuid)
         )
     }
 

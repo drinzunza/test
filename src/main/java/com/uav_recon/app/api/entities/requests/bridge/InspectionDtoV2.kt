@@ -30,7 +30,7 @@ data class InspectionDtoV2(
         val archived: Boolean?,
         val previousInspectionId: String?,
         val inspectors: List<SimpleUserDto>?,
-        val structureSubdivisions: List<StructureSubdivision>? = null
+        val structureSubdivisions: List<StructureSubdivisionDto>? = null
 ) : Serializable
 
 fun InspectionDtoV2.toEntity(weather: Weather?, createdBy: Int, updatedBy: Int) = Inspection(
