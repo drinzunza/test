@@ -47,6 +47,7 @@ class ReportService(
         return reports.last().toDto()
     }
 
+    @Throws(Error::class)
     fun generate(userId: Int, inspectionId: String, dto: ReportGenerateDto): ReportDto {
         inspectionRepository.findFirstByUuidAndDeletedIsFalse(inspectionId)
                 ?: throw Error(101, "Invalid inspection UUID")
@@ -62,18 +63,18 @@ class ReportService(
             }
             if (observationDefects != null) {
                 if (dto.defectsOrder.size + dto.maintenancesOrder.size != observationDefects.size) {
-                    throw Error("Specify an order for exactly all defects and maintenances assigned to this inspection")
+                    throw Error(400, "Specify an order for exactly all defects and maintenances assigned to this inspection")
                 }
 
                 dto.defectsOrder.forEach { (uuid, _) ->
                     if (!observationDefects.filter { it.type == StructuralType.STRUCTURAL }.any { it.uuid == uuid }) {
-                        throw Error("No defect with uuid $uuid is assigned to this inspection")
+                        throw Error(400, "No defect with uuid $uuid is assigned to this inspection")
                     }
                 }
 
                 dto.maintenancesOrder.forEach { (uuid, _) ->
                     if (!observationDefects.filter { it.type == StructuralType.MAINTENANCE }.any { it.uuid == uuid }) {
-                        throw Error("No maintenance with uuid $uuid is assigned to this inspection")
+                        throw Error(400, "No maintenance with uuid $uuid is assigned to this inspection")
                     }
                 }
             }
