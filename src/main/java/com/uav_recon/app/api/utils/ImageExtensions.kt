@@ -27,6 +27,17 @@ fun ByteArray.saveWithRect(rect: Rect?, file: File, thumbFile: File, format: Str
     inputStream.close()
 }
 
+@Throws(Error::class)
+fun ByteArray.saveThumb(file: File, thumbFile: File, format: String, size: Int = 500) {
+    val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
+    val inputStream = inputStream()
+    val image = Thumbnails.of(inputStream).scale(1.0).asBufferedImage()
+    Thumbnails.of(image)
+        .scale(size.toDouble() / (if (image.width > image.height) image.width else image.height))
+        .toFile(thumbFile)
+    inputStream.close()
+}
+
 fun BufferedImage.drawRect(rect: Rect?) {
     rect?.let {
         val startX = min(rect.startX, rect.endX)

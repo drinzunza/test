@@ -15,6 +15,10 @@ class FileServiceImpl(configuration: UavConfiguration) : FileService {
         return service.save(path, bytes, format, drawables)
     }
 
+    override fun saveAnnotatedPhoto(path: String, bytes: ByteArray, format: String): String {
+        return service.saveAnnotatedPhoto(path, bytes, format)
+    }
+
     override fun delete(link: String) {
         service.delete(link)
     }

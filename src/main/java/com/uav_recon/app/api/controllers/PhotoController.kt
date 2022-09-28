@@ -34,8 +34,8 @@ class PhotoController(private val photoService: PhotoService) : BaseController()
             @RequestParam location: LocationDto?,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX") createdAt: OffsetDateTime?,
             @RequestParam drawables: String?,
-            @RequestParam data: MultipartFile): ResponseEntity<PhotoDto> {
-        return ResponseEntity.ok(photoService.save(PhotoDto(uuid, null, null, name, createdAt, location, drawables, observationDefectId),
+            @RequestParam data: Array<MultipartFile>): ResponseEntity<PhotoDto> {
+        return ResponseEntity.ok(photoService.save(PhotoDto(uuid, null, null, null, name, createdAt, location, drawables, observationDefectId),
                                                    data,
                                                    inspectionId,
                                                    observationId,
@@ -56,14 +56,22 @@ class PhotoController(private val photoService: PhotoService) : BaseController()
         @RequestParam altitude: Double?,
         @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX") createdAt: OffsetDateTime?,
         @RequestParam drawables: String?,
-        @RequestParam data: MultipartFile): ResponseEntity<PhotoDto> {
+        @RequestParam data: Array<MultipartFile>): ResponseEntity<PhotoDto> {
         val location = LocationDto(latitude, longitude, altitude)
-        return ResponseEntity.ok(photoService.save(PhotoDto(uuid, null, null, name, createdAt, location, drawables, observationId),
+        return ResponseEntity.ok(photoService.save(PhotoDto(uuid, null, null, null, name, createdAt, location, drawables, observationId),
             data,
             inspectionId,
             observationId,
             observationDefectId,
             getAuthenticatedUserId()))
+    }
+
+    @PostMapping("${VERSION}/photo/{uuid}")
+    fun updateAnnotatedPhoto(@RequestHeader(X_TOKEN) token: String,
+                    @PathVariable uuid: String,
+                    @RequestParam data: MultipartFile
+    ): ResponseEntity<PhotoDto> {
+        return ResponseEntity.ok(photoService.updateAnnotatedPhoto(uuid, data, getAuthenticatedUserId()))
     }
 
     @PutMapping("${VERSION}/inspection/{inspectionId}/observation/{observationId}/observationDefect/{observationDefectId}/photo/{uuid}")

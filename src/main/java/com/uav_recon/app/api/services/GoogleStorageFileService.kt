@@ -17,6 +17,11 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
         return "$linkPrefix$path"
     }
 
+    override fun saveAnnotatedPhoto(path: String, bytes: ByteArray, format: String): String {
+        storage.create(BlobInfo.newBuilder(configuration.files.gsBucket, path).build(), bytes)
+        return "$linkPrefix$path"
+    }
+
     override fun delete(link: String) {
         storage.delete(BlobId.of(configuration.files.gsBucket, link.replace(linkPrefix, "")))
     }
