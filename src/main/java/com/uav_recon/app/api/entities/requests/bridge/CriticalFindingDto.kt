@@ -6,5 +6,6 @@ import java.io.Serializable
 @JsonInclude(JsonInclude.Include.NON_NULL)
 class CriticalFindingDto(
         var name: String,
-        var value: String
+        var value: String,
+        var finding: String
 ) : Serializable

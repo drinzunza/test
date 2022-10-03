@@ -255,7 +255,7 @@ class DictionaryService(
         val observationTypes = ObservationType.values().map { ObservationTypeDto(it.title, it.name, it.letter) }
         val conditionTypes = ConditionType.values().map { ConditionTypeDto(it.title, it.name, it.csWeight) }
         val criticalFindings =
-            CriticalFinding.values().map { CriticalFindingDto(it.name.toLowerCase().capitalize(), it.name) }
+            CriticalFinding.values().map { CriticalFindingDto(it.name.toLowerCase().capitalize(), it.name, it.finding) }
         val companies: List<Company> =
             if (user.companyId != null)
                 companyRepository.findAllByDeletedIsFalseAndIdIn(listOf(user.companyId!!))
