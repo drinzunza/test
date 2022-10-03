@@ -1,0 +1,1 @@
+ALTER TABLE structure_subdivision ALTER COLUMN number TYPE TEXT;

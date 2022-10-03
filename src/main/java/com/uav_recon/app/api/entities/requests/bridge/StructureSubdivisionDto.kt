@@ -9,7 +9,7 @@ data class StructureSubdivisionDto(
         val uuid: String,
         var inspectionId: String,
         val name: String?,
-        val number: Int?,
+        val number: String?,
         val sgrRating: String?,
         var observationStructureSubdivisions: List<ObservationStructureSubdivisionDto>? = null
 ) : Serializable

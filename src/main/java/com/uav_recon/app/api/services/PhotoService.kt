@@ -110,7 +110,7 @@ class PhotoService(
 
         // set unchanged cloned observation defects to changed
         val observationDefect = observationDefectRepository.findFirstByUuid(observationDefectId)
-        if (observationDefect?.status == ObservationDefectStatus.UNCHANGED) {
+        if (observationDefect?.status == ObservationDefectStatus.UNCHANGED && observationDefect.previousDefectNumber != null) {
             observationDefect.status = ObservationDefectStatus.CHANGED
         }
         observationDefectRepository.save(observationDefect)
@@ -124,7 +124,7 @@ class PhotoService(
 
         // set unchanged cloned observation defects to changed
         val observationDefect = observationDefectRepository.findFirstByUuid(photo.observationDefectId)
-        if (observationDefect?.status == ObservationDefectStatus.UNCHANGED) {
+        if (observationDefect?.status == ObservationDefectStatus.UNCHANGED && observationDefect.previousDefectNumber != null) {
             observationDefect.status = ObservationDefectStatus.CHANGED
         }
         observationDefectRepository.save(observationDefect)
@@ -158,7 +158,7 @@ class PhotoService(
         )
 
         // set unchanged cloned observation defects to changed
-        if (observationDefect?.status == ObservationDefectStatus.UNCHANGED) {
+        if (observationDefect?.status == ObservationDefectStatus.UNCHANGED && observationDefect.previousDefectNumber != null) {
             observationDefect.status = ObservationDefectStatus.CHANGED
         }
         observationDefectRepository.save(observationDefect)
@@ -224,7 +224,7 @@ class PhotoService(
 
         // set unchanged cloned observation defects to changed
         val observationDefect = observationDefectRepository.findFirstByUuid(observationDefectId)
-        if (observationDefect?.status == ObservationDefectStatus.UNCHANGED) {
+        if (observationDefect?.status == ObservationDefectStatus.UNCHANGED && observationDefect.previousDefectNumber != null) {
             observationDefect.status = ObservationDefectStatus.CHANGED
         }
         observationDefectRepository.save(observationDefect)

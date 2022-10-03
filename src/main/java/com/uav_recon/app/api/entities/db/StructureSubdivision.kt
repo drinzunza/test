@@ -16,7 +16,7 @@ class StructureSubdivision(
     @Column(name = "name")
     var name: String? = null,
     @Column(name = "number")
-    var number: Int? = null,
+    var number: String? = null,
     @Column(name = "sgr_rating")
     var sgrRating: String? = null,
     @Transient
