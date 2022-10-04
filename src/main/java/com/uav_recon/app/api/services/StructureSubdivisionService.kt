@@ -26,7 +26,7 @@ class StructureSubdivisionService(
 
         // check if subdivision number is unique for the inspection
         val existingSubdivisions = structureSubdivisionRepository.findAllByInspectionId(inspectionId)
-        if (existingSubdivisions.any { it.number == dto.number }) {
+        if (existingSubdivisions.filter { it.uuid != dto.uuid }.any { it.number == dto.number }) {
             throw Error(400, "Subdivision number already exists for this inspection")
         }
 
