@@ -161,9 +161,9 @@ class MainDocumentFactory(
 
             page { createTitlePage(report, inspection, inspector, structure, company, flavor) }
             page { createGlobalPage(inspection, flavor) }
-            page { createStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor, isInverse) }
+            page { createStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor, isInverse, defectList) }
             if (CustomReportManager.getInstance().isVisible("maintenance_observation_section", flavor)) {
-                page { createNonStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor, isInverse) }
+                page { createNonStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor, isInverse, maintenanceList) }
             }
             page { createObservationSummary(inspection, flavor) }
 
@@ -533,17 +533,40 @@ class MainDocumentFactory(
         lineFeed { SINGLE_LINE_FEED_ELEMENT }
     }
 
-    private fun Page.Builder.createNonStructuralDefectsReport(inspection: Inspection, inspector: User, isTunnelStructure: Boolean, flavor: String, isInverse: Boolean) {
+    private fun Page.Builder.createNonStructuralDefectsReport(
+        inspection: Inspection,
+        inspector: User,
+        isTunnelStructure: Boolean,
+        flavor: String,
+        isInverse: Boolean,
+        defectList: List<ObservationDefect>
+    ) {
         val title = TextElement.Simple(CustomReportManager.getInstance().getString("non_structural_defects_report", flavor), styles = ITALIC_BOLD_STYLE_LIST)
-        createDefectsReport(inspection, inspector, title, StructuralType.MAINTENANCE, isTunnelStructure, flavor, isInverse)
+        createDefectsReport(inspection, inspector, title, StructuralType.MAINTENANCE, isTunnelStructure, flavor, isInverse, defectList)
     }
 
-    private fun Page.Builder.createStructuralDefectsReport(inspection: Inspection, inspector: User, isTunnelStructure: Boolean, flavor: String, isInverse: Boolean) {
+    private fun Page.Builder.createStructuralDefectsReport(
+        inspection: Inspection,
+        inspector: User,
+        isTunnelStructure: Boolean,
+        flavor: String,
+        isInverse: Boolean,
+        defectList: List<ObservationDefect>
+    ) {
         val title = TextElement.Simple(CustomReportManager.getInstance().getString("structural_defects_report", flavor), styles = ITALIC_BOLD_STYLE_LIST)
-        createDefectsReport(inspection, inspector, title, StructuralType.STRUCTURAL, isTunnelStructure, flavor, isInverse)
+        createDefectsReport(inspection, inspector, title, StructuralType.STRUCTURAL, isTunnelStructure, flavor, isInverse, defectList)
     }
 
-    private fun Page.Builder.createDefectsReport(inspection: Inspection, inspector: User, title: TextElement, type: StructuralType, isTunnelStructure: Boolean, flavor: String, isInverse: Boolean) {
+    private fun Page.Builder.createDefectsReport(
+        inspection: Inspection,
+        inspector: User,
+        title: TextElement,
+        type: StructuralType,
+        isTunnelStructure: Boolean,
+        flavor: String,
+        isInverse: Boolean,
+        defectList: List<ObservationDefect>
+    ) {
         orientation = Page.Orientation.LANDSCAPE
 
         val defectReportFieldFactory = DefectReportFields(flavor, isTunnelStructure)
@@ -556,7 +579,15 @@ class MainDocumentFactory(
         table {
             width { TABLE_WIDTH_LANDSCAPE }
             defectReportFieldFactory.buildHeaderRow(this, type)
-            defectReportFieldFactory.buildRows(this, inspection, inspector, type, configuration.server.host, isTunnelStructure, isInverse)
+            defectReportFieldFactory.buildRows(
+                this,
+                inspection,
+                inspector,
+                type,
+                configuration.server.host,
+                isInverse,
+                defectList
+            )
         }
     }
 

@@ -99,26 +99,19 @@ internal class DefectReportFields(private val flavor: String = "default", privat
     fun buildRows(tableBuilder: Table.Builder,
                   inspection: Inspection, inspector: User,
                   type: StructuralType, server: String,
-                  sortByStationing: Boolean,
-                  isInverse: Boolean
+                  isInverse: Boolean,
+                  defectList: List<ObservationDefect>
     ) {
         tableBuilder.apply {
             var coloredCell = true
-            // Put all defects in one list.
-            var defectList: MutableList<ObservationDefect> = ArrayList()
+
             // Create a map of defect id to observation for faster access.
             val defectToObservationMap: HashMap<String, Observation> = HashMap()
             inspection.observations?.forEach { observation ->
                 observation.defects?.forEach {
-                    defectList.add(it)
                     defectToObservationMap[it.id] = observation
                 }
             }
-
-            if (sortByStationing) {
-                defectList = defectList.sortedWith(compareBy { it.stationMarker }).toMutableList()
-            }
-
 
             defectList.filter { type == it.type }
                     .also {
