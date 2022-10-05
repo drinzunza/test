@@ -44,15 +44,23 @@ class ObservationStructureSubdivisionService(
         }
 
         // check if observation structure subdivision dimension is acceptable
-        val currentObservationStructureSubdivisions = observationStructureSubdivisionRepository.findAllByObservationId(
+        var currentObservationStructureSubdivisions = observationStructureSubdivisionRepository.findAllByObservationId(
             dto.observationId
         )
-        val currentDimensionTotal = currentObservationStructureSubdivisions.filter { it.uuid != dto.uuid }.fold(0){
+
+        // FOR TESTING: filter out allocations with deleted structure subdivisions
+        val inspectionStructureSubdivisionIds = structureSubdivisionRepository.findAllByInspectionId(inspectionId).map { it.uuid }
+        currentObservationStructureSubdivisions = currentObservationStructureSubdivisions.filter {
+            it.uuid != dto.uuid && it.structureSubdivisionId in inspectionStructureSubdivisionIds
+        }
+
+        val currentDimensionTotal = currentObservationStructureSubdivisions.fold(0){
                 total, next -> total + next.dimensionNumber
         }
 
         if (currentDimensionTotal + dto.dimensionNumber > observation.dimensionNumber!!) {
-            throw Error(400, "The specified dimension number is greater than the available dimension number")
+            val availableDimensionNumber = observation.dimensionNumber!! - currentDimensionTotal
+            throw Error(400, "The specified dimension number is greater than the available dimension number (${availableDimensionNumber})")
         }
 
         return observationStructureSubdivisionRepository.save(dto.toEntity()).toDto()

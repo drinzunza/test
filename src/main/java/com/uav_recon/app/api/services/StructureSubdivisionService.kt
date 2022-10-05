@@ -66,6 +66,10 @@ class StructureSubdivisionService(
         val structureSubdivision = structureSubdivisionRepository.findFirstByUuid(uuid)
             ?: throw Error(400, "Specified structure subdivision does not exist")
 
-        return structureSubdivisionRepository.delete(structureSubdivision)
+        structureSubdivisionRepository.delete(structureSubdivision)
+
+        // delete allocations to this structure subdivision
+        val allocations = observationStructureSubdivisionService.getAllByStructureSubdivisionId(uuid)
+        allocations.forEach { observationStructureSubdivisionService.delete(it.uuid) }
     }
 }
