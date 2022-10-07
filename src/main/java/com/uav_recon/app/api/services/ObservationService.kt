@@ -231,6 +231,29 @@ class ObservationService(
     }
 
     fun calculateObservationHealthIndex(observation: Observation): Double? {
+        var subcomponentHI = 0.0
+        val defects = observation.defects
+        val componentSize = observation.dimensionNumber
+        val measureUnit = observation.subcomponent?.measureUnit
+        val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(observation.inspectionId)
+            ?: throw Error(101, "Invalid inspection UUID")
+        if (componentSize == null || defects == null || measureUnit == null) {
+            return null
+        }
+        val spansCount = getSpansCount(observation, inspection.spansCount) ?: 0
+        val cs1 = getCsValue(observation, ConditionType.GOOD, spansCount)
+        val cs2 = getCsValue(observation, ConditionType.FAIR, spansCount)
+        val cs3 = getCsValue(observation, ConditionType.POOR, spansCount)
+        val cs4 = getCsValue(observation, ConditionType.SEVERE, spansCount)
+        subcomponentHI = ((cs1 * ConditionType.GOOD.csWeight)
+                + (cs2 * ConditionType.FAIR.csWeight)
+                + (cs3 * ConditionType.POOR.csWeight)
+                + (cs4 * ConditionType.SEVERE.csWeight)
+                ).toDouble() / componentSize.toDouble()
+        return subcomponentHI
+    }
+
+    fun calculateObservationHealthIndexOld(observation: Observation): Double? {
         val measureUnit = observation.subcomponent?.measureUnit
         val componentSize = observation.dimensionNumber
         val defects = observation.defects
