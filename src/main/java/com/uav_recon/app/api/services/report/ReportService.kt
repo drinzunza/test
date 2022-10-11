@@ -62,18 +62,25 @@ class ReportService(
                 )
             }
             if (observationDefects != null) {
-                if (dto.defectsOrder.size + dto.maintenancesOrder.size != observationDefects.size) {
-                    throw Error(400, "Specify an order for exactly all defects and maintenances assigned to this inspection")
+                val dtoTotalDefects = dto.defectsOrder.size + dto.maintenancesOrder.size
+                if (dtoTotalDefects != observationDefects.size) {
+                    throw Error(
+                        400,
+                        "Specify an order for exactly all defects and maintenances assigned to this inspection" +
+                                "(Total defects and maintenances given is $dtoTotalDefects but should be ${observationDefects.size})"
+                    )
                 }
 
+                val structuralDefects = observationDefects.filter { it.type == StructuralType.STRUCTURAL }
                 dto.defectsOrder.forEach { (uuid, _) ->
-                    if (!observationDefects.filter { it.type == StructuralType.STRUCTURAL }.any { it.uuid == uuid }) {
+                    if (!structuralDefects.any { it.uuid == uuid }) {
                         throw Error(400, "No defect with uuid $uuid is assigned to this inspection")
                     }
                 }
 
+                val maintenanceDefects = observationDefects.filter { it.type == StructuralType.MAINTENANCE }
                 dto.maintenancesOrder.forEach { (uuid, _) ->
-                    if (!observationDefects.filter { it.type == StructuralType.MAINTENANCE }.any { it.uuid == uuid }) {
+                    if (!maintenanceDefects.any { it.uuid == uuid }) {
                         throw Error(400, "No maintenance with uuid $uuid is assigned to this inspection")
                     }
                 }
