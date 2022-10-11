@@ -115,13 +115,6 @@ class MainDocumentFactory(
         val company = inspector.getCompany()
         val structureType = structure?.structureTypeId
 
-        // Default sort by components, sub-components, station marker.
-        inspection.observations = inspection.observations
-                ?.sortedWith(compareBy({ it.component?.name }, { it.subcomponent?.name }))
-        inspection.observations?.forEach { observation ->
-            observation.defects = observation.defects?.sortedWith(compareBy { it.stationMarker })
-        }
-
         // Put all defects in one list.
         var defectList: MutableList<ObservationDefect> = ArrayList()
         var maintenanceList: MutableList<ObservationDefect> = ArrayList()
