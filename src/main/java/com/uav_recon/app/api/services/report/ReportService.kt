@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.services.report
 
+import com.uav_recon.app.api.entities.db.ObservationDefectFilters
 import com.uav_recon.app.api.entities.db.Report
 import com.uav_recon.app.api.entities.db.StructuralType
 import com.uav_recon.app.api.entities.requests.bridge.ReportDto
@@ -56,11 +57,11 @@ class ReportService(
         if (user != null) {
             // check if defects and maintenances exist
             val inspection = inspectionService.getNotDeleted(user, inspectionId)
-            val observationDefects = inspection.observations?.map { it.id }?.let {
-                observationDefectService.findAllByObservationIdsAndNotDeleted(
-                    it
-                )
-            }
+            val observationDefects = observationDefectService.findAllByInspectionIdAndNotDeleted(
+                inspection.uuid,
+                ObservationDefectFilters.CLASS
+            )
+
             if (observationDefects != null) {
                 val dtoTotalDefects = dto.defectsOrder.size + dto.maintenancesOrder.size
                 if (dtoTotalDefects != observationDefects.size) {
