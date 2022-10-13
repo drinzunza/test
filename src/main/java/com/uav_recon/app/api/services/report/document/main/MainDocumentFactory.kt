@@ -161,10 +161,10 @@ class MainDocumentFactory(
             page { createObservationSummary(inspection, flavor) }
 
             defectList.forEach { defect ->
-                page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.id]!!, defect, flavor) }
+                page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.uuid]!!, defect, flavor) }
             }
             maintenanceList.forEach { defect ->
-                page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.id]!!, defect, flavor) }
+                page { createDefectReportPage(inspection, inspector, structure, defectToObservationMap[defect.uuid]!!, defect, flavor) }
             }
         }
     }
