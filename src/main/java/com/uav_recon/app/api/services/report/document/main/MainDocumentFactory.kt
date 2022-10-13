@@ -128,11 +128,11 @@ class MainDocumentFactory(
         inspection.observations?.forEach { observation ->
             observation.defects?.forEach {
                 if (it.type == StructuralType.STRUCTURAL) {
-                    defectMap[it.id] = it
+                    defectMap[it.uuid] = it
                 } else {
-                    maintenanceMap[it.id] = it
+                    maintenanceMap[it.uuid] = it
                 }
-                defectToObservationMap[it.id] = observation
+                defectToObservationMap[it.uuid] = observation
             }
         }
 
