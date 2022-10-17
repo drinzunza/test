@@ -11,6 +11,7 @@ data class StructureSubdivisionDto(
         val name: String?,
         val number: String?,
         val sgrRating: String?,
+        val computedSgrRating: Double?,
         var observationStructureSubdivisions: List<ObservationStructureSubdivisionDto>? = null
 ) : Serializable
 

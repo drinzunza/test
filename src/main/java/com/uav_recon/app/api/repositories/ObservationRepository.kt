@@ -7,6 +7,7 @@ import java.util.*
 interface ObservationRepository : CrudRepository<Observation, String> {
     fun findAllByDeletedIsFalseAndInspectionIdIn(ids: List<String>): List<Observation>
     fun findAllByInspectionIdAndDeletedIsFalse(inspectionId: String): List<Observation>
+    fun findAllByInspectionIdAndStructuralComponentIdAndDeletedIsFalse(inspectionId: String, structuralComponentId: String): List<Observation>
     fun findByUuidAndDeletedIsFalse(id: String): Optional<Observation>
     fun findByUuidAndInspectionIdAndDeletedIsFalse(id: String, inspectionId: String): Optional<Observation>
     fun findFirstByUuidAndDeletedIsFalse(id: String): Observation?

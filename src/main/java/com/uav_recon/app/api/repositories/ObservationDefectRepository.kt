@@ -15,6 +15,15 @@ interface ObservationDefectRepository : CrudRepository<ObservationDefect, String
     fun findFirstByUuid(uuid: String): ObservationDefect?
     fun findFirstByUuidAndDeletedIsFalse(observationDefectId: String): ObservationDefect?
     fun findFirstByObservationIdAndIdAndDeletedIsFalse(observationId: String, displayId: String): ObservationDefect?
+    fun findAllByObservationIdAndStructureSubdivisionIdAndDeletedIsFalse(
+        observationId: String,
+        structureSubdivisionId: String
+    ): List<ObservationDefect>
+    fun findAllByDeletedIsFalseAndObservationIdInAndStructureSubdivisionId(
+        ids: List<String>,
+        structureSubdivisionId: String
+    ): List<ObservationDefect>
+
 
     @Query("select od " +
             "from Inspection i, Observation o, ObservationDefect od " +

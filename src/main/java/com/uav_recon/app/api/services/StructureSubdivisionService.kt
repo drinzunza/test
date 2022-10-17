@@ -1,19 +1,56 @@
 package com.uav_recon.app.api.services
 
-import com.uav_recon.app.api.entities.db.toDto
+import com.uav_recon.app.api.entities.db.StructureSubdivision
 import com.uav_recon.app.api.entities.requests.bridge.StructureSubdivisionDto
 import com.uav_recon.app.api.entities.requests.bridge.toEntity
 import com.uav_recon.app.api.repositories.InspectionRepository
+import com.uav_recon.app.api.repositories.ObservationRepository
+import com.uav_recon.app.api.repositories.ObservationStructureSubdivisionRepository
 import com.uav_recon.app.api.repositories.StructureSubdivisionRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class StructureSubdivisionService(
+    private val observationRepository: ObservationRepository,
     private val structureSubdivisionRepository: StructureSubdivisionRepository,
     private val observationStructureSubdivisionService: ObservationStructureSubdivisionService,
+    private val observationStructureSubdivisionRepository: ObservationStructureSubdivisionRepository,
+
     private val inspectionRepository: InspectionRepository
 ) : BaseService() {
+
+    fun StructureSubdivision.toDto() = StructureSubdivisionDto(
+        uuid = uuid,
+        inspectionId = inspectionId,
+        name = name,
+        number = number,
+        computedSgrRating = calculateSubdivisionSgr(this),
+        sgrRating = sgrRating
+    )
+
+    fun calculateSubdivisionSgr(subdivision: StructureSubdivision): Double {
+        var totalWeight = 0
+        var totalWeightedHI = 0.0
+        val subdivisionObservations = observationStructureSubdivisionRepository
+            .findAllByStructureSubdivisionId(subdivision.uuid)
+        if (subdivisionObservations.isEmpty()) {
+            return 0.0
+        }
+        subdivisionObservations.forEach {
+            val mainObservation = observationRepository.findFirstByUuidAndDeletedIsFalse(it.observationId)
+            val weightedHI = observationStructureSubdivisionService
+                .calculateWeightedSubdivisionObservationHealthIndex(it) ?: 0.0
+            totalWeightedHI += weightedHI
+            if (weightedHI > 0) {
+                totalWeight += mainObservation?.subcomponent?.fdotBhiValue ?: 0
+            }
+        }
+        if (totalWeight == 0) {
+            return 0.0
+        }
+        return totalWeightedHI / totalWeight
+    }
 
     @Transactional
     @Throws(Error::class)

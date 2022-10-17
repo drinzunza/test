@@ -22,11 +22,3 @@ class StructureSubdivision(
     @Transient
     var observationStructureSubdivisions: List<ObservationStructureSubdivision>? = null
 )
-
-fun StructureSubdivision.toDto() = StructureSubdivisionDto(
-    uuid = uuid,
-    inspectionId = inspectionId,
-    name = name,
-    number = number,
-    sgrRating = sgrRating
-)
