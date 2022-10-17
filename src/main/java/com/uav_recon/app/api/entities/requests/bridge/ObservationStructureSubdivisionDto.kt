@@ -9,6 +9,8 @@ data class ObservationStructureSubdivisionDto(
     val uuid: String,
     val structureSubdivisionId: String,
     val observationId: String,
+    val computedHealthIndex: Double?,
+//    val weightedHealthIndex: Double?,
     val dimensionNumber: Int
 ) : Serializable
 
