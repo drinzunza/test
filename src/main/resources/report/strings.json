@@ -69,7 +69,10 @@
     "photo_qty_key" : "Photo Qty: ",
     "location_key" : "Location ID: ",
     "size_key" : "Size: ",
-    "o_clock_key": "O Clock Position: "
+    "o_clock_key": "O Clock Position: ",
+    "number": "Number",
+    "name": "Name",
+    "sub_components": "Subcomponents"
   },
   "non-infra": {
     "sgr_rating" : "Severity Scale",

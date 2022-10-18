@@ -154,6 +154,9 @@ class MainDocumentFactory(
 
             page { createTitlePage(report, inspection, inspector, structure, company, flavor) }
             page { createGlobalPage(inspection, flavor) }
+            if (flavor == "default") {
+                page { createStructureSubdivisionSection(inspection) }
+            }
             page { createStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor, isInverse, defectList) }
             if (CustomReportManager.getInstance().isVisible("maintenance_observation_section", flavor)) {
                 page { createNonStructuralDefectsReport(inspection, inspector, structureType == 4L, flavor, isInverse, maintenanceList) }
@@ -373,6 +376,22 @@ class MainDocumentFactory(
 
     private fun formatRating(key: String, value: Any?, suffix: String? = null): String {
         return String.format(FORMAT_KEY_VALUE, key, value?.let { it.toString() + (suffix ?: "") } ?: "")
+    }
+
+    private fun Page.Builder.createStructureSubdivisionSection(inspection: Inspection) {
+        val structureSubdivisionFieldFactory = StructureSubdivisionFields()
+        val header = TextElement.Simple("Structure Subdivisions", styles = BOLD_STYLE_LIST)
+
+        paragraph {
+            text { header }
+            lineFeed { DOUBLE_LINE_FEED_ELEMENT }
+        }
+
+        table {
+            width { TABLE_WIDTH_PORTRAIT }
+            structureSubdivisionFieldFactory.buildHeaderRow(this)
+            structureSubdivisionFieldFactory.buildRows(this, inspection)
+        }
     }
 
     private fun Page.Builder.createObservationSummary(inspection: Inspection, flavor: String) {
