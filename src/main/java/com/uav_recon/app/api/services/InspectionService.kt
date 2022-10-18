@@ -38,7 +38,10 @@ class InspectionService(
     private val observationNameRepository: ObservationNameRepository,
     private val locationIdRepository: LocationIdRepository,
     private val fileService: FileService,
-    private val structureSubdivisionService: StructureSubdivisionService
+    private val structureSubdivisionRepository: StructureSubdivisionRepository,
+    private val structureSubdivisionService: StructureSubdivisionService,
+    private val observationStructureSubdivisionRepository: ObservationStructureSubdivisionRepository,
+    private val observationStructureSubdivisionService: ObservationStructureSubdivisionService
 ) : BaseService() {
 
     private val logger = LoggerFactory.getLogger(ObservationDefectService::class.java)
@@ -693,7 +696,17 @@ class InspectionService(
         val observationNames =
             observationNameRepository.findAllByIdIn(observationDefects.map { it.observationNameId ?: "" })
         val locationIds = locationIdRepository.findAll()
+        val structureSubdivisions = mutableListOf<StructureSubdivision>()
+        inspections.forEach { structureSubdivisions.addAll(structureSubdivisionRepository.findAllByInspectionId(it.uuid)) }
 
+        structureSubdivisions.forEach { structureSubdivision ->
+            structureSubdivision.computedSgrRating = structureSubdivisionService.calculateSubdivisionSgr(structureSubdivision)
+            structureSubdivision.observationStructureSubdivisions =
+                observationStructureSubdivisionRepository.findAllByStructureSubdivisionId(structureSubdivision.uuid)
+            structureSubdivision.observationStructureSubdivisions!!.forEach {
+                it.computedHealthIndex = observationStructureSubdivisionService.calculateSubdivisionObservationHealthIndex(it)
+            }
+        }
         observationDefects.forEach { observationDefect ->
             observationDefect.defect = defects.firstOrNull { it.id == observationDefect.defectId }
             observationDefect.condition = conditions.firstOrNull { it.id == observationDefect.conditionId }
@@ -709,6 +722,7 @@ class InspectionService(
         }
         inspections.forEach { inspection ->
             inspection.observations = observations.filter { it.inspectionId == inspection.uuid }
+            inspection.structureSubdivisions = structureSubdivisions.filter { it.inspectionId == inspection.uuid }
         }
     }
 
