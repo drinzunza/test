@@ -39,4 +39,6 @@ interface FileService {
     fun getImagePath(link: String, format: String? = null, type: FileType = FileType.NORMAL): String
     fun getRect(drawables: String?): Rect?
     fun regenerateRectImages(photo: Photo)
+
+    fun generateSignedLink(link: String): String
 }

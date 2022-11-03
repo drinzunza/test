@@ -46,4 +46,8 @@ class FileServiceImpl(configuration: UavConfiguration) : FileService {
     override fun regenerateRectImages(photo: Photo) {
         service.regenerateRectImages(photo)
     }
+
+    override fun generateSignedLink(link: String): String {
+        return service.generateSignedLink(link)
+    }
 }

@@ -10,18 +10,12 @@ import com.uav_recon.app.api.services.StructureSubdivisionService
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION
 import com.uav_recon.app.configurations.ControllerConfiguration.VERSION2
 import com.uav_recon.app.configurations.ControllerConfiguration.X_TOKEN
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.server.ResponseStatusException
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.util.Collections
-import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-import javax.servlet.ServletException
 import javax.servlet.http.HttpServletResponse
 
 
