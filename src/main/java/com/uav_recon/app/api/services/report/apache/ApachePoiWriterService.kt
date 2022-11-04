@@ -1,22 +1,19 @@
 package com.uav_recon.app.api.services.report.apache
 
 import com.uav_recon.app.api.beans.resources.Resources
-import com.uav_recon.app.api.services.FileStorageService
 import com.uav_recon.app.api.services.report.DocumentWriter
-import com.uav_recon.app.api.services.report.MapLoaderService
 import com.uav_recon.app.api.services.report.document.models.Document
 import com.uav_recon.app.api.services.report.document.models.Page
 import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.services.report.document.models.body.Paragraph
 import com.uav_recon.app.api.services.report.document.models.body.Table
 import com.uav_recon.app.api.services.report.document.models.elements.*
-import com.uav_recon.app.configurations.UavConfiguration
 import org.apache.poi.util.Units
 import org.apache.poi.xwpf.usermodel.*
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.io.File
+import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 import java.math.BigInteger
 
@@ -40,6 +37,17 @@ class ApachePoiWriterService(private val resources: Resources) : DocumentWriter 
         FileOutputStream(filePath).use {
             wordDocument.write(it)
         }
+    }
+
+    override fun writeDocumentToMemory(document: Document): ByteArray {
+        val wordDocument = XWPFDocument(resources.template.inputStream())
+        document.writeTo(wordDocument)
+        val out = ByteArrayOutputStream()
+        wordDocument.write(out)
+        out.close()
+        wordDocument.close()
+
+        return out.toByteArray()
     }
 
     private fun Document.writeTo(doc: XWPFDocument) {

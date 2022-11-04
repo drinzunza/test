@@ -5,4 +5,6 @@ import java.io.File
 
 interface DocumentWriter {
     fun writeDocument(document: Document, filePath: String)
+
+    fun writeDocumentToMemory(document: Document) : ByteArray
 }

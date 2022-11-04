@@ -5,7 +5,9 @@ import com.uav_recon.app.api.services.Error
 import net.coobird.thumbnailator.Thumbnails
 import java.awt.*
 import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.OutputStream
 import java.lang.Double.max
 import java.lang.Double.min
 import kotlin.math.abs
@@ -36,6 +38,24 @@ fun ByteArray.saveThumb(file: File, thumbFile: File, format: String, size: Int =
         .scale(size.toDouble() / (if (image.width > image.height) image.width else image.height))
         .toFile(thumbFile)
     inputStream.close()
+}
+
+@Throws(Error::class)
+fun ByteArray.saveThumbToMemory(format: String, size: Int = 500): ByteArray {
+    val needFormat = if (format.toLowerCase() == "png") "png" else "jpg"
+    val outputStream = ByteArrayOutputStream()
+    val inputStream = inputStream()
+    val image = Thumbnails.of(inputStream).scale(1.0).asBufferedImage()
+
+    Thumbnails.of(image)
+        .scale(size.toDouble() / (if (image.width > image.height) image.width else image.height))
+        .outputFormat(needFormat)
+        .toOutputStream(outputStream)
+
+    inputStream.close()
+    outputStream.close()
+
+    return outputStream.toByteArray()
 }
 
 fun BufferedImage.drawRect(rect: Rect?) {

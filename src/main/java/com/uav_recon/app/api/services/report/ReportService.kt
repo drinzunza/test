@@ -14,6 +14,7 @@ import com.uav_recon.app.api.services.FileService
 import com.uav_recon.app.api.services.InspectionService
 import com.uav_recon.app.api.services.ObservationDefectService
 import com.uav_recon.app.api.services.report.document.DocumentFactory
+import com.uav_recon.app.configurations.UavConfiguration
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.util.*
@@ -28,12 +29,13 @@ class ReportService(
         private val observationDefectService: ObservationDefectService,
         private val documentWriter: DocumentWriter,
         private val documentFactory: DocumentFactory,
-        private val fileService: FileService
+        private val fileService: FileService,
+        private val configuration: UavConfiguration
 ) {
 
     fun Report.toDto() = ReportDto(
             id = id,
-            link = link,
+            link = fileService.generateSignedLink(link),
             date = createdAt!!
     )
 
@@ -90,23 +92,46 @@ class ReportService(
             val company = user.companyId?.let { companyRepository.findFirstById(it) }
             val id = generateDisplayId(userId)
             val uuid = UUID.randomUUID().toString()
-            val link = fileService.save("$userId/$inspectionId/$id.docx", ByteArray(0), "docx", null)
-            val report = Report(
-                id = id,
-                uuid = uuid,
-                link = link,
-                inspectionId = inspectionId,
-                createdBy = userId,
-                updatedBy = userId
-            )
 
-            val document = documentFactory.generateDocument(
-                report,
-                isInverse = company?.ratingInverse ?: false,
-                defectsOrder = dto.defectsOrder,
-                maintenanceOrder = dto.maintenancesOrder
-            )
-            documentWriter.writeDocument(document, fileService.getPath(link))
+            var report : Report? = null
+            if (configuration.files.useGoogle == "false") {
+                val link = fileService.save("$userId/$inspectionId/$id.docx", ByteArray(0), "docx", null)
+                report = Report(
+                    id = id,
+                    uuid = uuid,
+                    link = link,
+                    inspectionId = inspectionId,
+                    createdBy = userId,
+                    updatedBy = userId
+                )
+
+                val document = documentFactory.generateDocument(
+                    report,
+                    isInverse = company?.ratingInverse ?: false,
+                    defectsOrder = dto.defectsOrder,
+                    maintenanceOrder = dto.maintenancesOrder
+                )
+                documentWriter.writeDocument(document, fileService.getPath(link))
+            } else {
+                val linkString = fileService.getLink("$userId/$inspectionId/$id.docx")
+                report = Report(
+                    id = id,
+                    uuid = uuid,
+                    link = linkString,
+                    inspectionId = inspectionId,
+                    createdBy = userId,
+                    updatedBy = userId
+                )
+
+                val document = documentFactory.generateDocument(
+                    report,
+                    isInverse = company?.ratingInverse ?: false,
+                    defectsOrder = dto.defectsOrder,
+                    maintenanceOrder = dto.maintenancesOrder
+                )
+                val documentBytes = documentWriter.writeDocumentToMemory(document)
+                fileService.save("$userId/$inspectionId/$id.docx", documentBytes, "docx", null)
+            }
 
             val savedReport = reportRepository.save(report)
             return savedReport.toDto()

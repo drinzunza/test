@@ -50,7 +50,8 @@ class InspectionService(
         withObservations: Boolean = true,
         inspectors: List<SimpleUserDto>? = null,
         structure: Structure? = null,
-        observations: List<ObservationDto>? = null
+        observations: List<ObservationDto>? = null,
+        withSignedLink: Boolean = true
     ) = InspectionDtoV2(
         uuid = uuid,
         location = if (latitude != null) LocationDto(latitude, longitude, altitude) else null,
@@ -62,7 +63,10 @@ class InspectionService(
         structureId = structureId,
         structureCode = structure?.code ?: structureId?.let { structureRepository.findFirstById(it) }?.code,
         structureName = structure?.name ?: structureId?.let { structureRepository.findFirstById(it) }?.name,
-        report = if (reportId != null) InspectionReport(reportId, reportLink, reportDate) else null,
+        report = if (reportId != null) InspectionReport(reportId,
+            if (withSignedLink) reportLink?.let { fileService.generateSignedLink(it) } else reportLink,
+            reportDate
+        ) else null,
         status = status,
         termRating = termRating,
         weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
@@ -93,7 +97,8 @@ class InspectionService(
             structureId = structureId,
             structureCode = structure?.code ?: structureId?.let { structureRepository.findFirstById(it) }?.code,
             structureName = structure?.name ?: structureId?.let { structureRepository.findFirstById(it) }?.name,
-            report = if (reportId != null) InspectionReport(reportId, reportLink, reportDate) else null,
+            report = if (reportId != null) InspectionReport(reportId,
+                reportLink?.let { fileService.generateSignedLink(it) }, reportDate) else null,
             status = status,
             termRating = termRating,
             weather = if (temperature != null) Weather(temperature, humidity, wind) else null,
@@ -190,7 +195,7 @@ class InspectionService(
         inspectionRepository.save(cloneInspection)
 
         // convert clone to Dto to fetch related objects
-        val existingInspectionDto = existingInspection.toDto()
+        val existingInspectionDto = existingInspection.toDto(withSignedLink = false)
 
         // clone the observations
         existingInspectionDto.observations?.forEach { currentObservation ->
@@ -295,7 +300,7 @@ class InspectionService(
         if (inspection.isPresent) {
             val path = "op_ord_docs/$inspectionId.docx"
             try {
-                link = fileService.getLink(path)
+                link = fileService.generateSignedLink(path)
             } catch (e: Exception) {
                 throw Error(105, "Operational order document not found in this inspection")
             }

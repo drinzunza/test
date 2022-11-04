@@ -132,6 +132,10 @@ class LocalStorageFileService(private val configuration: UavConfiguration) : Fil
         return null
     }
 
+    override fun generateSignedLink(link: String): String {
+        return getLink(link)
+    }
+
     fun generateRectImages(bytes: ByteArray, rect: Rect?, file: File, thumbFile: File, format: String) {
         try {
             if (format == "docx") return

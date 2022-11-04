@@ -38,9 +38,9 @@ class PhotoService(
         name = name,
         observationDefectId = observationDefectId,
         createdAt = createdAtClient,
-        link = link,
-        thumbLink = getThumbnailLink(this),
-        annotatedLink = getAnnotatedLink(this),
+        link = fileService.generateSignedLink(link),
+        thumbLink = fileService.generateSignedLink(getThumbnailLink(this)),
+        annotatedLink = fileService.generateSignedLink(getAnnotatedLink(this)),
         location = LocationDto(
             latitude,
             longitude,
