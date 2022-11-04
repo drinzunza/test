@@ -35,7 +35,7 @@ class ReportService(
 
     fun Report.toDto() = ReportDto(
             id = id,
-            link = link,
+            link = fileService.generateSignedLink(link),
             date = createdAt!!
     )
 
