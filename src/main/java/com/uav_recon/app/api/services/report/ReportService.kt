@@ -113,7 +113,7 @@ class ReportService(
                 )
                 documentWriter.writeDocument(document, fileService.getPath(link))
             } else {
-                val linkString = fileService.getLink("$userId/$inspectionId/$id.docx")
+                val linkString = "https://storage.cloud.google.com/${configuration.files.gsBucket}/data/$userId/$inspectionId/$id.docx"
                 report = Report(
                     id = id,
                     uuid = uuid,
