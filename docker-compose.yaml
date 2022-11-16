@@ -26,6 +26,12 @@ services:
       - ${HOME}/uav-recon:/uav-recon
     depends_on:
       - database
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pg-docker:5432/uav_recon
+      - SPRING_DATASOURCE_USER=postgres
+      - SPRING_DATASOURCE_PASSWORD=docker
+    stdin_open: true
+    tty: true
 
 volumes:
   dbdata:
