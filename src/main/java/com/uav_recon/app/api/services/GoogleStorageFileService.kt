@@ -17,10 +17,11 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
     private val logger = LoggerFactory.getLogger(GoogleStorageFileService::class.java)
     private val storage = StorageOptions.getDefaultInstance().service
     private val linkPrefix = "https://storage.cloud.google.com/"
+    private val bucketDirectory = "${configuration.files.gsBucket}/data/"
 
     override fun save(path: String, bytes: ByteArray, format: String, drawables: String?): String {
-        storage.create(BlobInfo.newBuilder(configuration.files.gsBucket, path).build(), bytes)
-        return "$linkPrefix${configuration.files.gsBucket}/$path"
+        storage.create(BlobInfo.newBuilder(configuration.files.gsBucket, "data/$path").build(), bytes)
+        return "$linkPrefix$bucketDirectory$path"
     }
 
     override fun saveAnnotatedPhoto(path: String, bytes: ByteArray, format: String): String {
@@ -29,9 +30,9 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
 
         val thumbImageBytes = generateThumbImageForFile(bytes, format)
 
-        storage.create(BlobInfo.newBuilder(configuration.files.gsBucket, pathWithRect).build(), bytes)
-        storage.create(BlobInfo.newBuilder(configuration.files.gsBucket, pathWithRectThumb).build(), thumbImageBytes)
-        return "$linkPrefix${configuration.files.gsBucket}/$path"
+        storage.create(BlobInfo.newBuilder(configuration.files.gsBucket, "data/$pathWithRect").build(), bytes)
+        storage.create(BlobInfo.newBuilder(configuration.files.gsBucket, "data/$pathWithRectThumb").build(), thumbImageBytes)
+        return "$linkPrefix$bucketDirectory$path"
     }
 
     override fun delete(link: String) {
