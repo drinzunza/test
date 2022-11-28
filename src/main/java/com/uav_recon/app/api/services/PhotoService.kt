@@ -209,11 +209,12 @@ class PhotoService(
             }
 
             val format = getFileFormat(originalPhotoData!!.contentType)
-            val annotatedPhotoFormat = getFileFormat(annotatedPhotoData!!.contentType)
             link = fileService.save(updatedBy, inspectionId, observationId, observationDefectId,
                     dto.uuid, dto.drawables, format, originalPhotoData.bytes)
-            annotatedPhotoLink = fileService.saveAnnotatedPhoto(updatedBy, inspectionId, observationId,
-                observationDefectId, dto.uuid, annotatedPhotoFormat, annotatedPhotoData.bytes)
+            annotatedPhotoLink = fileService.saveAnnotatedPhoto(
+                updatedBy, inspectionId, observationId,
+                observationDefectId, dto.uuid, format, annotatedPhotoData!!.bytes
+            )
             logger.info("Photo ${dto.uuid} saved with link $link")
         }
 
@@ -314,11 +315,11 @@ class PhotoService(
     }
 
     private fun getFileFormat(contentType: String?): String {
-        var fileFormat = if (contentType != null && contentType.contains("/")) contentType.split("/")[1] else "jpg"
+        var fileFormat = if (contentType != null && contentType.contains("/")) contentType.split("/")[1] else "jpeg"
 
         if (fileFormat == "octet-stream") {
             // assume it is an image
-            fileFormat = "jpg"
+            fileFormat = "jpeg"
         }
 
         return fileFormat
