@@ -313,7 +313,14 @@ class PhotoService(
         return name?.let { photo.link.replace(name, "${name}_rect") } ?: photo.link
     }
 
-    private fun getFileFormat(contentType: String?) =
-            if (contentType != null && contentType.contains("/")) contentType.split("/")[1] else "jpg"
+    private fun getFileFormat(contentType: String?): String {
+        var fileFormat = if (contentType != null && contentType.contains("/")) contentType.split("/")[1] else "jpg"
 
+        if (fileFormat == "octet-stream") {
+            // assume it is an image
+            fileFormat = "jpg"
+        }
+
+        return fileFormat
+    }
 }
