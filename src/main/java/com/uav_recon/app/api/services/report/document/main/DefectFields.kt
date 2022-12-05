@@ -28,6 +28,7 @@ internal class DefectFields(private val flavor: String = "default", private val 
             addStructuralLeftField("o_clock_key", O_CLOCK_POSITION_TAG)
         }
         addStructuralLeftField("size_key", SIZE_TAG)
+        addStructuralLeftField("defect_status_key", STATUS_TAG)
         addStructuralRightField("inspection_date_key", DATE_TAG)
         addStructuralRightField("defect_id_key", DEFECT_TAG)
         addStructuralRightField("defect_name_key", DEFECT_NAME_TAG)
@@ -48,6 +49,7 @@ internal class DefectFields(private val flavor: String = "default", private val 
         if (isTunnelStructure) {
             addMaintenanceLeftField("o_clock_key", O_CLOCK_POSITION_TAG)
         }
+        addMaintenanceLeftField("defect_status_key", STATUS_TAG)
 
         addMaintenanceRightField("inspection_date_key", DATE_TAG)
         addMaintenanceRightField("observation_id_key", OBSERVATION_ID_TAG)
@@ -100,6 +102,7 @@ internal class DefectFields(private val flavor: String = "default", private val 
         const val DEFECT_NAME_TAG = "DEFECT_NAME_TAG"
         const val CONDITION_TAG = "CONDITION_TAG"
         const val PHOTO_QUANTITY_TAG = "PHOTO_QUANTITY_TAG"
+        const val STATUS_TAG = "STATUS_TAG"
     }
 
 
@@ -128,6 +131,7 @@ internal class DefectFields(private val flavor: String = "default", private val 
                     }
                 }
                 O_CLOCK_POSITION_TAG -> if (defect.clockPosition == null) null else defect.clockPosition.toString()
+                STATUS_TAG -> defect.status.toString()
                 else -> ""
             }
         }
