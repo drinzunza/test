@@ -66,7 +66,8 @@ class MainDocumentFactory(
         private val configuration: UavConfiguration,
         private val fileService: FileService,
         private val projectRepository: ProjectRepository,
-        private val structureTypeRepository: StructureTypeRepository
+        private val structureTypeRepository: StructureTypeRepository,
+        private val photoRepository: PhotoRepository
 ) : DocumentFactory {
 
     private val fileStorageLocation: Path = Paths.get(configuration.files.uploadDir).toAbsolutePath().normalize()
@@ -522,13 +523,27 @@ class MainDocumentFactory(
         paragraphLeft {
             text { PHOTO_SPACE_ELEMENT }
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
+
             defect.photos?.getOrNull(index)?.let { photo ->
+                var photoName = photo.name
+                // check if photo is from previous inspection or not
+                defect.previousDefectNumber?.let {
+                    val previousDefectPhoto = photoRepository.findByObservationDefectIdAndLink(
+                        observationDefectId = it,
+                        link = photo.link
+                    )
+                    photoName = if (previousDefectPhoto != null) {
+                        "$photoName (Photo from Previous Inspection)"
+                    } else {
+                        "$photoName (Photo from Current Inspection)"
+                    }
+                }
                 try {
                     fileService.get(photo.link, photo.drawables, FileService.FileType.WITH_RECT_THUMB).also {
                         picture(photo.name, it, DEFECT_PHOTO_SIZE, DEFECT_PHOTO_SIZE)
                         text { SPACE_ELEMENT }
                         lineFeed { SINGLE_LINE_FEED_ELEMENT }
-                        text(photo.name, textSize = 6)
+                        text(photoName, textSize = 6)
                         lineFeed { SINGLE_LINE_FEED_ELEMENT }
                         text { LinkTextElement.Simple(photo.getUrl(configuration.server.host, inspection, inspector), textSize = 6) }
                     }
