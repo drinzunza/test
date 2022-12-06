@@ -18,6 +18,7 @@ internal class DefectFields(private val flavor: String = "default", private val 
     init {
         addStructuralLeftField("component_key", COMPONENT_TAG)
         addStructuralLeftField("sub_component_key", SUB_COMPONENT_TAG)
+        addStructuralLeftField("subdivision_number_key", SUBDIVISION_TAG)
         if (CustomReportManager.getInstance().isVisible("station_column", flavor)) {
             addStructuralLeftField("station_key", STATION_TAG)
         }
@@ -103,6 +104,7 @@ internal class DefectFields(private val flavor: String = "default", private val 
         const val CONDITION_TAG = "CONDITION_TAG"
         const val PHOTO_QUANTITY_TAG = "PHOTO_QUANTITY_TAG"
         const val STATUS_TAG = "STATUS_TAG"
+        const val SUBDIVISION_TAG = "SUBDIVISION_TAG"
     }
 
 
@@ -120,7 +122,7 @@ internal class DefectFields(private val flavor: String = "default", private val 
                 }
                 DATE_TAG -> defect.createdAtClient?.formatDate(DATE_FORMAT)
                 STATION_TAG -> defect.stationMarker
-                CRITICAL_FINDING_TAG -> if (defect.criticalFindings.isNullOrEmpty()) "" else defect.criticalFindings?.size.toString()
+                CRITICAL_FINDING_TAG -> if (defect.criticalFindings.isNullOrEmpty()) "NONE" else defect.criticalFindings?.joinToString(separator = ", ") { it.finding }
                 PHOTO_QUANTITY_TAG -> defect.photos?.size?.toString() ?: "0"
                 LOCATION_TAG -> defect.span
                 SIZE_TAG -> {
@@ -132,6 +134,7 @@ internal class DefectFields(private val flavor: String = "default", private val 
                 }
                 O_CLOCK_POSITION_TAG -> if (defect.clockPosition == null) null else defect.clockPosition.toString()
                 STATUS_TAG -> defect.status.toString()
+                SUBDIVISION_TAG -> defect.structureSubdivision?.number
                 else -> ""
             }
         }
