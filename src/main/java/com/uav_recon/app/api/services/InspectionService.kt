@@ -718,6 +718,7 @@ class InspectionService(
             observationDefect.observationName =
                 observationNames.firstOrNull { it.id == observationDefect.observationNameId }
             observationDefect.photos = photos.filter { it.observationDefectId == observationDefect.uuid }
+            observationDefect.structureSubdivision = structureSubdivisions.firstOrNull { it.uuid == observationDefect.structureSubdivisionId }
         }
         observations.forEach { observation ->
             observation.component = components.firstOrNull { it.id == observation.structuralComponentId }

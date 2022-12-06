@@ -26,6 +26,7 @@ internal class DefectReportFields(private val flavor: String = "default", privat
         addStructuralField("index", 0.0417f, INDEX_TAG)
         addStructuralField("defect_id", 0.0986f, DEFECT_TAG)
         addStructuralField("sub_component", 0.1236f, SUB_COMPONENT_TAG)
+        addStructuralField("subdivision_number", 0.0417f, SUBDIVISION_TAG)
         if (CustomReportManager.getInstance().isVisible("location_id_column", flavor)) {
             addStructuralField("location_id", 0.0653f, LOCATION_TAG)
         }
@@ -212,6 +213,10 @@ internal class DefectReportFields(private val flavor: String = "default", privat
                     alignment = Alignment.CENTER
                     addCellText(defect.status.toString())
                 }
+                SUBDIVISION_TAG -> {
+                    alignment = Alignment.CENTER
+                    addCellText(defect.structureSubdivision?.number)
+                }
                 else -> addCellText()
             }
         }
@@ -287,6 +292,7 @@ internal class DefectReportFields(private val flavor: String = "default", privat
         const val OBSERVATION_NAME_TAG = "OBSERVATION_NAME_TAG"
         const val O_CLOCK_POSITION_TAG = "O_CLOCK_POSITION_TAG"
         const val STATUS_TAG = "STATUS_TAG"
+        const val SUBDIVISION_TAG = "SUBDIVISION_TAG"
     }
 
 
