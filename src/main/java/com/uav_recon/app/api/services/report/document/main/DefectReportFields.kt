@@ -26,6 +26,7 @@ internal class DefectReportFields(private val flavor: String = "default", privat
         addStructuralField("index", 0.0417f, INDEX_TAG)
         addStructuralField("defect_id", 0.0986f, DEFECT_TAG)
         addStructuralField("sub_component", 0.1236f, SUB_COMPONENT_TAG)
+        addStructuralField("subdivision_number", 0.0417f, SUBDIVISION_TAG)
         if (CustomReportManager.getInstance().isVisible("location_id_column", flavor)) {
             addStructuralField("location_id", 0.0653f, LOCATION_TAG)
         }
@@ -49,6 +50,7 @@ internal class DefectReportFields(private val flavor: String = "default", privat
         }
         addStructuralField("repair_method", 0.0757f, REPAIR_TAG)
         addStructuralField("repair_date", 0.0657f, REPAIR_DATE_TAG)
+        addStructuralField("defect_status", 0.0757f, STATUS_TAG)
 
         addMaintenanceField("index", 0.0417f, INDEX_TAG)
         addMaintenanceField("observation_id", 0.0986f, OBSERVATION_ID_TAG)
@@ -67,6 +69,7 @@ internal class DefectReportFields(private val flavor: String = "default", privat
         }
         addMaintenanceField("repair_method", 0.0757f, REPAIR_TAG)
         addMaintenanceField("repair_date", 0.0657f, REPAIR_DATE_TAG)
+        addMaintenanceField("defect_status", 0.0757f, STATUS_TAG)
     }
 
     private fun addMaintenanceField(stringId: String, widthPercent: Float, tag: String) {
@@ -206,6 +209,14 @@ internal class DefectReportFields(private val flavor: String = "default", privat
                     alignment = Alignment.CENTER
                     addCellText(if (defect.clockPosition == null) null else defect.clockPosition.toString(), TEXT_NOT_APPLICABLE)
                 }
+                STATUS_TAG -> {
+                    alignment = Alignment.CENTER
+                    addCellText(defect.status.toString())
+                }
+                SUBDIVISION_TAG -> {
+                    alignment = Alignment.CENTER
+                    addCellText(defect.structureSubdivision?.number)
+                }
                 else -> addCellText()
             }
         }
@@ -280,6 +291,8 @@ internal class DefectReportFields(private val flavor: String = "default", privat
         const val PREV_OBSERVATION_ID_TAG = "PREV_OBSERVATION_ID_TAG"
         const val OBSERVATION_NAME_TAG = "OBSERVATION_NAME_TAG"
         const val O_CLOCK_POSITION_TAG = "O_CLOCK_POSITION_TAG"
+        const val STATUS_TAG = "STATUS_TAG"
+        const val SUBDIVISION_TAG = "SUBDIVISION_TAG"
     }
 
 

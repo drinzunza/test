@@ -12,4 +12,5 @@ interface PhotoRepository : CrudRepository<Photo, String> {
     fun findByUuidAndObservationDefectIdAndDeletedIsFalse(uuid: String, observationDefectId: String): Optional<Photo>
     fun findAllByNameAndObservationDefectId(name: String, observationDefectId: String): List<Photo>
     fun countByObservationDefectIdAndDeletedIsFalse(observationDefectId: String): Long
+    fun findByObservationDefectIdAndLink(observationDefectId: String, link: String): Photo?
 }

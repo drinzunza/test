@@ -72,7 +72,11 @@
     "o_clock_key": "O Clock Position: ",
     "number": "Number",
     "name": "Name",
-    "sub_components": "Subcomponents"
+    "sub_components": "Subcomponents",
+    "defect_status": "Status",
+    "defect_status_key": "Status: ",
+    "subdivision_number": "Structure Subdivision Number",
+    "subdivision_number_key": "Structure Subdivision Number: "
   },
   "non-infra": {
     "sgr_rating" : "Severity Scale",
