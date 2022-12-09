@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
+import org.springframework.http.ResponseEntity
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpSession
+import java.util.Collections
 
 @Controller
 @RequestMapping("datarecon-public")
@@ -23,5 +25,10 @@ class PublicController(private val configuration: UavConfiguration) {
         response.contentType = MediaType.IMAGE_JPEG_VALUE
         val file = FileInputStream(File(configuration.files.uploadDir, imageName.split("/").last()))
         IOUtils.copy(file, response.outputStream)
+    }
+
+    @GetMapping("/healthcheck")
+    fun getHealthCheck (): ResponseEntity<*> {
+        return ResponseEntity.ok(Collections.singletonMap("success", true))
     }
 }
