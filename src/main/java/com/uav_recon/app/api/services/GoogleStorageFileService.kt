@@ -1,5 +1,6 @@
 package com.uav_recon.app.api.services
 
+import com.google.auth.ServiceAccountSigner
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.Storage
@@ -88,7 +89,13 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
             )
         ).build()
 
-        return storage.signUrl(blobInfo, 60, TimeUnit.MINUTES, Storage.SignUrlOption.withV4Signature()).toString()
+        return storage.signUrl(
+            blobInfo,
+            60,
+            TimeUnit.MINUTES,
+            Storage.SignUrlOption.withV4Signature(),
+            Storage.SignUrlOption.signWith(storage.options.credentials as ServiceAccountSigner)
+        ).toString()
     }
 
     private fun generateThumbImageForFile(bytes: ByteArray, format: String): ByteArray? {
