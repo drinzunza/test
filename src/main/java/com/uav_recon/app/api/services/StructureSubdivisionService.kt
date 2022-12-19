@@ -7,6 +7,7 @@ import com.uav_recon.app.api.repositories.InspectionRepository
 import com.uav_recon.app.api.repositories.ObservationRepository
 import com.uav_recon.app.api.repositories.ObservationStructureSubdivisionRepository
 import com.uav_recon.app.api.repositories.StructureSubdivisionRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -19,6 +20,8 @@ class StructureSubdivisionService(
 
     private val inspectionRepository: InspectionRepository
 ) : BaseService() {
+
+    private val logger = LoggerFactory.getLogger(ObservationStructureSubdivisionService::class.java)
 
     fun StructureSubdivision.toDto() = StructureSubdivisionDto(
         uuid = uuid,
@@ -37,7 +40,9 @@ class StructureSubdivisionService(
         if (subdivisionObservations.isEmpty()) {
             return 0.0
         }
+        logger.info("subdivision UUID: ${subdivision.uuid}")
         subdivisionObservations.forEach {
+            logger.info("observation ID: ${it.observationId}")
             val mainObservation = observationRepository.findFirstByUuidAndDeletedIsFalse(it.observationId)
             val weightedHI = observationStructureSubdivisionService
                 .calculateWeightedSubdivisionObservationHealthIndex(it) ?: 0.0
@@ -49,6 +54,7 @@ class StructureSubdivisionService(
         if (totalWeight == 0) {
             return 0.0
         }
+        logger.info("totalWeightedHI: $totalWeightedHI | totalWeight: $totalWeight")
         return totalWeightedHI / totalWeight
     }
 

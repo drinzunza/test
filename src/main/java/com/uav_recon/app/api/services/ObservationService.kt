@@ -220,13 +220,14 @@ class ObservationService(
                 observation,
                 spansCount
             ) - ConditionType.LIST_EXCLUDING_GOOD.sumBy { getCsValue(observation, it, spansCount) }
-            else -> when {
+            else -> calculateCsProcessA(observation, conditionType)
+        /*when {
                 observation.subcomponent?.isEachMeasureUnit() ?: false -> calculateCsProcessB(
                     observation,
                     conditionType
                 )
                 else -> calculateCsProcessA(observation, conditionType)
-            }
+            }*/
         }
     }
 
@@ -234,9 +235,8 @@ class ObservationService(
         var subcomponentHI = 0.0
         val defects = observation.defects
         val componentSize = observation.dimensionNumber
-        val measureUnit = observation.subcomponent?.measureUnit
         val inspection = inspectionRepository.findFirstByUuidAndDeletedIsFalse(observation.inspectionId)
-        if (componentSize == null || defects == null || measureUnit == null || inspection == null) {
+        if (componentSize == null || defects == null || inspection == null) {
             return subcomponentHI
         }
         val spansCount = getSpansCount(observation, inspection.spansCount) ?: 0
