@@ -4,6 +4,7 @@ import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.ObservationStructureSubdivisionDto
 import com.uav_recon.app.api.entities.requests.bridge.toEntity
 import com.uav_recon.app.api.repositories.*
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
@@ -24,20 +25,20 @@ class ObservationStructureSubdivisionService(
         dimensionNumber = dimensionNumber
     )
 
-    fun calculateSubdivisionObservationHealthIndex(observation: ObservationStructureSubdivision): Double? {
-        var subdivisionObservationHI = 0.0
+    fun calculateSubdivisionObservationHealthIndex(observation: ObservationStructureSubdivision): Double {
+        var subdivisionObservationHI = 1.0
         val observationDefects = observationDefectRepository
             .findAllByObservationIdAndStructureSubdivisionIdAndDeletedIsFalse(observation.observationId, observation.structureSubdivisionId)
         if (observationDefects.isEmpty()) {
             return subdivisionObservationHI
         }
 
-        val totalDefectSize = observationDefects.sumBy { it.size?.toIntOrNull() ?: 0 }
-        if (totalDefectSize == 0) {
+        val componentSize = observation.dimensionNumber
+        if (componentSize == 0) {
             return subdivisionObservationHI
         }
 
-        val cs1 = getCsValue(observationDefects, ConditionType.GOOD)
+        val cs1 = getCsValue(observationDefects, ConditionType.GOOD, componentSize)
         val cs2 = getCsValue(observationDefects, ConditionType.FAIR)
         val cs3 = getCsValue(observationDefects, ConditionType.POOR)
         val cs4 = getCsValue(observationDefects, ConditionType.SEVERE)
@@ -45,7 +46,7 @@ class ObservationStructureSubdivisionService(
                 + (cs2 * ConditionType.FAIR.csWeight)
                 + (cs3 * ConditionType.POOR.csWeight)
                 + (cs4 * ConditionType.SEVERE.csWeight)
-                ) / totalDefectSize
+                ) / componentSize
         return if (subdivisionObservationHI.isNaN()) 0.0 else subdivisionObservationHI
     }
 
@@ -53,27 +54,29 @@ class ObservationStructureSubdivisionService(
         var weightedSubdivisionObservationHI = 0.0
         val mainObservation = observationRepository.findFirstByUuidAndDeletedIsFalse(observation.observationId)
             ?: return weightedSubdivisionObservationHI
-        val subdivision = structureSubdivisionRepository.findFirstByUuid(observation.structureSubdivisionId)
-            ?: return weightedSubdivisionObservationHI
         if (mainObservation.structuralComponentId == null) {
             return weightedSubdivisionObservationHI
         }
 
-        val componentHI = getSubdivisionComponentHealthIndex(
-            subdivision.inspectionId,
-            observation.structureSubdivisionId,
-            mainObservation.structuralComponentId!!
-        )
+        val componentHI = calculateSubdivisionObservationHealthIndex(observation)
         val fDotBhi = mainObservation.subcomponent?.fdotBhiValue ?: return weightedSubdivisionObservationHI
         weightedSubdivisionObservationHI = fDotBhi * componentHI
         return weightedSubdivisionObservationHI
     }
 
-    fun getCsValue(defects: List<ObservationDefect>, conditionType: ConditionType): Int {
-        return defects
-            .filter { it.type == StructuralType.STRUCTURAL }
-            .filter { it.condition?.type == conditionType }
-            .sumBy { it.size?.toIntOrNull() ?: 0 }
+    fun getCsValue(defects: List<ObservationDefect>, conditionType: ConditionType, totalSize: Int? = 0): Int {
+        return when (conditionType) {
+            ConditionType.GOOD -> totalSize!! - ConditionType.LIST_EXCLUDING_GOOD.sumBy {
+                getCsValue(
+                    defects,
+                    it
+                )
+            }
+            else -> defects
+                .filter { it.type == StructuralType.STRUCTURAL }
+                .filter { it.condition?.type == conditionType }
+                .sumBy { it.size?.toIntOrNull() ?: 0 }
+        }
     }
 
     fun getSubdivisionComponentHealthIndex(
@@ -104,7 +107,7 @@ class ObservationStructureSubdivisionService(
                     return@forEach
                 }
 
-                val cs1 = getCsValue(defectsList, ConditionType.GOOD)
+                val cs1 = getCsValue(defectsList, ConditionType.GOOD, totalDefectSize)
                 val cs2 = getCsValue(defectsList, ConditionType.FAIR)
                 val cs3 = getCsValue(defectsList, ConditionType.POOR)
                 val cs4 = getCsValue(defectsList, ConditionType.SEVERE)
