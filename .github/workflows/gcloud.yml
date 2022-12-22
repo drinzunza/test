@@ -103,7 +103,7 @@ jobs:
         docker build \
           --tag "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA" \
           --build-arg SPRING_DATASOURCE_URL="$SPRING_DATASOURCE_URL" \
-          --build-arg SPRING_DATASOURCE_USER="$SPRING_DATASOURCE_USER" \
+          --build-arg SPRING_DATASOURCE_USERNAME="$SPRING_DATASOURCE_USERNAME" \
           --build-arg SPRING_DATASOURCE_PASSWORD="$SPRING_DATASOURCE_PASSWORD" \
           .
     # Publish image to GAR
