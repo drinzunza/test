@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uav-recon-dev
+  namespace: uav-recon
+spec:
+  replicas: 1
+  progressDeadlineSeconds: 1000
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: uav-recon-dev
+  template:
+    metadata:
+      labels:
+        app: uav-recon-dev
+    spec:
+      serviceAccountName: datarecon-cicd
+      nodeSelector:
+        iam.gke.io/gke-metadata-server-enabled: "true"
+      imagePullSecrets:
+      - name: artifact-registry
+      containers:
+      - name: uav-recon-dev
+        # NOTE: image value should be replaced before building
+        image: latest-backend-image
+        ports:
+        - containerPort: 8080
+          hostPort: 8080
+        # NOTE: spring datasource variables should be replaced before building
+        env:
+          - name: "SPRING_DATASOURCE_URL"
+            value: "__SPRING_DATASOURCE_URL__"
+          - name: "SPRING_DATASOURCE_USERNAME"
+            value: "__SPRING_DATASOURCE_USERNAME__"
+          - name: "SPRING_DATASOURCE_PASSWORD"
+            value: "__SPRING_DATASOURCE_PASSWORD__"
+          - name: "UAV_FILES_GS_BUCKET"
+            value: "__UAV_FILES_GS_BUCKET__"
+        readinessProbe:
+            httpGet:
+              path: /datarecon-public/healthcheck
+              port: 8080
+            initialDelaySeconds: 180
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
