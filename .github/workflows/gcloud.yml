@@ -53,7 +53,6 @@ jobs:
       env:
         SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USER_DEV }}
         SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
-        UAV_FILES_GS_BUCKET: uav-dev-files
 
     # configure production variables if branch is master
     - name: set prod variables
@@ -66,7 +65,6 @@ jobs:
       env:
         SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USER_PROD }}
         SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD_PROD }}
-        UAV_FILES_GS_BUCKET: uav-prod-files
 
     # Configure Docker
     - name: Docker configuration
