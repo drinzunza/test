@@ -29,7 +29,8 @@ class DictionaryService(
         private val structureComponentService: StructureComponentService,
         private val structureTypeRepository: StructureTypeRepository,
         private val companyStructureTypeRepository: CompanyStructureTypeRepository,
-        private val companyRepository: CompanyRepository
+        private val companyRepository: CompanyRepository,
+        private val cannedDescriptionRepository: CannedDescriptionRepository
 ) {
     private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
 
@@ -163,7 +164,7 @@ class DictionaryService(
         val structureIds = initIds(etags)
         val locationIds = initIds(etags)
         val observationNameIds = initIds(etags)
-        val companiesIds = initIds(etags);
+        val companiesIds = initIds(etags)
 
         etags.forEach {
             val change = try {
@@ -247,6 +248,11 @@ class DictionaryService(
         userSubcomponentDefects = userSubcomponentDefects
                 .filter { userDefects.map { it.id }.contains(it.defectId) }
         val companyStructureTypes = user.companyId?.let { companyStructureTypeRepository.findAllByCompanyId(it) } ?: listOf()
+        val userCannedDescriptions = cannedDescriptionRepository.findAllByComponentIdInAndSubcomponentIdInAndDefectIdIn(
+            componentIds = userComponents.map { it.id },
+            subcomponentIds = userSubcomponents.map { it.id },
+            defectIds = userDefects.map { it.id }
+        )
 
         // Get all values
         val locations = locationIdRepository.findAll().map { s -> s.toDto() }
@@ -280,6 +286,11 @@ class DictionaryService(
                 .map { d -> d.toDto(userConditions) }
         val conditions = userConditions
                 .filter { defects.map { it.id }.contains(it.defectId) }
+        val cannedDescriptions = userCannedDescriptions
+            .filter { cannedDescription -> components.map { it.id }.contains(cannedDescription.componentId) }
+            .filter { cannedDescription -> subcomponents.map { it.id }.contains(cannedDescription.subcomponentId) }
+            .filter { cannedDescription -> defects.map { it.id }.contains(cannedDescription.defectId) }
+            .map { it.toDto() }
 
         return DictionaryDto(
             conditions,
@@ -293,7 +304,8 @@ class DictionaryService(
             observationTypes,
             conditionTypes,
             criticalFindings,
-            companies
+            companies,
+            cannedDescriptions
         )
     }
 
@@ -447,5 +459,13 @@ class DictionaryService(
             deleted = deleted,
             hideObservationType = hideObservationType,
             hideStationMarker = hideStationMarker
+    )
+
+    private fun CannedDescription.toDto() = CannedDescriptionDto(
+        id = id,
+        componentId = componentId,
+        subcomponentId = subcomponentId,
+        defectId = defectId,
+        description = description
     )
 }

@@ -17,7 +17,8 @@ data class DictionaryDto(
         var observationTypes: List<ObservationTypeDto>,
         var conditionTypes: List<ConditionTypeDto>,
         var criticalFindings: List<CriticalFindingDto>,
-        var companies: List<Company>
+        var companies: List<Company>,
+        var cannedDescriptions: List<CannedDescriptionDto>
 ) : Serializable {
 
     fun isEmpty(): Boolean {

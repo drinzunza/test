@@ -220,7 +220,8 @@ class MainDocumentFactory(
             lineFeed { SINGLE_LINE_FEED_ELEMENT }
             picture(
                     company?.name ?: "Demo Company",
-                    fileStorageLocation.resolve(company?.logo?.split("/")?.last() ?: "logo_datarecon.png").toFile().inputStream(),
+                    if (configuration.files.useGoogle == "false") fileStorageLocation.resolve(company?.logo?.split("/")?.last() ?: "logo_datarecon.png").toFile().inputStream()
+                    else fileService.get("https://storage.cloud.google.com/${configuration.files.gsBucket}/files/logo_datarecon.png"),
                     LOGO_WIDTH,
                     LOGO_HEIGHT
             )
