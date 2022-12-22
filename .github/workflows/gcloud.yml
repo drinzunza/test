@@ -1,0 +1,133 @@
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches: [ "develop-ingenuity"]
+  workflow_dispatch:
+    inputs:
+      ref_name:
+        description: 'The branch to deploy'
+        required: true
+env:
+  BRANCH_NAME: ${{ inputs.ref_name || github.head_ref || github.ref_name }}
+  # set these
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GAR_LOCATION: us-central1 # TODO: set this in the .env file (Artifact Registry region)
+  GKE_CLUSTER: cluster-1    # TODO: update to cluster name
+  GKE_ZONE: us-central1-c   # TODO: update to cluster zone
+  DEPLOYMENT_NAME: gke-test # TODO: update to deployment name
+  REPOSITORY: samples # TODO: update to Artifact Registry docker repository
+  IMAGE: static-site
+
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        token_format: 'access_token'
+        workload_identity_provider: 'projects/921414564595/locations/global/workloadIdentityPools/uav-recon-pool/providers/uav-recon-provider'
+        service_account: 'datarecon-cicd@data-recon-1569432712591.iam.gserviceaccount.com'
+        create_credentials_file: true
+
+    # configure staging variables if branch is develop-ingenuity
+    - name: Set dev variables
+      working-directory: .github/workflows/config
+      if: startswith(env.BRANCH_NAME, 'develop-ingenuity')
+      run: |
+        cat dev.env >> $GITHUB_ENV
+        echo "SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME" >> $GITHUB_ENV
+        echo "SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD" >> $GITHUB_ENV
+      env:
+        SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USER_DEV }}
+        SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD_DEV }}
+        UAV_FILES_GS_BUCKET: uav-dev-files
+
+    # configure production variables if branch is master
+    - name: set prod variables
+      working-directory: .github/workflows/config
+      if: startswith(env.BRANCH_NAME, 'master')
+      run: |
+        cat dev.env >> $GITHUB_ENV
+        echo "SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME" >> $GITHUB_ENV
+        echo "SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD" >> $GITHUB_ENV
+      env:
+        SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USER_PROD }}
+        SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD_PROD }}
+        UAV_FILES_GS_BUCKET: uav-prod-files
+
+    # Configure Docker
+    - name: Docker configuration
+      run: |
+        echo ${{steps.auth.outputs.access_token}} | docker login -u oauth2accesstoken --password-stdin https://$GAR_LOCATION-docker.pkg.dev
+
+    # Get the GKE credentials so we can deploy to the cluster
+    - name: Set up GKE credentials
+      uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+
+    # Update the GKE deployment file
+    - name: Update the deployment file
+      run: |
+        sed -i 's/latest-backend-image/'"$GAR_LOCATION"'-docker.pkg.dev\/'"$PROJECT_ID"'\/'"$REPOSITORY"'\/'"$IMAGE"':'"$GITHUB_SHA"'/g' k8s/$DEPLOYMENT_NAME/deployment.yaml
+        sed -i 's|__SPRING_DATASOURCE_URL__|'"$SPRING_DATASOURCE_URL"'|g' k8s/$DEPLOYMENT_NAME/deployment.yaml
+        sed -i 's|__SPRING_DATASOURCE_USERNAME__|'"$SPRING_DATASOURCE_USERNAME"'|g' k8s/$DEPLOYMENT_NAME/deployment.yaml
+        sed -i 's|__SPRING_DATASOURCE_PASSWORD__|'"$SPRING_DATASOURCE_PASSWORD"'|g' k8s/$DEPLOYMENT_NAME/deployment.yaml
+        sed -i 's|__UAV_FILES_GS_BUCKET__|'"$UAV_FILES_GS_BUCKET"'|g' k8s/$DEPLOYMENT_NAME/deployment.yaml
+
+        cat k8s/$DEPLOYMENT_NAME/deployment.yaml
+        cat src/main/resources/application.yml
+    # Build the Docker image
+    - name: Build
+      run: |
+        gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+        gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
+
+        # update the deployment to use the generated image version
+        # sed -i 's/latest-backend-image/'"$GAR_LOCATION"'-docker.pkg.dev\/'"$PROJECT_ID"'\/'"$REPOSITORY"'\/'"$IMAGE"':'"$GITHUB_SHA"'/g' k8s/$DEPLOYMENT_NAME/deployment.yaml
+
+        docker build \
+          --tag "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA" \
+          --build-arg SPRING_DATASOURCE_URL="$SPRING_DATASOURCE_URL" \
+          --build-arg SPRING_DATASOURCE_USERNAME="$SPRING_DATASOURCE_USERNAME" \
+          --build-arg SPRING_DATASOURCE_PASSWORD="$SPRING_DATASOURCE_PASSWORD" \
+          .
+    # Publish image to GAR
+    - name: Publish to GAR
+      run: |
+        docker push "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA"
+
+    # Set up Kustomize
+    - name: Set up Kustomize
+      run: |
+        curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
+        chmod u+x ./kustomize
+        sudo mv ./kustomize /usr/bin/
+
+    # Deploy the Docker image to the GKE cluster
+    - name: Kustomize the image and deploy
+      run: |
+        # replacing the image name in the k8s template
+        #(cd overlays/$OVERLAY_DIR && kustomize edit set image latest-backend-image=$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA && kustomize build ../../overlays/$OVERLAY_DIR)
+        kustomize build overlays/$OVERLAY_DIR
+        kubectl apply -v7 --validate=true -k k8s/$DEPLOYMENT_NAME --namespace=uav-recon
+
+    # Wait for the deployment to finish and report the status
+    - name: Wait for Ready Status
+      run: |
+        sleep 30
+        kubectl rollout status -f "k8s/$DEPLOYMENT_NAME/deployment.yaml" --namespace=uav-recon
