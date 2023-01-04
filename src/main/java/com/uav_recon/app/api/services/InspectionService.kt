@@ -298,7 +298,7 @@ class InspectionService(
         val inspection = inspectionRepository.findByUuidAndDeletedIsFalse(inspectionId)
         var link = ""
         if (inspection.isPresent) {
-            val path = "op_ord_docs/$inspectionId.docx"
+            val path = "data/op_ord_docs/$inspectionId.docx"
             try {
                 link = fileService.generateSignedLink(path)
             } catch (e: Exception) {
