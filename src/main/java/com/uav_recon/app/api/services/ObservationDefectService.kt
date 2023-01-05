@@ -189,8 +189,8 @@ class ObservationDefectService(
         if (entity.status == ObservationDefectStatus.UNCHANGED && entity.previousDefectNumber != null) {
             entity.status = ObservationDefectStatus.CHANGED
         }
-        if (entity.status == null) {
-            entity.status = ObservationDefectStatus.UNCHANGED
+        if (entity.status == null && observationDefect == null) {
+            entity.status = ObservationDefectStatus.NEW
         }
 
         val saved = observationDefectRepository.save(entity)
