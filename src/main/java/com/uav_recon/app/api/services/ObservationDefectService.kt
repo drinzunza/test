@@ -189,7 +189,7 @@ class ObservationDefectService(
         if (entity.status == ObservationDefectStatus.UNCHANGED && entity.previousDefectNumber != null) {
             entity.status = ObservationDefectStatus.CHANGED
         }
-        if (entity.status == null && observationDefect == null) {
+        if (entity.status == null) {
             entity.status = ObservationDefectStatus.NEW
         }
 
