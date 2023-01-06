@@ -74,7 +74,7 @@ class PhotoService(
             latitude = sourcePhotoDto.location?.latitude,
             drawables = sourcePhotoDto.drawables,
             observationDefectId = observationDefectId,
-            link = sourcePhotoDto.link ?: "",
+            link = getFileGCSNameFromSignedLink(sourcePhotoDto.link) ?: "",
             createdBy = createdBy,
             updatedBy = updatedBy,
             createdAtClient = createdAtClient ?: OffsetDateTime.now()
@@ -323,5 +323,18 @@ class PhotoService(
         }
 
         return fileFormat
+    }
+
+    private fun getFileGCSNameFromSignedLink(signedLink: String?): String? {
+        val regex = """^(.*?)\?X-Goog-Algorithm""".toRegex()
+
+        val matchResult = signedLink?.let { regex.find(it) } ?: return null
+
+        val (capture) = matchResult.destructured
+
+        val oldPrefix = "https://storage.googleapis.com"
+        val newPrefix = "https://storage.cloud.google.com"
+
+        return capture.replace(oldPrefix, newPrefix)
     }
 }
