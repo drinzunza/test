@@ -40,7 +40,7 @@ jobs:
         token_format: 'access_token'
         workload_identity_provider: 'projects/921414564595/locations/global/workloadIdentityPools/uav-recon-pool/providers/uav-recon-provider'
         service_account: 'datarecon-cicd@data-recon-1569432712591.iam.gserviceaccount.com'
-        credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+        create_credentials_file: true
 
     # configure staging variables if branch is develop-ingenuity
     - name: Set dev variables
