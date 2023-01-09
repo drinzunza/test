@@ -2,7 +2,7 @@ name: Build and Deploy to GKE
 
 on:
   push:
-    branches: [ "develop-ingenuity"]
+    branches: [ "develop-ingenuity", "master"]
   workflow_dispatch:
     inputs:
       ref_name:
