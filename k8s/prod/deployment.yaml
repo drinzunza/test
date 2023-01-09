@@ -31,8 +31,6 @@ spec:
         ports:
         - containerPort: 8080
           hostPort: 8080
-        resources:
-        - limits: 
         # NOTE: spring datasource variables should be replaced before building
         env:
           - name: "SPRING_DATASOURCE_URL"
