@@ -59,7 +59,7 @@ jobs:
       working-directory: .github/workflows/config
       if: startswith(env.BRANCH_NAME, 'master')
       run: |
-        cat dev.env >> $GITHUB_ENV
+        cat prod.env >> $GITHUB_ENV
         echo "SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME" >> $GITHUB_ENV
         echo "SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD" >> $GITHUB_ENV
       env:
