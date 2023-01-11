@@ -221,7 +221,7 @@ class MainDocumentFactory(
             picture(
                     company?.name ?: "Demo Company",
                     if (configuration.files.useGoogle == "false") fileStorageLocation.resolve(company?.logo?.split("/")?.last() ?: "logo_datarecon.png").toFile().inputStream()
-                    else fileService.get("https://storage.cloud.google.com/${configuration.files.gsBucket}/files/logo_datarecon.png"),
+                    else company?.logo?.let { fileService.get(it) } ?: fileService.get("https://storage.cloud.google.com/${configuration.files.gsBucket}/files/logo_datarecon.png"),
                     LOGO_WIDTH,
                     LOGO_HEIGHT
             )

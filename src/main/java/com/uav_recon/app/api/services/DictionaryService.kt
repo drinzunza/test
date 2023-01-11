@@ -30,7 +30,8 @@ class DictionaryService(
         private val structureTypeRepository: StructureTypeRepository,
         private val companyStructureTypeRepository: CompanyStructureTypeRepository,
         private val companyRepository: CompanyRepository,
-        private val cannedDescriptionRepository: CannedDescriptionRepository
+        private val cannedDescriptionRepository: CannedDescriptionRepository,
+        private val fileService: FileService
 ) {
     private val logger = LoggerFactory.getLogger(DictionaryService::class.java)
 
@@ -267,6 +268,7 @@ class DictionaryService(
                 companyRepository.findAllByDeletedIsFalseAndIdIn(listOf(user.companyId!!))
             else
                 listOf()
+        companies.forEach { it.logo = it.logo?.let { originalLogo -> fileService.generateSignedLink(originalLogo) } }
         val structureTypeId = buildType.toStructureTypePart()
         val structures = userStructures
             .filter { structureTypeId == null || it.structureTypeId == structureTypeId }
