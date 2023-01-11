@@ -16,7 +16,8 @@ class CompanyService(
     private val companyRepository: CompanyRepository,
     private val structureTypeRepository: StructureTypeRepository,
     private val etagRepository: EtagRepository,
-    private val companyStructureTypeRepository: CompanyStructureTypeRepository
+    private val companyStructureTypeRepository: CompanyStructureTypeRepository,
+    private val fileService: FileService
 ) {
 
     fun listNotDeleted(user: User, type: CompanyType?): List<CompanyDto> {
@@ -130,4 +131,15 @@ class CompanyService(
         )
         )
     }
+
+    private fun Company.toDto(types: List<StructureType>, companyTypes: List<CompanyStructureType>) = CompanyDto(
+        id = id,
+        name = name,
+        logo = logo?.let { fileService.generateSignedLink(it) },
+        type = type,
+        ratingInverse = ratingInverse,
+        structureTypes = types.filter {
+            companyTypes.filter { it.companyId == id }.map { it.structureTypeId }.contains(it.id)
+        }.map { t -> t.toDto() }
+    )
 }
