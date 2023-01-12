@@ -8,9 +8,6 @@ fun ObservationDefect.toMaintenance() = if (type == StructuralType.MAINTENANCE) 
 fun ObservationDefect.getSizeWithMeasureUnits(observation: Observation): String? {
     val subComponent = observation.subcomponent
     val measureUnit = subComponent?.measureUnit
-    if (subComponent?.isEachMeasureUnit() == true) {
-        return measureUnit?.toUpperCase()
-    }
     return size?.let { size ->
         measureUnit?.let { unit -> "$size $unit" } ?: size
     }

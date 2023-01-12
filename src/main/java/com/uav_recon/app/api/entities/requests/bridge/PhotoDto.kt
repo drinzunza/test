@@ -16,5 +16,6 @@ data class PhotoDto(
         var createdAt: OffsetDateTime?,
         val location: LocationDto?,
         val drawables: String?,
-        var observationDefectId: String?
+        var observationDefectId: String?,
+        var previousPhotoId: String?
 ) : Serializable

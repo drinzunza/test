@@ -151,7 +151,7 @@ class ObservationDefectService(
             repairDate = sourceObservationDefectDto.repairDate,
             previousDefectNumber = sourceObservationDefectDto.uuid,
             createdAtClient = createdAtClient,
-            status = ObservationDefectStatus.UNCHANGED
+            status = null
         )
         val userDto = userService.get(createdBy).toDto()
         return observationDefectRepository.save(cloneObservationDefect).toDto(userDto)

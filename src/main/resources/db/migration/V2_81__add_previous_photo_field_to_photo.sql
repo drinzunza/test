@@ -1,0 +1,1 @@
+alter table photos add column if not exists previous_photo_id VARCHAR(50);
