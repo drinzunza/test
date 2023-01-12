@@ -23,7 +23,9 @@ class Photo(
         @Column(name = "is_deleted")
         var deleted: Boolean? = false,
         @Column(name = "created_at_client")
-        var createdAtClient: OffsetDateTime? = OffsetDateTime.now()
+        var createdAtClient: OffsetDateTime? = OffsetDateTime.now(),
+        @Column(name = "previous_photo_id")
+        var previousPhotoId: String? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
 
 fun Photo.update(dto: PhotoUpdateDto): Photo {
