@@ -105,7 +105,15 @@ fun ObservationDefect.update(dto: ObservationDefectUpdateDto): ObservationDefect
         if (dto.fields.contains(::repairMethod.name)) repairMethod = dto.repairMethod
         if (dto.fields.contains(::previousDefectNumber.name)) previousDefectNumber = dto.previousDefectNumber
         if (dto.fields.contains(::status.name)) status = dto.status
-        if (dto.fields.contains(::done.name)) done = dto.done
         if (dto.fields.contains(::structureSubdivisionId.name)) structureSubdivisionId = dto.structureSubdivisionId
+
+        if (dto.fields.contains(::done.name)) {
+                done = dto.done
+
+                if (dto.done == true && createdAtClient == null)  {
+                        createdAtClient = OffsetDateTime.now()
+                }
+        }
+
         return this
 }

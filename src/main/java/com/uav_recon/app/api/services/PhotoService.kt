@@ -46,7 +46,8 @@ class PhotoService(
             longitude,
             altitude
         ),
-        drawables = drawables
+        drawables = drawables,
+        previousPhotoId = previousPhotoId
     )
 
     fun PhotoDto.toEntity(createdBy: Int, updatedBy: Int, observationDefectId: String, link: String,
@@ -61,6 +62,7 @@ class PhotoService(
         link = link,
         createdBy = createdBy,
         updatedBy = updatedBy,
+        previousPhotoId = previousPhotoId,
         createdAtClient = createdAtClient
     )
 
@@ -77,7 +79,8 @@ class PhotoService(
             link = getFileGCSNameFromSignedLink(sourcePhotoDto.link) ?: "",
             createdBy = createdBy,
             updatedBy = updatedBy,
-            createdAtClient = createdAtClient ?: OffsetDateTime.now()
+            createdAtClient = createdAtClient ?: OffsetDateTime.now(),
+            previousPhotoId = sourcePhotoDto.uuid
         )
         return photoRepository.save(clonedPhoto).toDto()
     }
@@ -326,6 +329,10 @@ class PhotoService(
     }
 
     private fun getFileGCSNameFromSignedLink(signedLink: String?): String? {
+        if (configuration.files.useGoogle == "false") {
+            return signedLink
+        }
+
         val regex = """^(.*?)\?X-Goog-Algorithm""".toRegex()
 
         val matchResult = signedLink?.let { regex.find(it) } ?: return null
