@@ -326,7 +326,9 @@ class ObservationDefectService(
                 observationDefects = observationDefects.sortedBy { it.type }
             }
             ObservationDefectFilters.STATIONING -> {
-                observationDefects = observationDefects.sortedBy { it.stationMarker }
+                observationDefects = observationDefects.sortedBy {
+                    it.stationMarker?.replace("+", "")?.trim()?.toInt()
+                }
             }
             ObservationDefectFilters.LOCATION -> {
                 observationDefects = observationDefects.sortedBy { it.span }
