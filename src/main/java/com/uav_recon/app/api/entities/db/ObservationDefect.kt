@@ -110,10 +110,12 @@ fun ObservationDefect.update(dto: ObservationDefectUpdateDto): ObservationDefect
         if (dto.fields.contains(::done.name)) {
                 done = dto.done
 
-                if (dto.done == true && createdAtClient == null)  {
+                if (dto.done == true && !dto.fields.contains(::createdAtClient.name) && createdAtClient == null)  {
                         createdAtClient = OffsetDateTime.now()
                 }
         }
+
+        if (dto.fields.contains(::createdAtClient.name)) createdAtClient = dto.createdAtClient
 
         return this
 }

@@ -3,6 +3,7 @@ package com.uav_recon.app.api.entities.requests.bridge
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.uav_recon.app.api.entities.db.*
 import java.io.Serializable
+import java.time.OffsetDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ObservationDefectUpdateDto(
@@ -24,5 +25,6 @@ data class ObservationDefectUpdateDto(
         val status: ObservationDefectStatus?,
         val done: Boolean?,
         val structureSubdivisionId: String?,
-        val fields: List<String>
+        val fields: List<String>,
+        val createdAtClient: OffsetDateTime?
 ) : Serializable
