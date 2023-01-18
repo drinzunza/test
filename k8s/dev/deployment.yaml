@@ -28,6 +28,9 @@ spec:
       - name: uav-recon-dev
         # NOTE: image value should be replaced before building
         image: latest-backend-image
+        resources:
+          limits:
+            memory: "8Gi"
         ports:
         - containerPort: 8080
           hostPort: 8080
