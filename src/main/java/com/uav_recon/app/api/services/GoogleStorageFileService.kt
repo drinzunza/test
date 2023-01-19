@@ -45,7 +45,19 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
     }
 
     override fun get(link: String, drawables: String?, type: FileService.FileType): InputStream {
-        return storage.get(BlobId.of(configuration.files.gsBucket, link.replace("$linkPrefix${configuration.files.gsBucket}/", "")))
+        var blobName = link
+        val split = link.split('.')
+        val name = split.getOrNull(split.size - 2)
+
+        if (type == FileService.FileType.WITH_RECT) {
+            blobName = name?.let { blobName.replace(name, "${name}_rect") } ?: blobName
+        } else if (type == FileService.FileType.WITH_RECT_THUMB) {
+            blobName = name?.let { blobName.replace(name, "${name}_rect_thumb") } ?: blobName
+        }
+
+        blobName = blobName.replace("$linkPrefix${configuration.files.gsBucket}/", "")
+
+        return storage.get(BlobId.of(configuration.files.gsBucket, blobName))
                 .getContent()
                 .inputStream()
     }
@@ -91,8 +103,8 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
 
         return storage.signUrl(
             blobInfo,
-            60,
-            TimeUnit.MINUTES,
+            1,
+            TimeUnit.DAYS,
             Storage.SignUrlOption.withV4Signature(),
             Storage.SignUrlOption.signWith(storage.options.credentials as ServiceAccountSigner)
         ).toString()

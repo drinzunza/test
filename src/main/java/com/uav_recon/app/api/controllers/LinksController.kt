@@ -4,6 +4,7 @@ import com.google.api.client.util.IOUtils
 import com.uav_recon.app.api.entities.requests.bridge.InspectionDto
 import com.uav_recon.app.api.services.FileService
 import com.uav_recon.app.api.services.InspectionService
+import com.uav_recon.app.api.services.PhotoService
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -20,7 +21,8 @@ import kotlin.collections.ArrayList
 @RequestMapping("datarecon-links/{userId}")
 class LinksController(
         private val inspectionService: InspectionService,
-        private val fileService: FileService
+        private val fileService: FileService,
+        private val photoService: PhotoService
 ) {
     val errorMessageAttribute = "errorMessage"
 
@@ -72,7 +74,7 @@ class LinksController(
                     val photos = defects[0].photos?.filter { p -> photoId.contains(p.uuid) }
                     if (photos != null && photos.size == 1) {
                         response.contentType = MediaType.IMAGE_JPEG_VALUE
-                        IOUtils.copy(fileService.get(photos[0].link!!, photos[0].drawables, FileService.FileType.WITH_RECT), response.outputStream)
+                        IOUtils.copy(fileService.get(photoService.getFileGCSNameFromSignedLink(photos[0].link!!)!!, photos[0].drawables, FileService.FileType.WITH_RECT), response.outputStream)
                     }
                 }
             }
