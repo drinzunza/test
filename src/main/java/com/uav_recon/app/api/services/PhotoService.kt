@@ -328,7 +328,7 @@ class PhotoService(
         return fileFormat
     }
 
-    private fun getFileGCSNameFromSignedLink(signedLink: String?): String? {
+    fun getFileGCSNameFromSignedLink(signedLink: String?): String? {
         if (configuration.files.useGoogle == "false") {
             return signedLink
         }
