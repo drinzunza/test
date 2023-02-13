@@ -3,10 +3,7 @@ package com.uav_recon.app.api.services
 import com.uav_recon.app.api.entities.db.StructureSubdivision
 import com.uav_recon.app.api.entities.requests.bridge.StructureSubdivisionDto
 import com.uav_recon.app.api.entities.requests.bridge.toEntity
-import com.uav_recon.app.api.repositories.InspectionRepository
-import com.uav_recon.app.api.repositories.ObservationRepository
-import com.uav_recon.app.api.repositories.ObservationStructureSubdivisionRepository
-import com.uav_recon.app.api.repositories.StructureSubdivisionRepository
+import com.uav_recon.app.api.repositories.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -17,7 +14,7 @@ class StructureSubdivisionService(
     private val structureSubdivisionRepository: StructureSubdivisionRepository,
     private val observationStructureSubdivisionService: ObservationStructureSubdivisionService,
     private val observationStructureSubdivisionRepository: ObservationStructureSubdivisionRepository,
-
+    private val subcomponentRepository: SubcomponentRepository,
     private val inspectionRepository: InspectionRepository
 ) : BaseService() {
 
@@ -28,12 +25,11 @@ class StructureSubdivisionService(
         inspectionId = inspectionId,
         name = name,
         number = number,
-        computedSgrRating = calculateSubdivisionSgr(this),
+        computedSgrRating = computedSgrRating,
         sgrRating = sgrRating
     )
 
     fun calculateSubdivisionSgr(subdivision: StructureSubdivision): Double {
-        return 1.0
         var totalWeight = 0
         var totalWeightedHI = 0.0
         val subdivisionObservations = observationStructureSubdivisionRepository
@@ -41,21 +37,23 @@ class StructureSubdivisionService(
         if (subdivisionObservations.isEmpty()) {
             return 0.0
         }
-        logger.info("subdivision UUID: ${subdivision.uuid}")
+
         subdivisionObservations.forEach {
-            logger.info("observation ID: ${it.observationId}")
-            val mainObservation = observationRepository.findFirstByUuidAndDeletedIsFalse(it.observationId)
+            val mainObservation = observationRepository
+                .findFirstByUuidAndDeletedIsFalse(it.observationId) ?: return@forEach
+            mainObservation.subcomponent = subcomponentRepository.findFirstById(mainObservation.subComponentId ?: "" )
             val weightedHI = observationStructureSubdivisionService
                 .calculateWeightedSubdivisionObservationHealthIndex(it) ?: 0.0
             totalWeightedHI += weightedHI
+
             if (weightedHI > 0) {
-                totalWeight += mainObservation?.subcomponent?.fdotBhiValue ?: 0
+                totalWeight += mainObservation.subcomponent?.fdotBhiValue ?: 0
             }
         }
         if (totalWeight == 0) {
             return 0.0
         }
-        logger.info("totalWeightedHI: $totalWeightedHI | totalWeight: $totalWeight")
+
         return totalWeightedHI / totalWeight
     }
 

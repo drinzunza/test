@@ -19,7 +19,7 @@ class StructureSubdivision(
     var number: String? = null,
     @Column(name = "sgr_rating")
     var sgrRating: String? = null,
-    @Transient
+    @Column(name = "computed_sgr_rating")
     var computedSgrRating: Double? = null,
     @Transient
     var observationStructureSubdivisions: List<ObservationStructureSubdivision>? = null
