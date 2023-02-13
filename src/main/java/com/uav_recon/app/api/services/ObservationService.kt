@@ -232,6 +232,7 @@ class ObservationService(
     }
 
     fun calculateObservationHealthIndex(observation: Observation): Double? {
+        return 1.0
         var subcomponentHI = 0.0
         val defects = observation.defects
         val componentSize = observation.dimensionNumber
