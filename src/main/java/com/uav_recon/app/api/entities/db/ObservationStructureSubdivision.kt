@@ -17,6 +17,6 @@ class ObservationStructureSubdivision(
     var observationId: String,
     @Column(name = "dimension_number")
     var dimensionNumber: Int = 0,
-    @Transient
+    @Column(name = "computed_health_index")
     var computedHealthIndex: Double? = null
 )

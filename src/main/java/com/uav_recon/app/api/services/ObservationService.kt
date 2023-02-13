@@ -39,7 +39,7 @@ class ObservationService(
         observationDefects = observationDefectService.findAllByObservationIdAndNotDeleted(uuid),
         inspected = inspected,
         healthIndex = healthIndex,
-        computedHealthIndex = calculateObservationHealthIndex(this),
+        computedHealthIndex = computedHealthIndex,
         generalSummary = generalSummary,
         useHealthIndex = null
     )
@@ -56,7 +56,7 @@ class ObservationService(
         observationDefects = observationDefects.filter { it.observationId == uuid },
         inspected = inspected,
         healthIndex = healthIndex,
-        computedHealthIndex = calculateObservationHealthIndex(this),
+        computedHealthIndex = computedHealthIndex,
         generalSummary = generalSummary,
         useHealthIndex = null
     )
@@ -232,7 +232,6 @@ class ObservationService(
     }
 
     fun calculateObservationHealthIndex(observation: Observation): Double? {
-        return 1.0
         var subcomponentHI = 0.0
         val defects = observation.defects
         val componentSize = observation.dimensionNumber

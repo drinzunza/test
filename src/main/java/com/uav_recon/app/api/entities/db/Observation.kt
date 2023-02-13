@@ -45,7 +45,7 @@ class Observation(
         var defects: List<ObservationDefect>? = null,
         @Transient
         var locationIds: List<LocationId>? = null,
-        @Transient
+        @Column(name = "computed_health_index")
         var computedHealthIndex: Double? = null
 ) : MobileAppCreatedEntity(uuid, createdBy, updatedBy)
 
