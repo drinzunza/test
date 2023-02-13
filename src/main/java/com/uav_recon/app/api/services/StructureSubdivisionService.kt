@@ -33,6 +33,7 @@ class StructureSubdivisionService(
     )
 
     fun calculateSubdivisionSgr(subdivision: StructureSubdivision): Double {
+        return 1.0
         var totalWeight = 0
         var totalWeightedHI = 0.0
         val subdivisionObservations = observationStructureSubdivisionRepository

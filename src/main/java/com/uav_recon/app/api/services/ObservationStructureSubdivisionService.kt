@@ -26,6 +26,7 @@ class ObservationStructureSubdivisionService(
     )
 
     fun calculateSubdivisionObservationHealthIndex(observation: ObservationStructureSubdivision): Double {
+        return 1.0
         var subdivisionObservationHI = 1.0
         val observationDefects = observationDefectRepository
             .findAllByObservationIdAndStructureSubdivisionIdAndDeletedIsFalse(observation.observationId, observation.structureSubdivisionId)
