@@ -63,11 +63,7 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
     }
 
     override fun getPath(link: String, drawables: String?, type: FileService.FileType): String {
-        // TODO fix
         return ""
-        //return storage.get(BlobId.of(configuration.files.gsBucket, link.replace(linkPrefix, "")))
-        //        .getContent()
-        //        .inputStream()
     }
 
     override fun getImagePath(link: String, format: String?, type: FileService.FileType): String {
@@ -90,7 +86,7 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
     }
 
     override fun regenerateRectImages(photo: Photo) {
-        TODO("Not yet implemented")
+        return
     }
 
     override fun generateSignedLink(link: String): String {
