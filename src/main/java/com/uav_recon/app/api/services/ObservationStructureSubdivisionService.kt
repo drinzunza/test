@@ -4,9 +4,7 @@ import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.ObservationStructureSubdivisionDto
 import com.uav_recon.app.api.entities.requests.bridge.toEntity
 import com.uav_recon.app.api.repositories.*
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import kotlin.math.log
 
 @Service
 class ObservationStructureSubdivisionService(
