@@ -39,7 +39,7 @@ class ObservationService(
         observationDefects = observationDefectService.findAllByObservationIdAndNotDeleted(uuid),
         inspected = inspected,
         healthIndex = healthIndex,
-        computedHealthIndex = computedHealthIndex,
+        computedHealthIndex = calculateObservationHealthIndex(this),
         generalSummary = generalSummary,
         useHealthIndex = null
     )
@@ -56,7 +56,7 @@ class ObservationService(
         observationDefects = observationDefects.filter { it.observationId == uuid },
         inspected = inspected,
         healthIndex = healthIndex,
-        computedHealthIndex = computedHealthIndex,
+        computedHealthIndex = calculateObservationHealthIndex(this),
         generalSummary = generalSummary,
         useHealthIndex = null
     )
