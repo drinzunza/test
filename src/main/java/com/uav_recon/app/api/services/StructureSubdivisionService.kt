@@ -3,7 +3,10 @@ package com.uav_recon.app.api.services
 import com.uav_recon.app.api.entities.db.StructureSubdivision
 import com.uav_recon.app.api.entities.requests.bridge.StructureSubdivisionDto
 import com.uav_recon.app.api.entities.requests.bridge.toEntity
-import com.uav_recon.app.api.repositories.*
+import com.uav_recon.app.api.repositories.InspectionRepository
+import com.uav_recon.app.api.repositories.ObservationRepository
+import com.uav_recon.app.api.repositories.ObservationStructureSubdivisionRepository
+import com.uav_recon.app.api.repositories.StructureSubdivisionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -14,7 +17,6 @@ class StructureSubdivisionService(
     private val structureSubdivisionRepository: StructureSubdivisionRepository,
     private val observationStructureSubdivisionService: ObservationStructureSubdivisionService,
     private val observationStructureSubdivisionRepository: ObservationStructureSubdivisionRepository,
-    private val subcomponentRepository: SubcomponentRepository,
     private val inspectionRepository: InspectionRepository
 ) : BaseService() {
 
@@ -25,7 +27,7 @@ class StructureSubdivisionService(
         inspectionId = inspectionId,
         name = name,
         number = number,
-        computedSgrRating = computedSgrRating,
+        computedSgrRating = calculateSubdivisionSgr(this),
         sgrRating = sgrRating
     )
 
@@ -39,9 +41,10 @@ class StructureSubdivisionService(
         }
 
         subdivisionObservations.forEach {
+//            val mainObservation = observationRepository.findFirstByUuidAndDeletedIsFalse(it.observationId)
             val mainObservation = observationRepository
                 .findFirstByUuidAndDeletedIsFalse(it.observationId) ?: return@forEach
-            mainObservation.subcomponent = subcomponentRepository.findFirstById(mainObservation.subComponentId ?: "" )
+//            mainObservation.subcomponent = subcomponentRepository.findFirstById(mainObservation.subComponentId ?: "" )
             val weightedHI = observationStructureSubdivisionService
                 .calculateWeightedSubdivisionObservationHealthIndex(it) ?: 0.0
             totalWeightedHI += weightedHI

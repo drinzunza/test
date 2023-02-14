@@ -4,8 +4,8 @@ import com.uav_recon.app.api.entities.db.*
 import com.uav_recon.app.api.entities.requests.bridge.ObservationStructureSubdivisionDto
 import com.uav_recon.app.api.entities.requests.bridge.toEntity
 import com.uav_recon.app.api.repositories.*
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import kotlin.math.log
 
 @Service
 class ObservationStructureSubdivisionService(
@@ -13,8 +13,6 @@ class ObservationStructureSubdivisionService(
     private val inspectionRepository: InspectionRepository,
     private val observationRepository: ObservationRepository,
     private val observationDefectRepository: ObservationDefectRepository,
-    private val conditionRepository: ConditionRepository,
-    private val subcomponentRepository: SubcomponentRepository,
     private val structureSubdivisionRepository: StructureSubdivisionRepository
 ) : BaseService() {
 
@@ -22,7 +20,7 @@ class ObservationStructureSubdivisionService(
         uuid = uuid,
         structureSubdivisionId = structureSubdivisionId,
         observationId = observationId,
-        computedHealthIndex = computedHealthIndex,
+        computedHealthIndex = calculateSubdivisionObservationHealthIndex(this),
 //        weightedHealthIndex = calculateWeightedSubdivisionObservationHealthIndex(this),
         dimensionNumber = dimensionNumber
     )
@@ -31,12 +29,12 @@ class ObservationStructureSubdivisionService(
         var subdivisionObservationHI = 1.0
         val observationDefects = observationDefectRepository
             .findAllByObservationIdAndStructureSubdivisionIdAndDeletedIsFalse(observation.observationId, observation.structureSubdivisionId)
-
-        val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
-        observationDefects.parallelStream().forEach { defect ->
-            defect.condition = conditions.firstOrNull { it.id == defect.conditionId }
-        }
-
+//
+//        val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
+//        observationDefects.parallelStream().forEach { defect ->
+//            defect.condition = conditions.firstOrNull { it.id == defect.conditionId }
+//        }
+//
         if (observationDefects.isEmpty()) {
             return subdivisionObservationHI
         }
@@ -62,13 +60,13 @@ class ObservationStructureSubdivisionService(
         var weightedSubdivisionObservationHI = 0.0
         val mainObservation = observationRepository.findFirstByUuidAndDeletedIsFalse(observation.observationId)
             ?: return weightedSubdivisionObservationHI
-        mainObservation.subcomponent = subcomponentRepository.findFirstById(mainObservation.subComponentId ?: "" )
+//        mainObservation.subcomponent = subcomponentRepository.findFirstById(mainObservation.subComponentId ?: "" )
         if (mainObservation.structuralComponentId == null) {
             return weightedSubdivisionObservationHI
         }
 
-//        val componentHI = calculateSubdivisionObservationHealthIndex(observation)
-        val componentHI = observation.computedHealthIndex ?: 1.0
+        val componentHI = calculateSubdivisionObservationHealthIndex(observation)
+//        val componentHI = observation.computedHealthIndex ?: 1.0
         val fDotBhi = mainObservation.subcomponent?.fdotBhiValue ?: return weightedSubdivisionObservationHI
         weightedSubdivisionObservationHI = fDotBhi * componentHI
         return weightedSubdivisionObservationHI

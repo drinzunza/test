@@ -705,12 +705,12 @@ class InspectionService(
         inspections.forEach { structureSubdivisions.addAll(structureSubdivisionRepository.findAllByInspectionId(it.uuid)) }
 
         structureSubdivisions.forEach { structureSubdivision ->
-//            structureSubdivision.computedSgrRating = structureSubdivisionService.calculateSubdivisionSgr(structureSubdivision)
+            structureSubdivision.computedSgrRating = structureSubdivisionService.calculateSubdivisionSgr(structureSubdivision)
             structureSubdivision.observationStructureSubdivisions =
                 observationStructureSubdivisionRepository.findAllByStructureSubdivisionId(structureSubdivision.uuid)
-//            structureSubdivision.observationStructureSubdivisions!!.forEach {
-//                it.computedHealthIndex = observationStructureSubdivisionService.calculateSubdivisionObservationHealthIndex(it)
-//            }
+            structureSubdivision.observationStructureSubdivisions!!.forEach {
+                it.computedHealthIndex = observationStructureSubdivisionService.calculateSubdivisionObservationHealthIndex(it)
+            }
         }
         observationDefects.forEach { observationDefect ->
             observationDefect.defect = defects.firstOrNull { it.id == observationDefect.defectId }
