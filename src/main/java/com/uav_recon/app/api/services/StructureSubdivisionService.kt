@@ -17,7 +17,6 @@ class StructureSubdivisionService(
     private val structureSubdivisionRepository: StructureSubdivisionRepository,
     private val observationStructureSubdivisionService: ObservationStructureSubdivisionService,
     private val observationStructureSubdivisionRepository: ObservationStructureSubdivisionRepository,
-
     private val inspectionRepository: InspectionRepository
 ) : BaseService() {
 
@@ -40,21 +39,24 @@ class StructureSubdivisionService(
         if (subdivisionObservations.isEmpty()) {
             return 0.0
         }
-        logger.info("subdivision UUID: ${subdivision.uuid}")
+
         subdivisionObservations.forEach {
-            logger.info("observation ID: ${it.observationId}")
-            val mainObservation = observationRepository.findFirstByUuidAndDeletedIsFalse(it.observationId)
+//            val mainObservation = observationRepository.findFirstByUuidAndDeletedIsFalse(it.observationId)
+            val mainObservation = observationRepository
+                .findFirstByUuidAndDeletedIsFalse(it.observationId) ?: return@forEach
+//            mainObservation.subcomponent = subcomponentRepository.findFirstById(mainObservation.subComponentId ?: "" )
             val weightedHI = observationStructureSubdivisionService
                 .calculateWeightedSubdivisionObservationHealthIndex(it) ?: 0.0
             totalWeightedHI += weightedHI
+
             if (weightedHI > 0) {
-                totalWeight += mainObservation?.subcomponent?.fdotBhiValue ?: 0
+                totalWeight += mainObservation.subcomponent?.fdotBhiValue ?: 0
             }
         }
         if (totalWeight == 0) {
             return 0.0
         }
-        logger.info("totalWeightedHI: $totalWeightedHI | totalWeight: $totalWeight")
+
         return totalWeightedHI / totalWeight
     }
 

@@ -29,6 +29,12 @@ class ObservationStructureSubdivisionService(
         var subdivisionObservationHI = 1.0
         val observationDefects = observationDefectRepository
             .findAllByObservationIdAndStructureSubdivisionIdAndDeletedIsFalse(observation.observationId, observation.structureSubdivisionId)
+//
+//        val conditions = conditionRepository.findAllByIdIn(observationDefects.map { it.conditionId ?: "" })
+//        observationDefects.parallelStream().forEach { defect ->
+//            defect.condition = conditions.firstOrNull { it.id == defect.conditionId }
+//        }
+//
         if (observationDefects.isEmpty()) {
             return subdivisionObservationHI
         }
@@ -54,11 +60,13 @@ class ObservationStructureSubdivisionService(
         var weightedSubdivisionObservationHI = 0.0
         val mainObservation = observationRepository.findFirstByUuidAndDeletedIsFalse(observation.observationId)
             ?: return weightedSubdivisionObservationHI
+//        mainObservation.subcomponent = subcomponentRepository.findFirstById(mainObservation.subComponentId ?: "" )
         if (mainObservation.structuralComponentId == null) {
             return weightedSubdivisionObservationHI
         }
 
         val componentHI = calculateSubdivisionObservationHealthIndex(observation)
+//        val componentHI = observation.computedHealthIndex ?: 1.0
         val fDotBhi = mainObservation.subcomponent?.fdotBhiValue ?: return weightedSubdivisionObservationHI
         weightedSubdivisionObservationHI = fDotBhi * componentHI
         return weightedSubdivisionObservationHI
