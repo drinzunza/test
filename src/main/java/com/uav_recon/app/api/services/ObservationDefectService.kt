@@ -186,7 +186,7 @@ class ObservationDefectService(
         }
 
         // Set unchanged observation defect clones to changed upon update
-        if (entity.status == ObservationDefectStatus.UNCHANGED && entity.previousDefectNumber != null) {
+        if (entity.status == ObservationDefectStatus.UNCHANGED && entity.previousDefectNumber != null && observationDefect?.status == ObservationDefectStatus.UNCHANGED) {
             entity.status = ObservationDefectStatus.CHANGED
         }
         if (entity.status == null) {
@@ -251,7 +251,7 @@ class ObservationDefectService(
         val createdByUser = userService.get(observationDefect.createdBy).toDto()
 
         // Set unchanged observation defect clones to changed upon update
-        if (observationDefect.status == ObservationDefectStatus.UNCHANGED && observationDefect.previousDefectNumber != null) {
+        if (observationDefect.status == ObservationDefectStatus.UNCHANGED && observationDefect.previousDefectNumber != null && !dto.fields.contains("status")) {
             observationDefect.status = ObservationDefectStatus.CHANGED
         }
 
