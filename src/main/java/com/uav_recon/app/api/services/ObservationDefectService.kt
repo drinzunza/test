@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.*
+import kotlin.collections.HashMap
 
 @Service
 class ObservationDefectService(
@@ -326,9 +327,48 @@ class ObservationDefectService(
                 observationDefects = observationDefects.sortedBy { it.type }
             }
             ObservationDefectFilters.STATIONING -> {
-                observationDefects = observationDefects.sortedBy {
-                    it.stationMarker?.replace("+", "")?.trim()?.toInt()
+                val listHashMap: HashMap<String, MutableList<ObservationDefectDto>> = HashMap()
+                // we'll just put station markers with no prepended strings in a group as well
+                val noPrependedList: MutableList<ObservationDefectDto> = mutableListOf()
+                // also group defects with no station marker in case
+                val nullStationMarkerList: MutableList<ObservationDefectDto> = mutableListOf()
+
+                for (observationDefect in observationDefects) {
+                    if (observationDefect.stationMarker == null) {
+                        // no station marker so just add to the null-station-marker list
+                        nullStationMarkerList.add(observationDefect)
+                        continue
+                    }
+
+                    // try to get the prepended string
+                    val stringSplit = observationDefect.stationMarker.trim().split(" ")
+                    if (stringSplit.size == 1) {
+                        // no prepended string so just add to the no-prepended list
+                        noPrependedList.add(observationDefect)
+                        continue
+                    }
+
+                    // add to the list of the corresponding prepended string (create if not existing yet)
+                    val prependedString = stringSplit[0].toUpperCase()
+                    if (listHashMap[prependedString] == null) {
+                        listHashMap[prependedString] = mutableListOf()
+                    }
+                    listHashMap[prependedString]!!.add(observationDefect)
                 }
+
+                val finalSortedDefectsList: MutableList<ObservationDefectDto> = mutableListOf()
+                val sortedKeys = listHashMap.keys.sorted()
+                for (key in sortedKeys) {
+                    val sortedDefects = listHashMap[key]!!.sortedBy {
+                        it.stationMarker!!.trim().split(" ")[1].replace("+", "").trim().toInt()
+                    }
+                    finalSortedDefectsList.addAll(sortedDefects)
+                }
+
+                finalSortedDefectsList.addAll(noPrependedList)
+                finalSortedDefectsList.addAll(nullStationMarkerList)
+
+                observationDefects = finalSortedDefectsList
             }
             ObservationDefectFilters.LOCATION -> {
                 observationDefects = observationDefects.sortedBy { it.span }
