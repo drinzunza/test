@@ -360,7 +360,12 @@ class ObservationDefectService(
                 val sortedKeys = listHashMap.keys.sorted()
                 for (key in sortedKeys) {
                     val sortedDefects = listHashMap[key]!!.sortedBy {
-                        it.stationMarker!!.trim().split(" ")[1].replace("+", "").trim().toInt()
+                        val splitMarkerString = it.stationMarker!!.trim().split(" ")
+                        if (splitMarkerString.size == 1) {
+                            return@sortedBy 0
+                        } else {
+                            return@sortedBy splitMarkerString[1].replace("+", "").trim().toIntOrNull() ?: 0
+                        }
                     }
                     finalSortedDefectsList.addAll(sortedDefects)
                 }
