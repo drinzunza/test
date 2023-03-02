@@ -98,12 +98,18 @@ jobs:
         # update the deployment to use the generated image version
         # sed -i 's/latest-backend-image/'"$GAR_LOCATION"'-docker.pkg.dev\/'"$PROJECT_ID"'\/'"$REPOSITORY"'\/'"$IMAGE"':'"$GITHUB_SHA"'/g' k8s/$DEPLOYMENT_NAME/deployment.yaml
 
+        # copy the GCP credentials to the src directory
+        # cp "${{ steps.auth.outputs.credentials_file_path }}" ./gcp-key.json
+        echo $GCP_KEY >> ./gcp-key.json
+
         docker build \
           --tag "$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA" \
           --build-arg SPRING_DATASOURCE_URL="$SPRING_DATASOURCE_URL" \
           --build-arg SPRING_DATASOURCE_USERNAME="$SPRING_DATASOURCE_USERNAME" \
           --build-arg SPRING_DATASOURCE_PASSWORD="$SPRING_DATASOURCE_PASSWORD" \
           .
+      env:
+        GCP_KEY: ${{secrets.GCP_CREDENTIALS}}
     # Publish image to GAR
     - name: Publish to GAR
       run: |
