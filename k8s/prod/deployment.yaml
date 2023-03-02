@@ -44,6 +44,8 @@ spec:
             value: "__SPRING_DATASOURCE_PASSWORD__"
           - name: "UAV_FILES_GS_BUCKET"
             value: "__UAV_FILES_GS_BUCKET__"
+          - name: "GOOGLE_APPLICATION_CREDENTIALS"
+            value: "/src/gcp-key.json"
         readinessProbe:
             httpGet:
               path: /datarecon-public/healthcheck
