@@ -333,47 +333,11 @@ class ObservationDefectService(
                 // also group defects with no station marker in case
                 val nullStationMarkerList: MutableList<ObservationDefectDto> = mutableListOf()
 
-                for (observationDefect in observationDefects) {
-                    if (observationDefect.stationMarker == null) {
-                        // no station marker so just add to the null-station-marker list
-                        nullStationMarkerList.add(observationDefect)
-                        continue
-                    }
-
-                    // try to get the prepended string
-                    val stringSplit = observationDefect.stationMarker.trim().split(" ")
-                    if (stringSplit.size == 1) {
-                        // no prepended string so just add to the no-prepended list
-                        noPrependedList.add(observationDefect)
-                        continue
-                    }
-
-                    // add to the list of the corresponding prepended string (create if not existing yet)
-                    val prependedString = stringSplit[0].toUpperCase()
-                    if (listHashMap[prependedString] == null) {
-                        listHashMap[prependedString] = mutableListOf()
-                    }
-                    listHashMap[prependedString]!!.add(observationDefect)
-                }
-
-                val finalSortedDefectsList: MutableList<ObservationDefectDto> = mutableListOf()
-                val sortedKeys = listHashMap.keys.sorted()
-                for (key in sortedKeys) {
-                    val sortedDefects = listHashMap[key]!!.sortedBy {
-                        val splitMarkerString = it.stationMarker!!.trim().split(" ")
-                        if (splitMarkerString.size == 1) {
-                            return@sortedBy 0
-                        } else {
-                            return@sortedBy splitMarkerString[1].replace("+", "").trim().toIntOrNull() ?: 0
-                        }
-                    }
-                    finalSortedDefectsList.addAll(sortedDefects)
-                }
-
-                finalSortedDefectsList.addAll(noPrependedList)
-                finalSortedDefectsList.addAll(nullStationMarkerList)
-
-                observationDefects = finalSortedDefectsList
+                val sortedObservationDefects = observationDefects.sortedWith(compareBy(
+                    { it.stationMarker == null },
+                    { it.stationMarker }
+                ))
+                observationDefects = sortedObservationDefects
             }
             ObservationDefectFilters.LOCATION -> {
                 observationDefects = observationDefects.sortedBy { it.span }

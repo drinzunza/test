@@ -7,10 +7,15 @@ import com.google.cloud.storage.Storage
 import com.google.cloud.storage.StorageOptions
 import com.uav_recon.app.api.entities.db.Photo
 import com.uav_recon.app.api.entities.db.Rect
+import com.uav_recon.app.api.utils.drawRect
 import com.uav_recon.app.api.utils.saveThumbToMemory
 import com.uav_recon.app.configurations.UavConfiguration
+import net.coobird.thumbnailator.Thumbnails
 import org.slf4j.LoggerFactory
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
 import java.io.InputStream
+import java.io.OutputStream
 import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
@@ -82,11 +87,38 @@ class GoogleStorageFileService(private val configuration: UavConfiguration) : Fi
     }
 
     override fun getRect(drawables: String?): Rect? {
+        try {
+            val coords = drawables
+                ?.replace("Rect(", "")
+                ?.replace(")", "")
+                ?.split(',')
+            if (coords != null && coords.size == 4) {
+                return Rect(coords[0].toDouble(), coords[1].toDouble(), coords[2].toDouble(), coords[3].toDouble())
+            }
+        } catch (e: Exception) {
+            logger.error("Invalid image rect data", e)
+        }
         return null
     }
 
     override fun regenerateRectImages(photo: Photo) {
-        return
+        try {
+            val path = photo.link.substringAfter("$linkPrefix$bucketDirectory")
+            val format = path.split(".").last()
+            val clearInputStream = get(photo.link, photo.drawables, FileService.FileType.NORMAL)
+            val image = Thumbnails.of(clearInputStream).scale(1.0).asBufferedImage()
+            val outputStream = ByteArrayOutputStream()
+            image.drawRect(getRect(photo.drawables))
+            Thumbnails.of(image)
+                .scale(1.0)
+                .outputFormat(format)
+                .toOutputStream(outputStream)
+            saveAnnotatedPhoto(path, outputStream.toByteArray(), format)
+            clearInputStream.close()
+            outputStream.close()
+        } catch (e: Exception) {
+            logger.error("regenerateRectImages failed", e)
+        }
     }
 
     override fun generateSignedLink(link: String): String {
