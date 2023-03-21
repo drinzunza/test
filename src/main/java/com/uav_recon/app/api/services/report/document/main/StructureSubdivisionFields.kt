@@ -1,6 +1,7 @@
 package com.uav_recon.app.api.services.report.document.main
 
 import com.uav_recon.app.api.entities.db.Inspection
+import com.uav_recon.app.api.entities.db.Observation
 import com.uav_recon.app.api.entities.db.StructureSubdivision
 import com.uav_recon.app.api.services.report.document.models.body.Alignment
 import com.uav_recon.app.api.services.report.document.models.body.Paragraph
@@ -86,7 +87,11 @@ internal class StructureSubdivisionFields {
                 SUB_COMPONENTS_TAG -> {
                     val allocationsSize = structureSubdivision.observationStructureSubdivisions?.size
                     structureSubdivision.observationStructureSubdivisions?.forEachIndexed { index, allocation ->
-                        val observation = inspection.observations?.first { it.uuid == allocation.observationId }
+                        val observation: Observation? = try {
+                            inspection.observations?.first { it.uuid == allocation.observationId }
+                        } catch (e: NoSuchElementException) {
+                            null
+                        }
                         val subcomponent = observation?.subcomponent
 
                         addCellText("${subcomponent?.name} ${allocation.dimensionNumber}${subcomponent?.measureUnit} ${allocation.computedHealthIndex}")
