@@ -22,6 +22,7 @@ data class ObservationDefectUpdateDto(
         val repairDate: String?,
         val repairMethod: String?,
         val previousDefectNumber: String?,
+        val previousDefect: String?,
         val status: ObservationDefectStatus?,
         val done: Boolean?,
         val structureSubdivisionId: String?,
