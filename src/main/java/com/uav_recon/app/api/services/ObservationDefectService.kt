@@ -58,6 +58,7 @@ class ObservationDefectService(
             repairDate = repairDate,
             repairMethod = repairMethod,
             previousDefectNumber = previousDefectNumber,
+            previousDefect = previousDefect,
             createdAt = createdAt,
             createdAtClient = createdAtClient,
             done = done,
@@ -89,6 +90,7 @@ class ObservationDefectService(
             repairDate = repairDate,
             repairMethod = repairMethod,
             previousDefectNumber = previousDefectNumber,
+            previousDefect = previousDefect,
             createdAt = createdAt,
             createdAtClient = createdAtClient,
             done = done,
@@ -120,6 +122,7 @@ class ObservationDefectService(
             repairMethod = repairMethod,
             repairDate = repairDate,
             previousDefectNumber = previousDefectNumber,
+            previousDefect = previousDefect,
             createdAtClient = createdAtClient,
             done = done,
             status = status,
@@ -151,6 +154,7 @@ class ObservationDefectService(
             repairMethod = sourceObservationDefectDto.repairMethod,
             repairDate = sourceObservationDefectDto.repairDate,
             previousDefectNumber = sourceObservationDefectDto.uuid,
+            previousDefect = sourceObservationDefectDto.uuid,
             createdAtClient = createdAtClient,
             status = null
         )

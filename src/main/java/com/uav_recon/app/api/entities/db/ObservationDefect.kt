@@ -64,6 +64,8 @@ class ObservationDefect(
         var repairMethod: String? = null,
         @Column(name = "previous_defect_number")
         var previousDefectNumber: String? = null,
+        @Column(name = "previous_defect")
+        var previousDefect: String? = null,
         @Column(name = "created_at_client")
         var createdAtClient: OffsetDateTime? = null,
         @Column(name = "defect_status")
@@ -104,6 +106,7 @@ fun ObservationDefect.update(dto: ObservationDefectUpdateDto): ObservationDefect
         if (dto.fields.contains(::repairDate.name)) repairDate = dto.repairDate
         if (dto.fields.contains(::repairMethod.name)) repairMethod = dto.repairMethod
         if (dto.fields.contains(::previousDefectNumber.name)) previousDefectNumber = dto.previousDefectNumber
+        if (dto.fields.contains(::previousDefect.name)) previousDefect = dto.previousDefect
         if (dto.fields.contains(::status.name)) status = dto.status
         if (dto.fields.contains(::structureSubdivisionId.name)) structureSubdivisionId = dto.structureSubdivisionId
 
