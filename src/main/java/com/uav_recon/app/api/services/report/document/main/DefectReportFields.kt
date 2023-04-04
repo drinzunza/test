@@ -199,11 +199,11 @@ internal class DefectReportFields(private val flavor: String = "default", privat
                 }
                 PREV_DEF_ID_TAG -> {
                     alignment = Alignment.CENTER
-                    addCellText(defect.previousDefectNumber)
+                    addCellText(defect.previousDefect)
                 }
                 PREV_OBSERVATION_ID_TAG -> {
                     alignment = Alignment.CENTER
-                    addCellText(defect.previousDefectNumber)
+                    addCellText(defect.previousDefect)
                 }
                 O_CLOCK_POSITION_TAG -> {
                     alignment = Alignment.CENTER
