@@ -194,9 +194,6 @@ class ObservationDefectService(
         if (entity.status == ObservationDefectStatus.UNCHANGED && entity.previousDefectNumber != null && observationDefect?.status == ObservationDefectStatus.UNCHANGED) {
             entity.status = ObservationDefectStatus.CHANGED
         }
-        if (entity.status == null) {
-            entity.status = ObservationDefectStatus.NEW
-        }
 
         val saved = observationDefectRepository.save(entity)
         return saveWeather(saved).toDto(createdByUser)
