@@ -1,7 +1,7 @@
 FROM openjdk:8-jdk-alpine
-#RUN adduser -g '' -D service_user
+RUN adduser -g '' -D service_user
 
-ARG SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/uav_recon
+ARG SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/uav_recon
 ARG SPRING_DATASOURCE_USERNAME=postgres
 ARG SPRING_DATASOURCE_PASSWORD=docker
 
@@ -9,8 +9,8 @@ WORKDIR /src
 COPY . /src
 
 RUN mkdir /var/uav-recon
-#RUN chown -R service_user /src
-#RUN chown -R service_user /var/uav-recon
+RUN chown -R service_user /src
+RUN chown -R service_user /var/uav-recon
 
 #USER service_user
 ENV SPRING_DATASOURCE_URL=$SPRING_DATASOURCE_URL

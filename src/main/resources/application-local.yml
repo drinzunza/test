@@ -13,9 +13,9 @@ spring:
           starttls:
             enable: true
   datasource:
-    url: jdbc:postgresql://localhost:1007/uav_recon
+    url: jdbc:postgresql://localhost:5432/uav_recon
     username: postgres
-    password: 123123
+    password: docker
   jpa:
     show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQL9Dialect
@@ -47,8 +47,8 @@ server:
     min-response-size: 2048
 uav:
   files:
-    upload_dir: /Users/sergeyzhuravlev/uav-recon/files
-    root: /Users/sergeyzhuravlev/uav-recon/data/
+    upload_dir: /Users/inxunxa/uav-recon/files
+    root: /Users/inxunxa/uav-recon/data/
     use_google: false
     gs_bucket: data_recon_test
     remove_file_on_delete: false

@@ -7,7 +7,7 @@ services:
 
   database:
     image: postgres:12.2-alpine
-    container_name: pg-docker
+    container_name: database
     environment:
       POSTGRES_PASSWORD: "docker"
       POSTGRES_USER: "postgres"
@@ -27,7 +27,7 @@ services:
     depends_on:
       - database
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://pg-docker:5432/uav_recon
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/uav_recon
       - SPRING_DATASOURCE_USER=postgres
       - SPRING_DATASOURCE_PASSWORD=docker
     stdin_open: true
